@@ -65,8 +65,7 @@ typedef std::shared_ptr<inputProc<T> > inputProcPtr;
 /* --- Activity GetBlocks ----------------------------------------------- */
 
 /* Variables shared between the codels (they could go in the IDS) */
-static int N;
-static unsigned int globalLoss;
+static int N, globalLoss;
 static int64_t nfr;
 static T *li, *ri;
 std::vector<T> l, r;
