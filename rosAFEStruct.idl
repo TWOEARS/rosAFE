@@ -1,0 +1,15 @@
+#ifndef ROSAFESTRUCT_IDL
+#define ROSAFESTRUCT_IDL
+
+module rosAFE {
+    struct portStruct {
+        unsigned long         sampleRate;
+        unsigned long         nChunksOnPort;
+        unsigned long         nFramesPerChunk;
+        unsigned long long    lastFrameIndex;
+        sequence<double>      left;
+        sequence<double>      right;
+    };
+};
+
+#endif /* ROSAFESTRUCT_IDL */

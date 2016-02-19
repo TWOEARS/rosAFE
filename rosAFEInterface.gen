@@ -1,0 +1,6 @@
+#include "rosAFEStruct.idl"
+
+interface rosAFEInterface {
+    port out rosAFE::portStruct Output;
+};
+
