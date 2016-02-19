@@ -1,0 +1,25 @@
+#ifndef EMPTYPROCLIB_HPP
+#define EMPTYPROCLIB_HPP
+
+#define MAXCODABLEVALUE 2147483647;
+
+namespace openAFE {
+	
+	namespace inputProcLib {
+
+		/* This divades all the datas of the incoming chunk
+		 * with the MAXCODABLEVALUE.
+		 * */
+		template<typename T>
+		void normaliseData(T* firstValue, uint64_t dim) {
+			for ( unsigned int i = 0 ; i < dim ; ++i )
+				*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
+		}
+		
+	};
+};
+
+
+
+#endif /* EMPTYPROCLIB_HPP */
+

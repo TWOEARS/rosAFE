@@ -1,0 +1,43 @@
+#pragma require "bass-genom3 >= 1.0"
+#include "bassInterface.gen"
+
+component rosAFE {
+    version         "1.0";
+    lang            "c";
+    require         "genom3 >= 2.99.26";
+    uses            bassInterface;
+
+    exception e_noData;
+
+    task read {
+        period      250ms; //chosen arbitrarily for this example
+    };
+
+    activity GetBlocks(
+      inout unsigned long nBlocks = 1 : "Amount of blocks, 0 for unlimited",
+      in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
+      in long startOffs = -12000 : "Starting offset (past < 0, future > 0)"
+      ) {
+        doc         "Get consecutive blocks of audio data from bass";
+        task        read;
+        interrupts  GetBlocks;  // Only one audio input can be exist simultaneously (mono or stereo)
+
+        codel <start>   startGetBlocks(in nFramesPerBlock, in startOffs,
+                            port in Audio) yield waitExec;
+
+        codel <waitExec>    	waitExecGetBlocks(inout nBlocks, in nFramesPerBlock,
+                            		port in Audio) yield waitExec, exec, stop;
+        codel <exec>    	execGetBlocks() yield waitRelease, stop;
+        codel <waitRelease>    	waitReleaseGetBlocks() yield waitRelease, release, stop;
+        codel <release>    	releaseGetBlocks() yield waitExec, stop;
+
+        codel <stop>    stopGetBlocks() yield ether;
+
+        throw   e_noData;
+    };
+
+    function Stop() {
+        doc         "Stop getting blocks";
+        interrupts  GetBlocks;
+    };
+};
