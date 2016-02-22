@@ -1,12 +1,10 @@
 #include "acrosAFE.h"
 
 #include "rosAFE_c_types.h"
-#include "includeAPIFiles.hpp"
+
+#include "genom3_dataFiles.hpp"
 
 using namespace openAFE;
-
-
-using T = double;
 
 /* --- getAudioData ----------------------------------------------------- */
 
@@ -26,7 +24,7 @@ using T = double;
    were lost in *loss (*loss equals 0 if no loss).
  */
 
-int getAudioData(binaudio_portStruct *src, T *destL, T *destR,
+int getAudioData(binaudio_portStruct *src, inputT *destL, inputT *destR,
                  int N, int64_t *nfr, int *loss)
 {
     int n;       /* amount of frames the function will be able to get */
@@ -60,18 +58,15 @@ int getAudioData(binaudio_portStruct *src, T *destL, T *destR,
 
 /* --- Task read -------------------------------------------------------- */
 
-typedef std::shared_ptr<inputProc<T> > inputProcPtr;
-
 /* --- Activity GetBlocks ----------------------------------------------- */
 
 /* Variables shared between the codels (they could go in the IDS) */
 static int N;
 static unsigned int globalLoss;
 static int64_t nfr;
-static T *li, *ri;
-std::vector<T> l, r;
+static inputT *li, *ri;
+std::vector<inputT> l, r;
 
-inputProcPtr inputP;
 /** Codel startGetBlocks of activity GetBlocks.
  *
  * Triggered by rosAFE_start.
@@ -80,9 +75,9 @@ inputProcPtr inputP;
  */
 genom_event
 startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
-               uint32_t bufferSize_s, const rosAFE_Audio *Audio,
-               genom_context self)
-
+               uint32_t bufferSize_s,
+               rosAFE_inputProcessors **inputProcessorsSt,
+               const rosAFE_Audio *Audio, genom_context self)
 {
 	
   /* Check if the client can get data from the server */
@@ -92,8 +87,10 @@ startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
       return rosAFE_e_noData(self);
   }
     
-  inputProcPtr tmp ( new inputProc<T>("input", Audio->data(self)->sampleRate, Audio->data(self)->sampleRate, bufferSize_s) );
-  inputP = std::move( tmp );
+  inputProcPtr inputP ( new InputProc<inputT>("input", Audio->data(self)->sampleRate, Audio->data(self)->sampleRate, bufferSize_s) );
+
+  /* Adding this procesor to the ids */
+  (*inputProcessorsSt)->processorsAccessor->addProcessor( inputP );
   
   /* Initialization */
   N = nFramesPerBlock; //N is the amount of frames the client requests
@@ -144,7 +141,7 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
     
     if ( ( globalLoss >= l.size() ) || ( globalLoss >= r.size() ) ) {
 	/* Everythink is lost */
-		std::cout << "We lost everyting" << globalLoss << std::endl;
+		std::cout << "We lost everyting " << globalLoss << std::endl;
 		globalLoss = 0;		
 		return rosAFE_waitExec;
 	}
@@ -161,11 +158,13 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
  * Throws rosAFE_e_noData.
  */
 genom_event
-execGetBlocks(genom_context self)
+execGetBlocks(const rosAFE_inputProcessors *inputProcessorsSt,
+              genom_context self)
 {
   /* The client processes the current block l and r here */
-  std::cout << "Global Loss : " << globalLoss << std::endl;
-  inputP->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
+  // if (globalLoss > 0 )
+	std::cout << "Loss : " << globalLoss << std::endl;
+  inputProcessorsSt->processorsAccessor->getProcessor("input")->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
   return rosAFE_waitRelease;
 }
 
@@ -189,9 +188,10 @@ waitReleaseGetBlocks(genom_context self)
  * Throws rosAFE_e_noData.
  */
 genom_event
-releaseGetBlocks(genom_context self)
-{  
-  inputP->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
+releaseGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
+                 genom_context self)
+{
+  (*inputProcessorsSt)->processorsAccessor->getProcessor("input")->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
   globalLoss = 0;
   return rosAFE_waitExec;
 }
@@ -203,9 +203,11 @@ releaseGetBlocks(genom_context self)
  * Throws rosAFE_e_noData.
  */
 genom_event
-stopGetBlocks(genom_context self)
+stopGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
+              genom_context self)
 {
     l.clear();
     r.clear();
+    (*inputProcessorsSt)->processorsAccessor->clear();
     return rosAFE_ether;
 }

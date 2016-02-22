@@ -9,4 +9,6 @@
 #include "src/Processors/Processor.hpp"
 #include "src/Processors/inputProc.hpp"
 
+#include "src/Processors/ProcessorVector.hpp"
+
 #endif /* INCLAPIFILES_HPP */

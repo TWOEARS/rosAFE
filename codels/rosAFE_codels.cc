@@ -22,3 +22,5 @@
 #include "acrosAFE.h"
 
 #include "rosAFE_c_types.h"
+
+#include "genom3_dataFiles.hpp"

@@ -23,6 +23,7 @@ lib_LTLIBRARIES = librosAFE_codels.la
 
 librosAFE_codels_la_SOURCES=	rosAFE_c_types.h
 librosAFE_codels_la_SOURCES+=	rosAFE_codels.cc
+librosAFE_codels_la_SOURCES+=	rosAFE_init_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_read_codels.cc
 
 librosAFE_codels_la_CPPFLAGS=	$(requires_CFLAGS)

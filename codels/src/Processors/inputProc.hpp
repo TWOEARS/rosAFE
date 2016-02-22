@@ -23,7 +23,7 @@
 namespace openAFE {
 
 	template<typename T>
-	class inputProc : public Processor {
+	class InputProc : public Processor {
 
 		private:
 			
@@ -55,7 +55,7 @@ namespace openAFE {
 		public:
 
 			/* inputProc   This processor multiply the input chunk with the "Multiple" parameter ! */
-			inputProc (const std::string& nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s) : Processor (fsIn, fsOut, _inputProc) {
+			InputProc (const std::string& nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s) : Processor (fsIn, fsOut, _inputProc) {
 				
 				this->setDefaultParams ();
 
@@ -73,7 +73,7 @@ namespace openAFE {
 				rightOutput = std::move ( right );
 			}
 				
-			~inputProc () {
+			~InputProc () {
 				std::cout << "Destructor of a input processor" << std::endl;
 			}
 			

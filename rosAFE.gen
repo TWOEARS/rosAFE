@@ -1,13 +1,31 @@
 #pragma require "bass-genom3 >= 1.0"
 #include "bassInterface.gen"
+#include "rosAFEInterface.gen"
 
 component rosAFE {
     version         "1.0";
     lang            "c";
     require         "genom3 >= 2.99.26";
     uses            bassInterface;
+    provides        rosAFEInterface;
+
+    native inputProcessors;
+    native flagMap;
+    native newDataMap;
+
+
+    ids {
+
+	inputProcessors inputProcessorsSt;
+	flagMap flagMapSt;
+	newDataMap newDataMapSt;
+    };
 
     exception e_noData;
+    
+    task init {
+		codel <start> initIDS(out ::ids) yield ether;
+	};
 
     task read {
         period      250ms; //chosen arbitrarily for this example
@@ -16,22 +34,22 @@ component rosAFE {
     activity GetBlocks(
       inout unsigned long nBlocks = 1 : "Amount of blocks, 0 for unlimited",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
-      in long startOffs = -12000 : "Starting offset (past < 0, future > 0)"
+      in long startOffs = -12000 : "Starting offset (past < 0, future > 0)",
+      in unsigned long bufferSize_s = 10 : "Buffer size in seconds"
       ) {
         doc         "Get consecutive blocks of audio data from bass";
         task        read;
         interrupts  GetBlocks;  // Only one audio input can be exist simultaneously (mono or stereo)
 
-        codel <start>   startGetBlocks(in nFramesPerBlock, in startOffs,
+        codel <start>   startGetBlocks(in nFramesPerBlock, in startOffs, in bufferSize_s, inout inputProcessorsSt,
                             port in Audio) yield waitExec;
 
-        codel <waitExec>    	waitExecGetBlocks(inout nBlocks, in nFramesPerBlock,
-                            		port in Audio) yield waitExec, exec, stop;
-        codel <exec>    	execGetBlocks() yield waitRelease, stop;
+        codel <waitExec>    	waitExecGetBlocks(inout nBlocks, in nFramesPerBlock, port in Audio) yield waitExec, exec, stop;
+        codel <exec>    	execGetBlocks(in inputProcessorsSt) yield waitRelease, stop;
         codel <waitRelease>    	waitReleaseGetBlocks() yield waitRelease, release, stop;
-        codel <release>    	releaseGetBlocks() yield waitExec, stop;
+        codel <release>    	releaseGetBlocks(inout inputProcessorsSt) yield waitExec, stop;
 
-        codel <stop>    stopGetBlocks() yield ether;
+        codel <stop>    stopGetBlocks(inout inputProcessorsSt) yield ether;
 
         throw   e_noData;
     };

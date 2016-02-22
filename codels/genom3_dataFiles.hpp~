@@ -1,0 +1,16 @@
+#ifndef GENOM3_DATAFILES_HPP
+#define GENOM3_DATAFILES_HPP
+
+
+#include "Processors/allProcessors.hpp"
+
+using inputT = double;
+
+typedef std::shared_ptr<openAFE::AllProcessors<inputT> > allProcessorsSharedPtr;
+
+struct rosAFE_allProcessors {
+	allProcessorsSharedPtr processorsAccessor; 
+};
+
+
+#endif /* GENOM3_DATAFILES_HPP */

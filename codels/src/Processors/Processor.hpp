@@ -6,7 +6,7 @@
 namespace openAFE {
 
 	using apfMap = apf::parameter_map;
-	typedef apfMap::const_iterator mapIterator;	
+	typedef apfMap::const_iterator mapIterator;
 	//typedef std::vector<signalBaseSharedPtr > signalBaseSharedPtrVector;
 
 	/* The type of the processing */
@@ -125,7 +125,7 @@ namespace openAFE {
 			}
 			
 			~Processor () {
-				std::cout << "Destructor of '" << pInfo.name << "' processor" << std::endl;		
+				std::cout << "Destructor of Processor class named as : '" << pInfo.name << "'" << std::endl;		
 			}
 			
 			/* PROCESSOR abstract methods (to be implemented by each subclasses): */
@@ -158,15 +158,35 @@ namespace openAFE {
 			}
 			
 			/* Returns a pointer to the infos struct of this processor */
-			apfMap* getProcessorInfo () {
-				return &processorParams;
+			pInfoStruct* getProcessorInfo() {
+				return &pInfo;
 			}
 
 			/* Getter methods : This funtion sends a const reference for the asked parameter's value */
 			const std::string& getParameter( std::string paramArg ) {
 				return Processor::processorParams[ paramArg ];
 			}
-					
+			
+			/* Compare only the information of the two processors */
+			bool compareInfos (const Processor& toCompare) {
+				if ( this->pInfo.name == toCompare.pInfo.name )
+					if ( this->pInfo.label == toCompare.pInfo.label )
+						if ( this->pInfo.requestName == toCompare.pInfo.requestName )
+							if ( this->pInfo.requestLabel == toCompare.pInfo.requestLabel )
+								if ( this->pInfo.outputType == toCompare.pInfo.outputType )
+									if ( this->pInfo.isBinaural == toCompare.pInfo.isBinaural )
+										return true;
+				return false;
+			}
+			
+			/* Comapres informations and the current parameters of two processors */
+			bool operator==(const Processor& toCompare) {
+				if ( this->compareInfos( toCompare ) )
+					if ( this->processorParams == toCompare.processorParams )
+						return true;
+				return false;	
+			}
+								
 	};
 	
 };
