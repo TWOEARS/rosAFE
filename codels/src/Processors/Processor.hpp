@@ -3,11 +3,15 @@
 
 #include <apf/parameter_map.h>
 
+#include <assert.h>
+#include <memory>
+#include <thread>
+#include <iostream>
+
 namespace openAFE {
 
 	using apfMap = apf::parameter_map;
 	typedef apfMap::const_iterator mapIterator;
-	//typedef std::vector<signalBaseSharedPtr > signalBaseSharedPtrVector;
 
 	/* The type of the processing */
 	enum procType {
@@ -26,8 +30,24 @@ namespace openAFE {
 	};
 	
 	/* The father class for all processors in rosAFE */
+	template<typename inT, typename outT>
 	class Processor {
-		
+		public:
+			typedef std::shared_ptr<inT > 													inT_SignalSharedPtr;
+			typedef std::vector<inT_SignalSharedPtr > 										inT_SignalSharedPtrVector;
+			typedef typename std::vector<inT_SignalSharedPtr >::iterator 					inT_SignalIter;
+
+			typedef std::shared_ptr<outT > 													outT_SignalSharedPtr;
+			typedef std::vector<outT_SignalSharedPtr > 										outT_SignalSharedPtrVector;
+			typedef typename std::vector<outT_SignalSharedPtr >::iterator 					outT_SignalIter;
+
+			typedef typename inT::nTwoCTypeBlockAccessorPtr 								inT_nTwoCTypeBlockAccessorPtr;			
+			typedef std::vector<inT_nTwoCTypeBlockAccessorPtr > 							inT_nTwoCTypeBlockAccessorPtrVector;
+			typedef typename std::vector<inT_nTwoCTypeBlockAccessorPtrVector >::iterator 	inT_AccessorIter;
+			
+			typedef typename outT::nTwoCTypeBlockAccessorPtr 								outT_nTwoCTypeBlockAccessorPtr;
+			typedef std::vector<outT_nTwoCTypeBlockAccessorPtr >	 						outT_nTwoCTypeBlockAccessorPtrVector;
+			typedef typename std::vector<outT_nTwoCTypeBlockAccessorPtrVector >::iterator 	outT_AccessorIter;
 		private:			
 			
 			/* This function fills the defaultParams map with default
@@ -42,9 +62,15 @@ namespace openAFE {
 						  const std::string& requestLabelArg,
 						  const std::string& outputTypeArg,
 						  unsigned int isBinauralArg ) = 0;
-						
+									
 		protected:
+		
+			inT_SignalSharedPtrVector inputSignals;
+			outT_SignalSharedPtrVector outputSignals;
 
+			inT_nTwoCTypeBlockAccessorPtrVector inT_lastChunkInfo, inT_lastDataInfo, inT_oldDataInfo, inT_wholeBufferInfo;
+			outT_nTwoCTypeBlockAccessorPtrVector outT_lastChunkInfo, outT_lastDataInfo, outT_oldDataInfo, outT_wholeBufferInfo;
+						
 			apfMap processorParams;				// The parameters used by this processor
 			apfMap defaultParams;				// The default parameters of this processor
 			stringVector blacklist;				// The parameters which are not allowed to be modified in real time
@@ -103,9 +129,22 @@ namespace openAFE {
 			stringVector& getBlacklistedParameters() {
 				return this->blacklist;
 			}
+			
+			void linkAccesors () {
+				unsigned int signalNumber = outputSignals.size();
+				outT_lastChunkInfo.reserve(signalNumber); outT_lastDataInfo.reserve(signalNumber);
+				outT_oldDataInfo.reserve(signalNumber); outT_wholeBufferInfo.reserve(signalNumber);
+
+				for(outT_SignalIter it = outputSignals.begin() ; it != outputSignals.end() ; ++it) {
+					outT_lastChunkInfo.push_back ( (*it)->getLastChunkAccesor() );
+					outT_lastDataInfo.push_back ( (*it)->getLastDataAccesor() );
+					outT_oldDataInfo.push_back ( (*it)->getOldDataAccesor() );
+					outT_wholeBufferInfo.push_back ( (*it)->getWholeBufferAccesor() );
+				}
+			}
 
 		public:
-		
+					
 			/* PROCESSOR Super-constructor of the processor class
 			  * 
 			  * INPUT ARGUMENTS:
@@ -125,6 +164,8 @@ namespace openAFE {
 			}
 			
 			~Processor () {
+				inputSignals.clear();
+				outputSignals.clear();
 				std::cout << "Destructor of Processor class named as : '" << pInfo.name << "'" << std::endl;		
 			}
 			
@@ -132,7 +173,10 @@ namespace openAFE {
 			/* PROCESSCHUNK : Returns the output from the processing of a new chunk of input */
 			// virtual void processChunk () {} // = 0;
 			/* RESET : Resets internal states of the processor, if any */
-			virtual void reset () {} // = 0;
+			virtual void reset () {
+				for(outT_SignalIter it = outputSignals.begin() ; it != outputSignals.end() ; ++it)
+					(*it)->reset();
+			}
 
 			/* GETCURRENTPARAMETERS  This methods returns a list of parameter
 			 * values used by a given processor. */
@@ -142,7 +186,7 @@ namespace openAFE {
 			
 			/* HASPARAMETERS Test if the processor uses specific parameters */
 			bool hasParameters(const std::string& parName) {
-					return processorParams.has_key( parName );
+				return processorParams.has_key( parName );
 			}
             
 			/* MODIFYPARAMETER Requests a change of value of one parameter */
@@ -186,7 +230,54 @@ namespace openAFE {
 						return true;
 				return false;	
 			}
-								
+
+			void printSignals() {
+				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
+					(*it)->printSignal( );
+			}
+
+			void calcLastChunk() {
+				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
+					(*it)->calcLastChunk( );
+			}
+
+			// FIXME : this may be not useful as it is. Think about it.
+			uint64_t getFreshDataSize() {
+				outT_SignalIter it = outputSignals.begin(); 
+				return (*it)->getFreshDataSize();
+			}
+			
+			void calcLastData( uint64_t samplesArg ) {
+				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
+					(*it)->calcLastData( samplesArg );
+			}
+			
+			void calcOldData( uint64_t samplesArg = 0 ) {
+				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
+					(*it)->calcOldData( samplesArg );
+			}
+
+			void calcWholeBuffer() {
+				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
+					(*it)->calcWholeBuffer( );
+			}
+
+			outT_nTwoCTypeBlockAccessorPtrVector& getLastChunkAccesor( ) {
+				return this->outT_lastChunkInfo;
+			}
+
+			outT_nTwoCTypeBlockAccessorPtrVector& getLastDataAccesor( ) {
+				return this->outT_lastDataInfo;
+			}
+			
+			outT_nTwoCTypeBlockAccessorPtrVector& getOldDataAccesor( ) {
+				return this->outT_oldDataInfo;
+			}
+			
+			outT_nTwoCTypeBlockAccessorPtrVector& getWholeBufferAccesor( ) {
+				return this->outT_wholeBufferInfo;
+			}
+											
 	};
 	
 };

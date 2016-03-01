@@ -1,5 +1,5 @@
-#ifndef EMPTYPROCLIB_HPP
-#define EMPTYPROCLIB_HPP
+#ifndef INPUTPROCLIB_HPP
+#define INPUTPROCLIB_HPP
 
 #define MAXCODABLEVALUE 2147483647;
 
@@ -21,5 +21,5 @@ namespace openAFE {
 
 
 
-#endif /* EMPTYPROCLIB_HPP */
+#endif /* INPUTPROCLIB_HPP */
 

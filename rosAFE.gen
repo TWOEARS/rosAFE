@@ -5,29 +5,34 @@
 component rosAFE {
     version         "1.0";
     lang            "c";
+    email	    "musabini@isir.upmc.fr";
     require         "genom3 >= 2.99.26";
     uses            bassInterface;
     provides        rosAFEInterface;
 
     native inputProcessors;
+    native preProcessors;
     native flagMap;
-    native newDataMap;
-
 
     ids {
 
 	inputProcessors inputProcessorsSt;
+	preProcessors preProcessorsSt;
+
 	flagMap flagMapSt;
-	newDataMap newDataMapSt;
     };
 
     exception e_noData;
     
     task init {
 		codel <start> initIDS(out ::ids) yield ether;
-	};
+    };
 
     task read {
+        period      250ms; //chosen arbitrarily for this example
+    };
+
+    task preProc {
         period      250ms; //chosen arbitrarily for this example
     };
 
@@ -43,19 +48,53 @@ component rosAFE {
 
         codel <start>   startGetBlocks(in nFramesPerBlock, in startOffs, in bufferSize_s, inout inputProcessorsSt,
                             port in Audio) yield waitExec;
-
+	
+	// The state Machine, start
         codel <waitExec>    	waitExecGetBlocks(inout nBlocks, in nFramesPerBlock, port in Audio) yield waitExec, exec, stop;
         codel <exec>    	execGetBlocks(in inputProcessorsSt) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleaseGetBlocks() yield waitRelease, release, stop;
+        codel <waitRelease>    	waitReleaseGetBlocks(in flagMapSt) yield waitRelease, release, stop;
         codel <release>    	releaseGetBlocks(inout inputProcessorsSt) yield waitExec, stop;
+	// The state Machine, end
 
         codel <stop>    stopGetBlocks(inout inputProcessorsSt) yield ether;
 
         throw   e_noData;
     };
 
-    function Stop() {
+    activity PreProc (
+      in string name = "1st PreProc" : "The name of this PreProc",
+      in unsigned long fsIn = 44100 : "fsIn",
+      in unsigned long fsOut = 44100 : "fsOut"
+      ) {
+        doc         "preProc";
+        task        preProc;
+
+
+        codel <start>   startPreProc( inout name, inout preProcessorsSt ) yield waitExec, stop;
+	
+	// The state Machine, start
+        codel <waitExec>    	waitExecPreProc(inout name) yield waitExec, exec, stop;
+        codel <exec>    	execPreProc(inout name) yield waitRelease, stop;
+        codel <waitRelease>    	waitReleasePreProc(inout name) yield waitRelease, release, stop;
+        codel <release>    	releasePreProc(inout name) yield waitExec, stop;
+	// The state Machine, end
+
+        codel <stop>    stopPreProc(inout preProcessorsSt) yield ether;
+
+        throw   e_noData;
+    };
+
+    function AddFlag (
+	in string lowerDep = "output" : "The name of the lower dependencie filter",
+	in string upperDep = "input" : "The name of the upper dependencie filter"
+	) {
+	doc         "Creates a flag betwen the lowerDep and upperDep";
+
+	codel addFlag(inout lowerDep, inout upperDep, inout flagMapSt);
+        };
+
+    function StopAll() {
         doc         "Stop getting blocks";
         interrupts  GetBlocks;
-    };
+        };
 };

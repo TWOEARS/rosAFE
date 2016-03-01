@@ -16,17 +16,19 @@ namespace openAFE {
 	
 	template<typename T>
 	class CircularContainer {
-	
-	private:
 		
+	public:
 		// One dimention buffer
 		typedef boost::circular_buffer<T> circularBuffer;
-		typedef typename boost::circular_buffer<T, std::allocator<T> >::array_range boostArrayRange;
 		typedef typename CircularContainer<T>::circularBuffer::iterator bufferIter;
+		typedef std::shared_ptr<twoCTypeBlock<T> > twoCTypeBlockPtr;
+		
+	private:
+		typedef typename boost::circular_buffer<T, std::allocator<T> >::array_range boostArrayRange;
 
 		circularBuffer buffer;
 		
-		twoCTypeBlock<T> *lastChunkInfo, *newDataInfo, *oldDataInfo, *wholeBufferInfo;
+		twoCTypeBlockPtr lastChunkInfo, lastDataInfo, oldDataInfo, wholeBufferInfo;
 				
 		/*
 		 * freshData : Distance between the newest and the oldest - unseen data
@@ -40,118 +42,7 @@ namespace openAFE {
 			this->buffer.push_back(val);
 		}
 		
-		void calcLastChunk() {
-			
-			boostArrayRange ar1 = buffer.array_one();
-			boostArrayRange ar2 = buffer.array_two();
-			
-			if ( ar2.second == 0 ) {
-				this->lastChunkInfo->first->firstValue = ar1.first + ar1.second - this->getLastChunkSize();
-				this->lastChunkInfo->first->dim = this->getLastChunkSize();
-				this->lastChunkInfo->second->firstValue = NULL;
-				this->lastChunkInfo->second->dim = 0;
-			} else if ( this->getLastChunkSize() >= ar2.second ) {
-				this->lastChunkInfo->first->dim = lastChunkSize - ar2.second;
-				this->lastChunkInfo->first->firstValue = ar1.first + ar1.second - this->lastChunkInfo->first->dim;
-				this->lastChunkInfo->second->dim  = ar2.second;
-				this->lastChunkInfo->second->firstValue = ar2.first;
-			} else /* if ( lastChunkSize <= ar2.second ) */ {
-				this->lastChunkInfo->first->firstValue = ar2.first + ar2.second - this->getLastChunkSize();
-				this->lastChunkInfo->first->dim = this->getLastChunkSize();
-
-				this->lastChunkInfo->second->firstValue = NULL;
-				this->lastChunkInfo->second->dim  = 0;
-				}
-		}
-
-		void calcLatestData(uint64_t& samplesArg) {
-			
-			boostArrayRange ar1 = buffer.array_one();
-			boostArrayRange ar2 = buffer.array_two();
-			
-			if ( samplesArg > buffer.size() ) {
-				samplesArg = buffer.size();	
-			}
-				
-			if ( ar2.second == 0 ) {
-				this->newDataInfo->first->firstValue = ar1.first + ar1.second - samplesArg;
-				this->newDataInfo->first->dim = samplesArg;
-				this->newDataInfo->second->firstValue = NULL;
-				this->newDataInfo->second->dim = 0;
-			} else if ( samplesArg >= ar2.second ) {
-				this->newDataInfo->first->dim = samplesArg - ar2.second;
-				this->newDataInfo->first->firstValue = ar1.first + ar1.second - this->newDataInfo->first->dim;
-				this->newDataInfo->second->dim  = ar2.second;
-				this->newDataInfo->second->firstValue = ar2.first;
-			} else /* if ( samplesArg <= ar2.second ) */ {
-				this->newDataInfo->first->firstValue = ar2.first + ar2.second - samplesArg;
-				this->newDataInfo->first->dim = samplesArg;
-
-				this->newDataInfo->second->firstValue = NULL;
-				this->newDataInfo->second->dim = 0;
-				}
-		}
-
-		void calcOldData(uint64_t& samplesArg) {
-			
-			boostArrayRange ar1 = buffer.array_one();
-			boostArrayRange ar2 = buffer.array_two();
-			
-			if ( samplesArg > buffer.size() ) {
-				samplesArg = buffer.size();	
-			}
-			
-			if ( samplesArg > freshData ) {
-				samplesArg = freshData;	
-			}
-			
-			/* Eveything is in ar1 */
-			if ( ar2.second == 0 ) {
-				this->oldDataInfo->first->firstValue = ar1.first + ar1.second - freshData;
-				this->oldDataInfo->first->dim = samplesArg;
-				this->oldDataInfo->second->firstValue = NULL;
-				this->oldDataInfo->second->dim = 0;
-			       /* It is in ar1 ( but ar2 exists ) */
-			} else if ( ar2.second < freshData ) {
-					if ( ( freshData - samplesArg ) > ar2.second) {
-						this->oldDataInfo->first->firstValue = ar1.first + ar1.second + ar2.second - freshData;
-						this->oldDataInfo->first->dim = samplesArg;
-						this->oldDataInfo->second->firstValue = NULL;
-						this->oldDataInfo->second->dim = 0;	
-					/* It is in ar1 and  ar2 */	
-					} else {
-						this->oldDataInfo->first->firstValue = ar1.first + ar1.second + ar2.second - freshData;
-						this->oldDataInfo->first->dim = freshData - ar2.second;
-						this->oldDataInfo->second->firstValue = ar2.first;
-						this->oldDataInfo->second->dim = samplesArg - freshData + ar2.second ;	
-					}
-			/* Eveything is in ar2 */
-			} else {
-				this->oldDataInfo->first->firstValue = ar2.first + ar2.second - freshData;
-				this->oldDataInfo->first->dim = samplesArg;
-				this->oldDataInfo->second->firstValue = NULL;
-				this->oldDataInfo->second->dim = 0;	
-			}		
-						
-			freshData -= samplesArg;
-			if ( freshData < 0 )
-				freshData = 0;
-		}
-
-		void calcWholeBuffer() {
-			
-			boostArrayRange ar1 = buffer.array_one();
-			boostArrayRange ar2 = buffer.array_two();
-
-			this->wholeBufferInfo->first->firstValue = ar1.first;
-			this->wholeBufferInfo->first->dim = ar1.second;
-			if ( ar2.second > 0 )
-				this->wholeBufferInfo->second->firstValue = ar2.first;
-			else 
-				this->wholeBufferInfo->second->firstValue = NULL;
-			this->wholeBufferInfo->second->dim = ar2.second;
-		}
-		
+		/* getLastChunkSize : return the number of samples, appended by the last chunk */
 		inline
 		uint64_t getLastChunkSize() const {
 			if (this->buffer.size() > 0)
@@ -159,24 +50,32 @@ namespace openAFE {
 			else return 0;
 		}
 
-		// Tells if the memory is linear
-		bool isLinearized() const {
-			return this->buffer.is_linearized();
+		/* getCapacity : Returns the total capacity of this buffer */
+		uint64_t getCapacity() const {
+			return this->buffer.capacity();
 		}
-							
+
+		/* Update the sample number of the lately pushed chunk.
+		 * Call this funtion if the argument "setNow" of push_chunk
+		 * function is false.
+		 * */
+		void setLastChunkSize( uint64_t numSamples ) { // if referenced, then error in l 124 : this->setLastChunkSize ( 0 );
+			
+			if (numSamples > this->getCapacity() )
+				this->lastChunkSize = this->getCapacity();
+			else 
+				this->lastChunkSize = numSamples ;
+		}
+													
 	public :		
 		
-		// Empty ctor
-		CircularContainer( ) {
-			}
-
-		// Ctor with dimensions	
-		CircularContainer( unsigned int argDim ) {
-			std::cout << "Buffer of : " << argDim << std::endl;
+		/* Empty ctor. The buffer's capacity is zero. */
+		/* Ctor with dimention : Buffer has a capacity */
+		CircularContainer( unsigned int argDim = 0) {
 			this->init( argDim );
 		}
 
-		// Ctor with copy		
+		/* Ctor with copy */
 		CircularContainer( CircularContainer<T>& toCopy ) {
 			
 			this->init( toCopy );
@@ -184,24 +83,22 @@ namespace openAFE {
 		
 		/* Destroys the circular_buffer. */
 		~CircularContainer() {
-			this->buffer.clear();
-			delete lastChunkInfo;		// FIXME : smart pointer (?)
-			delete newDataInfo;
-			delete oldDataInfo;
+			this->clear();
 			std::cout << "Destructor of a buffer" << std::endl;
 		}
 	
 		/* This is the main initialisation, for each constructor */
-		void init ( unsigned int argDims ) {
+		void init ( unsigned int argDims = 0 ) {
 			
 			// We set the capacity
 			this->buffer.set_capacity( argDims );
-			this->lastChunkInfo = new twoCTypeBlock<T>();
-			this->newDataInfo = new twoCTypeBlock<T>();
-			this->oldDataInfo = new twoCTypeBlock<T>();
-			this->wholeBufferInfo = new twoCTypeBlock<T>();
+			
+			this->lastChunkInfo.reset ( new twoCTypeBlock<T>() );
+			this->lastDataInfo.reset ( new twoCTypeBlock<T>() );
+			this->oldDataInfo.reset ( new twoCTypeBlock<T>() );
+			this->wholeBufferInfo.reset ( new twoCTypeBlock<T>() );
 
-			this->setLastChunkSize ( 0 );
+			this->lastChunkSize = 0;
 			this->freshData = 0;
 		}
 		
@@ -237,47 +134,167 @@ namespace openAFE {
 				freshData = this->getCapacity();
 		}
 
-		/* Update the sample number of the lately pushed chunk.
-		 * Call this funtion if the argument "setNow" of push_chunk
-		 * function is false.
-		 * */
-		void setLastChunkSize( uint64_t numSamples ) { // if referenced, then error in l 124 : this->setLastChunkSize ( 0 );
-			
-			if (numSamples > this->getCapacity() )
-				this->lastChunkSize = this->getCapacity();
-			else 
-				this->lastChunkSize = numSamples ;
+		void push_chunk(twoCTypeBlockPtr inChunk) {		
+			/* The first array */
+			this->push_chunk( inChunk->first->firstValue, inChunk->first->dim, false );
+			/* If there is any data, the second array */
+			if ( inChunk->second->dim > 0 )
+				this->push_chunk( inChunk->second->firstValue, inChunk->second->dim, false );
+			/* The total size of the last chunk */
+			this->setLastChunkSize( inChunk->first->dim + inChunk->second->dim );
 		}
-
-		bool empty() const {
-			return this->buffer.empty();
-		}
-
-		twoCTypeBlock<T>* getLastChunk() {
-			this->calcLastChunk();
+		
+		twoCTypeBlockPtr getLastChunkAccesor() {
 			return this->lastChunkInfo;		
 		}
 		
-		twoCTypeBlock<T>* getLastData(uint64_t samplesArg) {
-			this->calcLatestData( samplesArg );
-			return this->newDataInfo;
+		twoCTypeBlockPtr getLastDataAccesor() {
+			return this->lastDataInfo;
 		}
 
-		twoCTypeBlock<T>* getOldData(uint64_t samplesArg = 0) {
-			if ( samplesArg == 0 ) samplesArg = freshData;
-			this->calcOldData( samplesArg );
+		twoCTypeBlockPtr getOldDataAccesor() {
 			return this->oldDataInfo;
 		}
 
-		twoCTypeBlock<T>* getWholeBuffer() {
-			this->calcWholeBuffer( );
+		twoCTypeBlockPtr getWholeBufferAccesor() {
 			return this->wholeBufferInfo;
 		}
 		
-		uint64_t getCapacity() {
-			return this->buffer.capacity();
+		/* calcLastChunk : updates the lastChunkInfo */
+		void calcLastChunk() {
+			
+			boostArrayRange ar1 = buffer.array_one();
+			boostArrayRange ar2 = buffer.array_two();
+			
+			if ( ar2.second == 0 ) {
+				this->lastChunkInfo->first->firstValue = ar1.first + ar1.second - this->getLastChunkSize();
+				this->lastChunkInfo->first->dim = this->getLastChunkSize();
+				this->lastChunkInfo->second->firstValue = NULL;
+				this->lastChunkInfo->second->dim = 0;
+			} else if ( this->getLastChunkSize() >= ar2.second ) {
+				this->lastChunkInfo->first->dim = lastChunkSize - ar2.second;
+				this->lastChunkInfo->first->firstValue = ar1.first + ar1.second - this->lastChunkInfo->first->dim;
+				this->lastChunkInfo->second->dim  = ar2.second;
+				this->lastChunkInfo->second->firstValue = ar2.first;
+			} else /* if ( lastChunkSize <= ar2.second ) */ {
+				this->lastChunkInfo->first->firstValue = ar2.first + ar2.second - this->getLastChunkSize();
+				this->lastChunkInfo->first->dim = this->getLastChunkSize();
+
+				this->lastChunkInfo->second->firstValue = NULL;
+				this->lastChunkInfo->second->dim  = 0;
+				}
+		}
+		
+		/* calcLatestData : updates the lastDataInfo 
+		 * 
+		 * Arguments : 
+		 * 	samplesArg : the amount asked data
+		 * 
+		 * */
+		void calcLatestData(uint64_t samplesArg) {
+			
+			boostArrayRange ar1 = buffer.array_one();
+			boostArrayRange ar2 = buffer.array_two();
+			
+			if ( samplesArg > buffer.size() ) {
+				samplesArg = buffer.size();	
+			}
+				
+			if ( ar2.second == 0 ) {
+				this->lastDataInfo->first->firstValue = ar1.first + ar1.second - samplesArg;
+				this->lastDataInfo->first->dim = samplesArg;
+				this->lastDataInfo->second->firstValue = NULL;
+				this->lastDataInfo->second->dim = 0;
+			} else if ( samplesArg >= ar2.second ) {
+				this->lastDataInfo->first->dim = samplesArg - ar2.second;
+				this->lastDataInfo->first->firstValue = ar1.first + ar1.second - this->lastDataInfo->first->dim;
+				this->lastDataInfo->second->dim  = ar2.second;
+				this->lastDataInfo->second->firstValue = ar2.first;
+			} else /* if ( samplesArg <= ar2.second ) */ {
+				this->lastDataInfo->first->firstValue = ar2.first + ar2.second - samplesArg;
+				this->lastDataInfo->first->dim = samplesArg;
+
+				this->lastDataInfo->second->firstValue = NULL;
+				this->lastDataInfo->second->dim = 0;
+				}
 		}
 
+		/* calcOldData : updates the oldDataInfo 
+		 * 
+		 * Arguments : 
+		 * 	samplesArg : the amount asked data
+		 *  setNow : if true, the fresh data is updated automatically.
+		 * 	set false if you need to acces to the same oldDataInfo
+		 *  mutiple times.
+		 * 
+		 * */
+		void calcOldData(uint64_t samplesArg = 0) {
+			
+			boostArrayRange ar1 = buffer.array_one();
+			boostArrayRange ar2 = buffer.array_two();
+			
+			if ( samplesArg > buffer.size() ) {
+				samplesArg = buffer.size();	
+			}
+			
+			if ( ( samplesArg > freshData ) || ( samplesArg == 0 ) ) {
+				samplesArg = freshData;	
+			}
+						
+			/* Eveything is in ar1 */
+			if ( ar2.second == 0 ) {
+				this->oldDataInfo->first->firstValue = ar1.first + ar1.second - freshData;
+				this->oldDataInfo->first->dim = samplesArg;
+				this->oldDataInfo->second->firstValue = NULL;
+				this->oldDataInfo->second->dim = 0;
+			       /* It is in ar1 ( but ar2 exists ) */
+			} else if ( ar2.second < freshData ) {
+					if ( ( freshData - samplesArg ) > ar2.second) {
+						this->oldDataInfo->first->firstValue = ar1.first + ar1.second + ar2.second - freshData;
+						this->oldDataInfo->first->dim = samplesArg;
+						this->oldDataInfo->second->firstValue = NULL;
+						this->oldDataInfo->second->dim = 0;	
+					/* It is in ar1 and  ar2 */	
+					} else {
+						this->oldDataInfo->first->firstValue = ar1.first + ar1.second + ar2.second - freshData;
+						this->oldDataInfo->first->dim = freshData - ar2.second;
+						this->oldDataInfo->second->firstValue = ar2.first;
+						this->oldDataInfo->second->dim = samplesArg - freshData + ar2.second ;	
+					}
+			/* Eveything is in ar2 */
+			} else {
+				this->oldDataInfo->first->firstValue = ar2.first + ar2.second - freshData;
+				this->oldDataInfo->first->dim = samplesArg;
+				this->oldDataInfo->second->firstValue = NULL;
+				this->oldDataInfo->second->dim = 0;	
+			}		
+			
+			this->freshData -= samplesArg;
+			if ( this->freshData < 0 )
+				this->freshData = 0;
+
+		}
+
+		/* calcWholeBuffer : updates the wholeBufferInfo */
+		void calcWholeBuffer() {
+			
+			boostArrayRange ar1 = buffer.array_one();
+			boostArrayRange ar2 = buffer.array_two();
+
+			this->wholeBufferInfo->first->firstValue = ar1.first;
+			this->wholeBufferInfo->first->dim = ar1.second;
+			if ( ar2.second > 0 )
+				this->wholeBufferInfo->second->firstValue = ar2.first;
+			else 
+				this->wholeBufferInfo->second->firstValue = NULL;
+			this->wholeBufferInfo->second->dim = ar2.second;
+		}
+
+		/* getFreshDataSize : Returns the number of available non seen samples */
+		uint64_t getFreshDataSize() {
+			return this->freshData;
+		}
+		
 		/* The buffer will contain only zeros after calling this function.
 		 * However the capacity  will reamin as it was.
 		 *
@@ -286,13 +303,12 @@ namespace openAFE {
 			for(bufferIter it = buffer.begin(); it != buffer.end(); ++it)
 				*it = 0;				
 		}
-				
+		
 		/* capacity will be zero after calling the clear function */
 		void clear() noexcept {
 			
 			this->buffer.clear();
-		}		
-		
+		}								
 	};
 };
 

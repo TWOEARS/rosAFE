@@ -13,7 +13,7 @@ namespace openAFE {
 	class TimeDomainSignal : public Signal<T> {
 	
 	private:
-	
+
 		void populateProperties(const std::string argName, const std::string argLabel) {
 			
 			apf::parameter_map params;
@@ -26,6 +26,8 @@ namespace openAFE {
 		}
 
 	public:
+	
+		using typename Signal<T>::nTwoCTypeBlockAccessorPtr;
 		
 		/* Create a TimeDomainSignal without initialising a first chunk */
 		TimeDomainSignal(uint64_t fs, uint64_t bufferSize_s, std::string argName = "Time", std::string argLabel = "Waveform", channel cha = _mono) : Signal<T>(fs, bufferSize_s) {
@@ -34,11 +36,11 @@ namespace openAFE {
 			Signal<T>::Channel = cha;
 		}
 
-		/* Create a TimeDomainSignal with initialising a first chunk */		
-		TimeDomainSignal(uint64_t fs, uint64_t bufferSize_s, std::string argName, std::string argLabel, nDimAudioChunkAccessor<T>& data, channel cha) : Signal<T>(fs, bufferSize_s) {
+		/* Create a TimeDomainSignal with initialising a first chunk */		 
+		TimeDomainSignal(uint64_t fs, uint64_t bufferSize_s, std::string argName, std::string argLabel, nTwoCTypeBlockAccessorPtr data, channel cha) : Signal<T>(fs, bufferSize_s) {
 	
 		    // Check dimensionality of data
-			assert (data.getDimOfSignal() == 1);
+			assert (data->getDimOfSignal() == 1);
 				
 			populateProperties(argName, argLabel);
 			Signal<T>::Channel = cha;
@@ -48,12 +50,17 @@ namespace openAFE {
 		
 		/* Calls automatically Signal's destructor */
 		~TimeDomainSignal() {
-			std::cout << "Destructor of a time domain signal" << std::endl;
+			std::cout << "Destructor of a TimeDomainSignal<T>" << std::endl;
 		}
 		
-		void appendChunk( T* inChunk, uint64_t dim ) {
+		void appendTChunk( T* inChunk, uint64_t dim ) {
 			
 			Signal<T>::appendChunk( inChunk, dim );
+		}
+		
+		void appendChunk( nTwoCTypeBlockAccessorPtr inChunk ) {
+			
+			Signal<T>::appendChunk( inChunk );
 		}
 
 	};

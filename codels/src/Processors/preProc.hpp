@@ -1,5 +1,5 @@
-#ifndef INPUTPROC_HPP
-#define INPUTPROC_HPP
+#ifndef PREPROC_HPP
+#define PREPROC_HPP
 
 #include "../Signals/TimeDomainSignal.hpp"
 #include "Processor.hpp"
@@ -13,35 +13,56 @@
  * It has no parameters. As processing, it normalises the input signal.
  * */
  
-#include "inputProcLib/inputProcLib.hpp"
+#include "preProcLib/preProcLib.hpp"
 
 namespace openAFE {
 
 	template<typename T>
-	class InputProc : public Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > {
+	class PreProc : public Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > {
 
 		private:
 
 			using PB = Processor<TimeDomainSignal<T>, TimeDomainSignal<T> >;
+
+			using typename PB::inT_SignalSharedPtr;
+			using typename PB::inT_SignalSharedPtrVector;
+			using typename PB::inT_SignalIter;
 			
 			using typename PB::outT_SignalSharedPtr;
 			using typename PB::outT_SignalSharedPtrVector;
 			using typename PB::outT_SignalIter;
+
+			using typename PB::inT_nTwoCTypeBlockAccessorPtr;
+			using typename PB::inT_nTwoCTypeBlockAccessorPtrVector;
+			using typename PB::inT_AccessorIter;
 
 			using typename PB::outT_nTwoCTypeBlockAccessorPtr;
 			using typename PB::outT_nTwoCTypeBlockAccessorPtrVector;
 			using typename PB::outT_AccessorIter;
 			
 			void setDefaultParams () {
-				PB::defaultParams.set("Type", "Input Processor");
+						
+				PB::defaultParams.set("bRemoveDC", 0);
+				PB::defaultParams.set("cutoffHzDC", 20);
+				PB::defaultParams.set("bPreEmphasis", 0);
+				PB::defaultParams.set("coefPreEmphasis", 0.97);
+				PB::defaultParams.set("bNormalizeRMS", 0);
+				PB::defaultParams.set("bBinauralRMS", 1);
+				PB::defaultParams.set("intTimeSecRMS", 500E-3);
+				PB::defaultParams.set("bLevelScaling", 0);
+				PB::defaultParams.set("refSPLdB", 100);
+				PB::defaultParams.set("bMiddleEarFiltering", 0);
+				PB::defaultParams.set("middleEarModel", "jespen");
+				PB::defaultParams.set("bUnityComp", 1);
+			
 			}
 			
 			void setPInfo(const std::string& nameArg,
-						  const std::string& labelArg = "Input Processor",
-						  const std::string& requestNameArg = "input",
-						  const std::string& requestLabelArg = "TimeDomainSignal",
+						  const std::string& labelArg = "Pre-processing stage",
+						  const std::string& requestNameArg = "time",
+						  const std::string& requestLabelArg = "Time domain signal",
 						  const std::string& outputTypeArg = "TimeDomainSignal",
-						  unsigned int isBinauralArg = 1						 				 
+						  unsigned int isBinauralArg = 2 // % Indicates that the processor can behave as mono or binaural						 				 
 						) {
 
 				PB::pInfo.name = nameArg;
@@ -51,14 +72,28 @@ namespace openAFE {
 				PB::pInfo.outputType = outputTypeArg;
 				PB::pInfo.isBinaural = isBinauralArg;
 			}
-			
+
+            void verifyParameters() {
+				
+				/* TODO : Follow Matlab AFE to update this function
+				 * Nothing at : 17.02.2016
+				 */
+				
+			}
+
+			/* Pointers to Filter Objects */
+			// dcFilter_l | dcFilter_r | preEmphFilter_l | preEmphFilter_r | agcFilter_l | agcFilter_r | midEarFilter_l | midEarFilter_r | meFilterPeakdB
+									
 		public:
 
-			/* inputProc */
-			InputProc (const std::string& nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s) : Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > (fsIn, fsOut, _inputProc) {
+			/* PreProc */
+			PreProc (const std::string nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s, apf::parameter_map& paramsArg) : Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > (fsIn, fsOut, _preProc) {
 				
 				this->setDefaultParams ();
 
+				/* Setting the user's parameters */
+				this->processorParams = paramsArg;
+				
 				/* Extending with default parameters */			
 				this->extendParameters ();
 				/* Setting the name of this processor and other informations */
@@ -74,10 +109,14 @@ namespace openAFE {
 				
 				/* Linking the output accesors of each signal */
 				PB::linkAccesors ();
+				
+				/* This processor can take two inputs and two outputs */
+				// Processor::isBinaural = true;
+				PB::hasTwoOutputs = true;
 			}
 				
-			~InputProc () {
-				std::cout << "Destructor of a input processor" << std::endl;
+			~PreProc () {
+				std::cout << "Destructor of a pre processor" << std::endl;
 			}
 			
 			/* This function does the asked calculations. 
@@ -85,24 +124,14 @@ namespace openAFE {
 			 * done here and the results are stocked in that private memory zone.
 			 * However, the results are not publiched yet on the output vectors.
 			 */
-			void processChunk (T* inChunkLeft, uint64_t leftDim, T* inChunkRight, uint64_t rightDim) {
+			void processChunk () {
 				
-				/* There is just one dimention */
-				std::thread leftThread(inputProcLib::normaliseData<T>, inChunkLeft, leftDim);
-				std::thread rightThread(inputProcLib::normaliseData<T>, inChunkRight, rightDim);
-				
-				leftThread.join();                // pauses until left finishes
-				rightThread.join();               // pauses until right finishes
+				//doNothing( );
 			}
 						
 			/* This funcion publishes (appends) the signals to the outputs of the processor */			
-			void appendChunk (T* inChunkLeft, uint64_t leftDim, T* inChunkRight, uint64_t rightDim) {
+			void appendChunk () {
 								
-				std::thread leftAppendThread( &TimeDomainSignal<T>::appendTChunk, PB::outputSignals[0], inChunkLeft, leftDim);
-				std::thread rightAppendThread( &TimeDomainSignal<T>::appendTChunk, PB::outputSignals[1], inChunkRight, rightDim);
-				
-				leftAppendThread.join();                // pauses until left finishes
-				rightAppendThread.join();               // pauses until right finishes
 			}
 			
 			/* TODO : Resets the internat states. */		
@@ -110,7 +139,7 @@ namespace openAFE {
 				PB::reset();
 			}							
 
-	}; /* class InputProc */
+	}; /* class PreProc */
 }; /* namespace openAFE */
 
-#endif /* INPUTPROC_HPP */
+#endif /* PREPROC_HPP */

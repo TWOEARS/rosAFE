@@ -88,7 +88,7 @@ startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
   }
     
   inputProcPtr inputP ( new InputProc<inputT>("input", Audio->data(self)->sampleRate, Audio->data(self)->sampleRate, bufferSize_s) );
-
+  
   /* Adding this procesor to the ids */
   (*inputProcessorsSt)->processorsAccessor->addProcessor( inputP );
   
@@ -98,7 +98,7 @@ startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
   l.resize(N); // l and r are arrays containing the
   r.resize(N); // current block of data
 
-  li = l.data(); ri = r.data(); //li and ri point to the current position in the block
+  li = l.data(); ri = r.data(); // li and ri point to the current position in the block
   
   globalLoss = 0;
      
@@ -141,7 +141,6 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
     
     if ( ( globalLoss >= l.size() ) || ( globalLoss >= r.size() ) ) {
 	/* Everythink is lost */
-		std::cout << "We lost everyting " << globalLoss << std::endl;
 		globalLoss = 0;		
 		return rosAFE_waitExec;
 	}
@@ -162,8 +161,6 @@ execGetBlocks(const rosAFE_inputProcessors *inputProcessorsSt,
               genom_context self)
 {
   /* The client processes the current block l and r here */
-  // if (globalLoss > 0 )
-	std::cout << "Loss : " << globalLoss << std::endl;
   inputProcessorsSt->processorsAccessor->getProcessor("input")->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
   return rosAFE_waitRelease;
 }
@@ -175,9 +172,16 @@ execGetBlocks(const rosAFE_inputProcessors *inputProcessorsSt,
  * Throws rosAFE_e_noData.
  */
 genom_event
-waitReleaseGetBlocks(genom_context self)
+waitReleaseGetBlocks(const rosAFE_flagMap *flagMapSt,
+                     genom_context self)
 {
-	  
+  // Here we wait for ALL childs
+  for ( flagStConstIterator it = flagMapSt->allFlags.begin() ; it != flagMapSt->allFlags.end() ; ++it) {
+	if ( (*it)->upperDep == "input" )
+		if ( (*it)->waitFlag == true )
+			return rosAFE_waitRelease;
+  }
+  // ALL childs are done
   return rosAFE_release;
 }
 
@@ -192,7 +196,8 @@ releaseGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
                  genom_context self)
 {
   (*inputProcessorsSt)->processorsAccessor->getProcessor("input")->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
-  globalLoss = 0;
+  std::cout << "Fresh data size : " << (*inputProcessorsSt)->processorsAccessor->getProcessor("input")->getFreshDataSize() << std::endl;
+  globalLoss = 0;  
   return rosAFE_waitExec;
 }
 

@@ -12,14 +12,16 @@ namespace openAFE {
 	class ProcessorVector {
 		
 	private:
-		/* Each type of processor has its own vector */
-		typedef std::shared_ptr<proccessorT > processorSharedPtr;
-		typedef std::vector<processorSharedPtr > processorSharedPtrVector;
-		typedef typename processorSharedPtrVector::iterator processorIterator;
 		
+	public:
+	
+		typedef std::shared_ptr<proccessorT > 					processorSharedPtr;
+		typedef std::vector<processorSharedPtr > 				processorSharedPtrVector;
+		typedef typename processorSharedPtrVector::iterator 	processorIterator;
+
+		/* Each type of processor has its own vector */		
 		processorSharedPtrVector processorVector;
-		
-	public:	
+				
 		ProcessorVector() {}
 		~ProcessorVector() {}
 

@@ -17,11 +17,11 @@ initIDS(rosAFE_ids *ids, genom_context self)
 {
   ids->inputProcessorsSt = new rosAFE_inputProcessors();
   ids->inputProcessorsSt->processorsAccessor.reset( new inputProcessorVector() );
-	
-  // Creatin of the structure which will contain all flags of new data.
-  ids->newDataMapSt = new rosAFE_newDataMap();
 
-  // Creatin of the structure which will contain all flags.
+  ids->preProcessorsSt = new rosAFE_preProcessors();
+  ids->preProcessorsSt->processorsAccessor.reset( new preProcessorVector() );
+  
+  // Creating the structure which will contain all flags.
   ids->flagMapSt = new rosAFE_flagMap();
 		
   return rosAFE_ether;
