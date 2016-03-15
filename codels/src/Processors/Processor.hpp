@@ -8,6 +8,9 @@
 #include <thread>
 #include <iostream>
 
+#include "ProcessorVector.hpp"
+
+
 namespace openAFE {
 
 	using apfMap = apf::parameter_map;
@@ -30,26 +33,20 @@ namespace openAFE {
 	};
 	
 	/* The father class for all processors in rosAFE */
-	template<typename inT, typename outT>
+	template<typename inProcT, typename inSignalT, typename outSignalT >
 	class Processor {
 		public:
-			typedef std::shared_ptr<inT > 													inT_SignalSharedPtr;
-			typedef std::vector<inT_SignalSharedPtr > 										inT_SignalSharedPtrVector;
-			typedef typename std::vector<inT_SignalSharedPtr >::iterator 					inT_SignalIter;
 
-			typedef std::shared_ptr<outT > 													outT_SignalSharedPtr;
-			typedef std::vector<outT_SignalSharedPtr > 										outT_SignalSharedPtrVector;
-			typedef typename std::vector<outT_SignalSharedPtr >::iterator 					outT_SignalIter;
+			using outT_SignalSharedPtr = typename outSignalT::signalSharedPtr;
+			using outT_nTwoCTypeBlockAccessorPtr = typename outSignalT::nTwoCTypeBlockAccessorPtr;
 
-			typedef typename inT::nTwoCTypeBlockAccessorPtr 								inT_nTwoCTypeBlockAccessorPtr;			
-			typedef std::vector<inT_nTwoCTypeBlockAccessorPtr > 							inT_nTwoCTypeBlockAccessorPtrVector;
-			typedef typename std::vector<inT_nTwoCTypeBlockAccessorPtrVector >::iterator 	inT_AccessorIter;
-			
-			typedef typename outT::nTwoCTypeBlockAccessorPtr 								outT_nTwoCTypeBlockAccessorPtr;
-			typedef std::vector<outT_nTwoCTypeBlockAccessorPtr >	 						outT_nTwoCTypeBlockAccessorPtrVector;
-			typedef typename std::vector<outT_nTwoCTypeBlockAccessorPtrVector >::iterator 	outT_AccessorIter;
-		private:			
-			
+			using inT_SignalSharedPtr = typename inSignalT::signalSharedPtr;	
+			using inT_nTwoCTypeBlockAccessorPtr = typename inSignalT::nTwoCTypeBlockAccessorPtr;
+						
+			using inProcessorSharedPtr = typename ProcessorVector<inProcT>::processorSharedPtr;
+
+		private:
+						
 			/* This function fills the defaultParams map with default
 			 * parameters for each processor
 			 * */
@@ -64,11 +61,29 @@ namespace openAFE {
 						  unsigned int isBinauralArg ) = 0;
 									
 		protected:
+
+			typedef std::vector<outT_SignalSharedPtr > 										outT_SignalSharedPtrVector;
+			typedef typename std::vector<outT_SignalSharedPtr >::iterator 					outT_SignalIter;
+			
+			typedef std::vector<outT_nTwoCTypeBlockAccessorPtr >	 						outT_nTwoCTypeBlockAccessorPtrVector;
+			typedef typename std::vector<outT_nTwoCTypeBlockAccessorPtrVector >::iterator 	outT_AccessorIter;
+
+			typedef std::vector<inT_SignalSharedPtr > 										inT_SignalSharedPtrVector;
+			typedef typename std::vector<inT_SignalSharedPtr >::iterator 					intT_SignalIter;
+			
+			typedef std::vector<inT_nTwoCTypeBlockAccessorPtr >	 							inT_nTwoCTypeBlockAccessorPtrVector;
+			typedef typename std::vector<inT_nTwoCTypeBlockAccessorPtrVector >::iterator 	inT_AccessorIter;
+
+
 		
-			inT_SignalSharedPtrVector inputSignals;
+		    ProcessorVector<inProcT > inputProcessors;
+		    using inputPtrIterator = typename ProcessorVector<inProcT >::processorSharedPtrVectorIterator;
+		    
 			outT_SignalSharedPtrVector outputSignals;
 
-			inT_nTwoCTypeBlockAccessorPtrVector inT_lastChunkInfo, inT_lastDataInfo, inT_oldDataInfo, inT_wholeBufferInfo;
+			inT_SignalSharedPtrVector inPrivateMemoryZone;			
+			outT_SignalSharedPtrVector outPrivateMemoryZone;
+			
 			outT_nTwoCTypeBlockAccessorPtrVector outT_lastChunkInfo, outT_lastDataInfo, outT_oldDataInfo, outT_wholeBufferInfo;
 						
 			apfMap processorParams;				// The parameters used by this processor
@@ -119,11 +134,11 @@ namespace openAFE {
              * user request.
              */
 			void setBlacklistedParameters() {
-				Processor::blacklist.push_back( "fb_type" );
-				Processor::blacklist.push_back( "fb_lowFreqHz" );
-				Processor::blacklist.push_back( "fb_highFreqHz" );
-				Processor::blacklist.push_back( "fb_nERBs" );
-				Processor::blacklist.push_back( "fb_cfHz" );				
+				this->blacklist.push_back( "fb_type" );
+				this->blacklist.push_back( "fb_lowFreqHz" );
+				this->blacklist.push_back( "fb_highFreqHz" );
+				this->blacklist.push_back( "fb_nERBs" );
+				this->blacklist.push_back( "fb_cfHz" );				
 			}
 			
 			stringVector& getBlacklistedParameters() {
@@ -164,8 +179,8 @@ namespace openAFE {
 			}
 			
 			~Processor () {
-				inputSignals.clear();
-				outputSignals.clear();
+				// inputProcessors.clear();
+				// outputSignals.clear();
 				std::cout << "Destructor of Processor class named as : '" << pInfo.name << "'" << std::endl;		
 			}
 			
@@ -243,10 +258,31 @@ namespace openAFE {
 
 			// FIXME : this may be not useful as it is. Think about it.
 			uint64_t getFreshDataSize() {
-				outT_SignalIter it = outputSignals.begin(); 
+				outT_SignalIter it = outputSignals.begin();
 				return (*it)->getFreshDataSize();
 			}
-			
+
+			uint64_t getFsOut() {
+				return this->fsOut;
+			}
+
+			uint64_t getFsIn() {
+				return this->fsIn;
+			}
+						
+			void addInputProcessor(inProcessorSharedPtr inProcessor) {
+				assert ( this->getFsIn() == inProcessor->getFsOut() );
+				inputProcessors.addProcessor ( inProcessor );
+			}
+
+			void removeInputProcessor(inProcessorSharedPtr inProcessor) {
+				inputProcessors.removeProcessor ( inProcessor );
+			}
+
+			const uint64_t getNumberInProcessor() {
+				return this->inputProcessors.getSize ( );
+			}
+								
 			void calcLastData( uint64_t samplesArg ) {
 				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
 					(*it)->calcLastData( samplesArg );
@@ -277,7 +313,20 @@ namespace openAFE {
 			outT_nTwoCTypeBlockAccessorPtrVector& getWholeBufferAccesor( ) {
 				return this->outT_wholeBufferInfo;
 			}
-											
+			
+			/* This funcion publishes (appends) the signals to the outputs of the processor */			
+			void appendChunk () {
+				
+				assert( this->outPrivateMemoryZone.size() == this->outputSignals.size() );
+				
+				outT_SignalIter itOut = this->outputSignals.begin();
+				for ( outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin() ; itPMZ != this->outPrivateMemoryZone.end() ; ++itPMZ ) {
+					(*itPMZ)->calcOldData();
+					
+					(*itOut)->appendChunk( (*itPMZ)->getOldDataAccesor() );
+					itOut++;
+				}
+			}									
 	};
 	
 };

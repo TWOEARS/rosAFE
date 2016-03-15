@@ -22,12 +22,11 @@ namespace openAFE {
 	  
 	template<typename T>
 	class Signal {
-
-	public:
-		typedef std::shared_ptr<nTwoCTypeBlockAccessor<T> > nTwoCTypeBlockAccessorPtr;
-	    typedef std::shared_ptr<CircularContainer<T> > containerPtr;
 	    		
 	private:
+
+		using nTwoCTypeBlockAccessorPtr = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtr;	
+	    using containerPtr = typename CircularContainer<T>::containerPtr;
 
 	    typedef std::vector<containerPtr > bufferPtrVector;
 	    typedef typename std::vector<containerPtr >::iterator bufferIter;
@@ -63,6 +62,8 @@ namespace openAFE {
 				
 
 	public:
+
+		typedef typename std::shared_ptr<Signal<T> > signalBaseSharedPtr;
 
 		/*	
 		 *  INPUT ARGUMENTS:
@@ -159,7 +160,7 @@ namespace openAFE {
 		 * one after the other.
 		 */
 		void appendChunk( nTwoCTypeBlockAccessorPtr inChunk ) {
-			
+						
 			assert( inChunk->getDimOfSignal() == bufferVector.size() );
 			uint64_t i = 0;
 			

@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <assert.h>
-
+#include <iostream>
 /*
  * This file contains the pre-defined macros for the openAFE.
  */
@@ -35,18 +35,22 @@ namespace openAFE {
 	template<typename T>
 	class twoCTypeBlock {		
 		public :
-		cTypeBlock<T> *first;
-		cTypeBlock<T> *second;
 		
-		twoCTypeBlock() {
-			first = new cTypeBlock<T>;
-			second = new cTypeBlock<T>;
-		}
-		
-		~twoCTypeBlock() {
-			delete first;
-			delete second;
-		}
+			typedef std::shared_ptr<twoCTypeBlock<T> > twoCTypeBlockPtr;
+			typedef std::vector<twoCTypeBlockPtr> twoCTypeBlockPtrVector;
+						
+			cTypeBlock<T> *first;
+			cTypeBlock<T> *second;
+			
+			twoCTypeBlock() {
+				first = new cTypeBlock<T>;
+				second = new cTypeBlock<T>;
+			}
+			
+			~twoCTypeBlock() {
+				delete first;
+				delete second;
+			}
 	};
 
 	/* nTwoCTypeBlockAccessor : A multidmentinal chunk may contains multiple twoCTypeBlock(s).
@@ -57,13 +61,20 @@ namespace openAFE {
 	 * */		
 	template<typename T>
 	class nTwoCTypeBlockAccessor {
+		public:
+			
+			typedef typename std::shared_ptr<nTwoCTypeBlockAccessor<T> > nTwoCTypeBlockAccessorPtr;			
+			typedef std::vector<nTwoCTypeBlockAccessorPtr >	 nTwoCTypeBlockAccessorPtrVector;
+			typedef typename std::vector<nTwoCTypeBlockAccessorPtrVector >::iterator nTwoCTypeBlockAccessorPtrVectorIter;
+			typedef typename std::vector<nTwoCTypeBlockAccessorPtrVector >::const_iterator nTwoCTypeBlockAccessorPtrVectorConstIter;
+					
 		private:
 		
-			typedef std::shared_ptr<twoCTypeBlock<T> > twoCTypeBlockPtr;
-			typedef std::vector<twoCTypeBlockPtr> audioChunkVector;
-			
+			using twoCTypeBlockPtr = typename twoCTypeBlock<T>::twoCTypeBlockPtr;
+			using twoCTypeBlockPtrVector = typename twoCTypeBlock<T>::twoCTypeBlockPtrVector;
+								
 			uint64_t dimOfSignal;
-			audioChunkVector audioVector;
+			twoCTypeBlockPtrVector audioVector;
 			
 			void assertAccessor( uint64_t argDim ){
 				assert ( argDim <= audioVector.size() );

@@ -1,8 +1,6 @@
 #ifndef PROCESSORVECTOR_HPP
 #define PROCESSORVECTOR_HPP
 
-#include "Processor.hpp"
-
 /* This class assambles the same type processors of the openAFE library. */
 
 namespace openAFE {
@@ -17,7 +15,7 @@ namespace openAFE {
 	
 		typedef std::shared_ptr<proccessorT > 					processorSharedPtr;
 		typedef std::vector<processorSharedPtr > 				processorSharedPtrVector;
-		typedef typename processorSharedPtrVector::iterator 	processorIterator;
+		typedef typename processorSharedPtrVector::iterator 	processorSharedPtrVectorIterator;
 
 		/* Each type of processor has its own vector */		
 		processorSharedPtrVector processorVector;
@@ -29,7 +27,7 @@ namespace openAFE {
 		 * with the same parameters and with the same informations.
 		 * */
 		const bool existsProcessor( const processorSharedPtr procObjArg ) {
-			for ( processorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
+			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
 				if ( *(*it) == (*procObjArg) )
 					return true;
 			return false;
@@ -60,7 +58,7 @@ namespace openAFE {
 		 * If the processor doesn't exists, returns a null pointer.
 		 * */		
 		const processorSharedPtr getProcessor ( const std::string& nameArg ) {
-			for ( processorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
+			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
 				if ( (*it)->getProcessorInfo()->name == nameArg )
 					return *it;
 			return nullptr;
@@ -69,14 +67,18 @@ namespace openAFE {
 		/* removeInputProcessor : returns true if the asked processor is removed.
 		 * returns false if the processor doesnt exist */
 		const bool removeProcessor ( const std::string& nameArg ) {
-			for ( processorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
+			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
 				if ( (*it)->getProcessorInfo()->name == nameArg ) {
 					this->processorVector.erase( it );
 					return true;
 				}
 			return false;
 		}
-		
+
+		const uint64_t getSize ( ) {
+			return this->processorVector.size( );
+		}
+				
 		/* Deletes all the processors, but not this object */
 		void clear ( ) {
 			this->processorVector.clear();

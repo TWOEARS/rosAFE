@@ -18,22 +18,22 @@
 namespace openAFE {
 
 	template<typename T>
-	class InputProc : public Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > {
+	class InputProc : public Processor < InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> > {
+		public:
 
+			using PB = Processor<InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> >;
+			
+			using inT_nTwoCTypeBlockAccessorPtr = typename PB::inT_nTwoCTypeBlockAccessorPtr;					
+			using outT_nTwoCTypeBlockAccessorPtr = typename PB::outT_nTwoCTypeBlockAccessorPtr;
+			
+			typedef std::shared_ptr< InputProc<T> > processorSharedPtr;
+					
 		private:
-
-			using PB = Processor<TimeDomainSignal<T>, TimeDomainSignal<T> >;
 			
 			using typename PB::outT_SignalSharedPtr;
-			using typename PB::outT_SignalSharedPtrVector;
-			using typename PB::outT_SignalIter;
-
-			using typename PB::outT_nTwoCTypeBlockAccessorPtr;
-			using typename PB::outT_nTwoCTypeBlockAccessorPtrVector;
-			using typename PB::outT_AccessorIter;
 			
 			void setDefaultParams () {
-				PB::defaultParams.set("Type", "Input Processor");
+				this->defaultParams.set("Type", "Input Processor");
 			}
 			
 			void setPInfo(const std::string& nameArg,
@@ -44,18 +44,18 @@ namespace openAFE {
 						  unsigned int isBinauralArg = 1						 				 
 						) {
 
-				PB::pInfo.name = nameArg;
-				PB::pInfo.label = labelArg;
-				PB::pInfo.requestName = requestNameArg;
-				PB::pInfo.requestLabel = requestLabelArg;
-				PB::pInfo.outputType = outputTypeArg;
-				PB::pInfo.isBinaural = isBinauralArg;
+				this->pInfo.name = nameArg;
+				this->pInfo.label = labelArg;
+				this->pInfo.requestName = requestNameArg;
+				this->pInfo.requestLabel = requestLabelArg;
+				this->pInfo.outputType = outputTypeArg;
+				this->pInfo.isBinaural = isBinauralArg;
 			}
 			
 		public:
 
 			/* inputProc */
-			InputProc (const std::string& nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s) : Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > (fsIn, fsOut, _inputProc) {
+			InputProc (const std::string& nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s) : PB (fsIn, fsOut, _inputProc) {
 				
 				this->setDefaultParams ();
 
@@ -69,11 +69,11 @@ namespace openAFE {
 				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
 				
 				/* Setting those signals as the output signals of this processor */
-				PB::outputSignals.push_back( std::move( leftOutput ) );
-				PB::outputSignals.push_back( std::move( rightOutput ) );
+				this->outputSignals.push_back( std::move( leftOutput ) );
+				this->outputSignals.push_back( std::move( rightOutput ) );
 				
 				/* Linking the output accesors of each signal */
-				PB::linkAccesors ();
+				this->linkAccesors ();
 			}
 				
 			~InputProc () {
@@ -98,8 +98,8 @@ namespace openAFE {
 			/* This funcion publishes (appends) the signals to the outputs of the processor */			
 			void appendChunk (T* inChunkLeft, uint64_t leftDim, T* inChunkRight, uint64_t rightDim) {
 								
-				std::thread leftAppendThread( &TimeDomainSignal<T>::appendTChunk, PB::outputSignals[0], inChunkLeft, leftDim);
-				std::thread rightAppendThread( &TimeDomainSignal<T>::appendTChunk, PB::outputSignals[1], inChunkRight, rightDim);
+				std::thread leftAppendThread( &TimeDomainSignal<T>::appendTChunk, this->outputSignals[0], inChunkLeft, leftDim);
+				std::thread rightAppendThread( &TimeDomainSignal<T>::appendTChunk, this->outputSignals[1], inChunkRight, rightDim);
 				
 				leftAppendThread.join();                // pauses until left finishes
 				rightAppendThread.join();               // pauses until right finishes

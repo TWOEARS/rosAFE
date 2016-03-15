@@ -13,7 +13,7 @@ namespace openAFE {
 	class TimeDomainSignal : public Signal<T> {
 	
 	private:
-
+	
 		void populateProperties(const std::string argName, const std::string argLabel) {
 			
 			apf::parameter_map params;
@@ -27,7 +27,8 @@ namespace openAFE {
 
 	public:
 	
-		using typename Signal<T>::nTwoCTypeBlockAccessorPtr;
+		using nTwoCTypeBlockAccessorPtr = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtr;
+		typedef typename std::shared_ptr<TimeDomainSignal<T> > signalSharedPtr;	
 		
 		/* Create a TimeDomainSignal without initialising a first chunk */
 		TimeDomainSignal(uint64_t fs, uint64_t bufferSize_s, std::string argName = "Time", std::string argLabel = "Waveform", channel cha = _mono) : Signal<T>(fs, bufferSize_s) {

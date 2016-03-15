@@ -66,7 +66,7 @@ int main() {
 		if ( key == 'd' ) { 
 			inputProcessor->printSignals();	
 		}
-				
+						
 	} // While
 
     return 0;

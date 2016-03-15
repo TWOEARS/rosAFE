@@ -23,6 +23,7 @@ initIDS(rosAFE_ids *ids, genom_context self)
   
   // Creating the structure which will contain all flags.
   ids->flagMapSt = new rosAFE_flagMap();
-		
+  ids->newDataMapSt = new rosAFE_flagMap();
+  		
   return rosAFE_ether;
 }

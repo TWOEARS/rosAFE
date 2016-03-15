@@ -20,10 +20,12 @@ namespace openAFE {
 	public:
 		// One dimention buffer
 		typedef boost::circular_buffer<T> circularBuffer;
-		typedef typename CircularContainer<T>::circularBuffer::iterator bufferIter;
-		typedef std::shared_ptr<twoCTypeBlock<T> > twoCTypeBlockPtr;
-		
+		typedef std::shared_ptr<CircularContainer<T> > containerPtr;
+
 	private:
+
+		using twoCTypeBlockPtr = typename twoCTypeBlock<T>::twoCTypeBlockPtr;
+		typedef typename CircularContainer<T>::circularBuffer::iterator bufferIter;
 		typedef typename boost::circular_buffer<T, std::allocator<T> >::array_range boostArrayRange;
 
 		circularBuffer buffer;

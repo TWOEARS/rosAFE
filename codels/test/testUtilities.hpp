@@ -7,15 +7,16 @@ using T = double;
 
 using namespace openAFE;
 
-using twoCTypeBlockPtr = typename CircularContainer<T>::twoCTypeBlockPtr;
-using nTwoCTypeBlockAccessorPtr = typename Signal<T>::nTwoCTypeBlockAccessorPtr;
-using nTwoCTypeBlockAccessorPtrVector = typename Processor<TimeDomainSignal<T>, TimeDomainSignal<T> >::inT_nTwoCTypeBlockAccessorPtrVector;
+using twoCTypeBlockPtr = typename twoCTypeBlock<T>::twoCTypeBlockPtr;
+using nTwoCTypeBlockAccessorPtr = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtr;
+using nTwoCTypeBlockAccessorPtrVector = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtrVector;
 
-using containerPtr = typename Signal<T>::containerPtr;
-typedef std::unique_ptr<Signal<T> > signalPtr;
-using TimeDomainSignalPtr = Processor<TimeDomainSignal<T>, TimeDomainSignal<T> >::inT_SignalSharedPtr;
+using containerPtr = typename CircularContainer<T>::containerPtr;
+using signalPtr = Signal<T>::signalBaseSharedPtr;
+using TimeDomainSignalPtr = TimeDomainSignal<T>::signalSharedPtr;
+	
 
-using InputProcPtr = typename ProcessorVector<InputProc<T> >::processorSharedPtr;
+using InputProcPtr = typename InputProc<T>::processorSharedPtr;
 using PreProcPtr = typename ProcessorVector<PreProc<T> >::processorSharedPtr;
 
 

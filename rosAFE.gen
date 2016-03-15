@@ -20,6 +20,7 @@ component rosAFE {
 	preProcessors preProcessorsSt;
 
 	flagMap flagMapSt;
+	flagMap newDataMapSt;
     };
 
     exception e_noData;
@@ -29,18 +30,19 @@ component rosAFE {
     };
 
     task read {
-        period      250ms; //chosen arbitrarily for this example
+        period      250ms;
     };
 
     task preProc {
-        period      250ms; //chosen arbitrarily for this example
+        period      250ms;
     };
 
     activity GetBlocks(
       inout unsigned long nBlocks = 1 : "Amount of blocks, 0 for unlimited",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
       in long startOffs = -12000 : "Starting offset (past < 0, future > 0)",
-      in unsigned long bufferSize_s = 10 : "Buffer size in seconds"
+      in unsigned long bufferSize_s = 10 : "Buffer size in seconds",
+      in string name = "input" : "The name of the GetBlocks activity"
       ) {
         doc         "Get consecutive blocks of audio data from bass";
         task        read;
@@ -50,19 +52,20 @@ component rosAFE {
                             port in Audio) yield waitExec;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExecGetBlocks(inout nBlocks, in nFramesPerBlock, port in Audio) yield waitExec, exec, stop;
-        codel <exec>    	execGetBlocks(in inputProcessorsSt) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleaseGetBlocks(in flagMapSt) yield waitRelease, release, stop;
-        codel <release>    	releaseGetBlocks(inout inputProcessorsSt) yield waitExec, stop;
+        codel <waitExec>    	waitExecGetBlocks( inout nBlocks, in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
+        codel <exec>    	execGetBlocks( inout name, in inputProcessorsSt ) yield waitRelease, stop;
+        codel <waitRelease>    	waitReleaseGetBlocks( inout name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseGetBlocks( inout name, inout inputProcessorsSt, out newDataMapSt) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <stop>    stopGetBlocks(inout inputProcessorsSt) yield ether;
+        codel <stop>    stopGetBlocks( inout name, inout inputProcessorsSt) yield ether;
 
         throw   e_noData;
     };
 
     activity PreProc (
-      in string name = "1st PreProc" : "The name of this PreProc",
+      in string name = "preProc1" : "The name of this preProc",
+      in string upperDepName = "input" : "The name of the upper dependencie",
       in unsigned long fsIn = 44100 : "fsIn",
       in unsigned long fsOut = 44100 : "fsOut"
       ) {
@@ -70,31 +73,30 @@ component rosAFE {
         task        preProc;
 
 
-        codel <start>   startPreProc( inout name, inout preProcessorsSt ) yield waitExec, stop;
+        codel <start>   	startPreProc( inout name, inout upperDepName, inout fsIn, inout fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt ) yield waitExec, stop;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExecPreProc(inout name) yield waitExec, exec, stop;
-        codel <exec>    	execPreProc(inout name) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleasePreProc(inout name) yield waitRelease, release, stop;
-        codel <release>    	releasePreProc(inout name) yield waitExec, stop;
+        codel <waitExec>    	waitExecPreProc ( inout name, inout upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, stop;
+        codel <exec>    	execPreProc ( inout name, inout upperDepName, inout preProcessorsSt, out flagMapSt ) yield waitRelease, stop;
+        codel <waitRelease>    	waitReleasePreProc ( inout name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releasePreProc ( inout name, inout preProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <stop>    stopPreProc(inout preProcessorsSt) yield ether;
+        codel <stop>    stopPreProc( inout name, inout preProcessorsSt ) yield ether;
 
         throw   e_noData;
     };
 
-    function AddFlag (
-	in string lowerDep = "output" : "The name of the lower dependencie filter",
-	in string upperDep = "input" : "The name of the upper dependencie filter"
+    function RemoveProcessor (
+	in string name = "name" : "The name of the processor to delete"
 	) {
-	doc         "Creates a flag betwen the lowerDep and upperDep";
+	doc         "Removes the flags of this processor";
 
-	codel addFlag(inout lowerDep, inout upperDep, inout flagMapSt);
-        };
+	codel removeDependencie(inout name, inout flagMapSt, inout newDataMapSt );
+    };
 
-    function StopAll() {
-        doc         "Stop getting blocks";
-        interrupts  GetBlocks;
-        };
+    function Stop() {
+        doc         "Stop all";
+        interrupts  GetBlocks, PreProc;
+    };
 };

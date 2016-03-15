@@ -1,16 +1,14 @@
 #ifndef PREPROC_HPP
 #define PREPROC_HPP
-
+	
 #include "../Signals/TimeDomainSignal.hpp"
 #include "Processor.hpp"
 
+
 /* 
- * inputProc is the first processor to receve the audio.
- * It has two time domain signals as output (left and right).
- * As input, it can accept just one dimentinal and continous data
- * per channel.
+ * preProc :
  * 
- * It has no parameters. As processing, it normalises the input signal.
+ * 
  * */
  
 #include "preProcLib/preProcLib.hpp"
@@ -18,42 +16,34 @@
 namespace openAFE {
 
 	template<typename T>
-	class PreProc : public Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > {
+	class PreProc : public Processor < InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> > {
 
 		private:
 
-			using PB = Processor<TimeDomainSignal<T>, TimeDomainSignal<T> >;
+			using PB = Processor< InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> >;
 
-			using typename PB::inT_SignalSharedPtr;
-			using typename PB::inT_SignalSharedPtrVector;
-			using typename PB::inT_SignalIter;
+			using inT_nTwoCTypeBlockAccessorPtr = typename PB::inT_nTwoCTypeBlockAccessorPtr;					
+			using outT_nTwoCTypeBlockAccessorPtr = typename PB::outT_nTwoCTypeBlockAccessorPtr;	
+
+			using inputPtrIterator = typename PB::inputPtrIterator;
+			using outT_SignalIter = typename PB::outT_SignalIter;
 			
-			using typename PB::outT_SignalSharedPtr;
-			using typename PB::outT_SignalSharedPtrVector;
-			using typename PB::outT_SignalIter;
-
-			using typename PB::inT_nTwoCTypeBlockAccessorPtr;
-			using typename PB::inT_nTwoCTypeBlockAccessorPtrVector;
-			using typename PB::inT_AccessorIter;
-
-			using typename PB::outT_nTwoCTypeBlockAccessorPtr;
-			using typename PB::outT_nTwoCTypeBlockAccessorPtrVector;
-			using typename PB::outT_AccessorIter;
+			typedef std::shared_ptr< PreProc<T> > processorSharedPtr;
 			
 			void setDefaultParams () {
 						
-				PB::defaultParams.set("bRemoveDC", 0);
-				PB::defaultParams.set("cutoffHzDC", 20);
-				PB::defaultParams.set("bPreEmphasis", 0);
-				PB::defaultParams.set("coefPreEmphasis", 0.97);
-				PB::defaultParams.set("bNormalizeRMS", 0);
-				PB::defaultParams.set("bBinauralRMS", 1);
-				PB::defaultParams.set("intTimeSecRMS", 500E-3);
-				PB::defaultParams.set("bLevelScaling", 0);
-				PB::defaultParams.set("refSPLdB", 100);
-				PB::defaultParams.set("bMiddleEarFiltering", 0);
-				PB::defaultParams.set("middleEarModel", "jespen");
-				PB::defaultParams.set("bUnityComp", 1);
+				this->defaultParams.set("bRemoveDC", 0);
+				this->defaultParams.set("cutoffHzDC", 20);
+				this->defaultParams.set("bPreEmphasis", 0);
+				this->defaultParams.set("coefPreEmphasis", 0.97);
+				this->defaultParams.set("bNormalizeRMS", 0);
+				this->defaultParams.set("bBinauralRMS", 1);
+				this->defaultParams.set("intTimeSecRMS", 500E-3);
+				this->defaultParams.set("bLevelScaling", 0);
+				this->defaultParams.set("refSPLdB", 100);
+				this->defaultParams.set("bMiddleEarFiltering", 0);
+				this->defaultParams.set("middleEarModel", "jespen");
+				this->defaultParams.set("bUnityComp", 1);
 			
 			}
 			
@@ -65,12 +55,12 @@ namespace openAFE {
 						  unsigned int isBinauralArg = 2 // % Indicates that the processor can behave as mono or binaural						 				 
 						) {
 
-				PB::pInfo.name = nameArg;
-				PB::pInfo.label = labelArg;
-				PB::pInfo.requestName = requestNameArg;
-				PB::pInfo.requestLabel = requestLabelArg;
-				PB::pInfo.outputType = outputTypeArg;
-				PB::pInfo.isBinaural = isBinauralArg;
+				this->pInfo.name = nameArg;
+				this->pInfo.label = labelArg;
+				this->pInfo.requestName = requestNameArg;
+				this->pInfo.requestLabel = requestLabelArg;
+				this->pInfo.outputType = outputTypeArg;
+				this->pInfo.isBinaural = isBinauralArg;
 			}
 
             void verifyParameters() {
@@ -85,9 +75,11 @@ namespace openAFE {
 			// dcFilter_l | dcFilter_r | preEmphFilter_l | preEmphFilter_r | agcFilter_l | agcFilter_r | midEarFilter_l | midEarFilter_r | meFilterPeakdB
 									
 		public:
+		
+			using typename PB::outT_SignalSharedPtr;
 
 			/* PreProc */
-			PreProc (const std::string nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s, apf::parameter_map& paramsArg) : Processor < TimeDomainSignal<T>, TimeDomainSignal<T> > (fsIn, fsOut, _preProc) {
+			PreProc (const std::string nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s, apf::parameter_map& paramsArg) : PB (fsIn, fsOut, _preProc) {
 				
 				this->setDefaultParams ();
 
@@ -104,15 +96,23 @@ namespace openAFE {
 				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
 				
 				/* Setting those signals as the output signals of this processor */
-				PB::outputSignals.push_back( std::move( leftOutput ) );
-				PB::outputSignals.push_back( std::move( rightOutput ) );
+				this->outputSignals.push_back( std::move( leftOutput ) );
+				this->outputSignals.push_back( std::move( rightOutput ) );
 				
 				/* Linking the output accesors of each signal */
-				PB::linkAccesors ();
+				this->linkAccesors ();
 				
 				/* This processor can take two inputs and two outputs */
 				// Processor::isBinaural = true;
-				PB::hasTwoOutputs = true;
+				this->hasTwoOutputs = true;
+	
+				/* Creating the PMZ signals */
+				outT_SignalSharedPtr outLeftPMZ( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Left TDS PMZ", "Left TDS PMZ", _left) );
+				outT_SignalSharedPtr outRightPMZ( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Right TDS PMZ", "Right TDS PMZ", _right) );
+				
+				/* Setting those signals as the PMZ signals of this processor */
+				this->outPrivateMemoryZone.push_back( std::move( outLeftPMZ ) );
+				this->outPrivateMemoryZone.push_back( std::move( outRightPMZ ) );
 			}
 				
 			~PreProc () {
@@ -125,15 +125,17 @@ namespace openAFE {
 			 * However, the results are not publiched yet on the output vectors.
 			 */
 			void processChunk () {
-				
-				//doNothing( );
+				inputPtrIterator it = this->inputProcessors.processorVector.begin();
+   
+				int i = 0;
+			    for ( outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin() ; itPMZ != this->outPrivateMemoryZone.end() ; ++itPMZ) {
+					(*itPMZ)->appendChunk( ((*it)->getLastChunkAccesor())[i++] );
+					(*itPMZ)->calcLastChunk();
+					preProcLib::multiply ((*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim, 2147483647);
+					preProcLib::multiply ((*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim, 2147483647);
+				}
 			}
-						
-			/* This funcion publishes (appends) the signals to the outputs of the processor */			
-			void appendChunk () {
-								
-			}
-			
+									
 			/* TODO : Resets the internat states. */		
 			void reset() {
 				PB::reset();

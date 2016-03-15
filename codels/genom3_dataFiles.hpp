@@ -19,7 +19,7 @@ struct rosAFE_inputProcessors {
 
 /* Start : The pre processor template definitions */
 using preT = double;
-using preProcessor = PreProc<inputT>;
+using preProcessor = PreProc<preT>;
 using preProcessorVector = ProcessorVector<preProcessor>;
 
 using preProcPtr = typename preProcessorVector::processorSharedPtr;
@@ -32,12 +32,11 @@ struct rosAFE_preProcessors {
 
 
 
-struct flagSt
-   {
+struct flagSt {
 	std::string upperDep;
 	std::string lowerDep;
-	bool waitFlag = false;	 
-   };
+	bool waitFlag = true;	 
+};
 
 typedef std::shared_ptr<flagSt > 			flagStPtr;
 typedef std::vector<flagStPtr > 			flagStPtrVector;

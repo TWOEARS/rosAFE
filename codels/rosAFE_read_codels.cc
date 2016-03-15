@@ -1,8 +1,5 @@
-#include "acrosAFE.h"
+#include "stateMachine.hpp"
 
-#include "rosAFE_c_types.h"
-
-#include "genom3_dataFiles.hpp"
 
 using namespace openAFE;
 
@@ -78,8 +75,7 @@ startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
                uint32_t bufferSize_s,
                rosAFE_inputProcessors **inputProcessorsSt,
                const rosAFE_Audio *Audio, genom_context self)
-{
-	
+{	
   /* Check if the client can get data from the server */
   Audio->read(self);
   if (Audio->data(self) == NULL) {
@@ -108,7 +104,7 @@ startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
 /** Codel waitExecGetBlocks of activity GetBlocks.
  *
  * Triggered by rosAFE_waitExec.
- * Yields to rosAFE_waitExec, rosAFE_exec, rosAFE_stop.
+ * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_stop.
  * Throws rosAFE_e_noData.
  */
 genom_event
@@ -134,7 +130,7 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
 	globalLoss += loss;
     /* If the current block is not complete, call getAudioData again
        to request the remaining part */
-    if (N > 0) return rosAFE_waitExec;
+    if (N > 0) return rosAFE_pause_waitExec;
 
     /* The current block is complete. Reset N, li and ri for next block */
     N = nFramesPerBlock; li = l.data(); ri = r.data();
@@ -142,7 +138,7 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
     if ( ( globalLoss >= l.size() ) || ( globalLoss >= r.size() ) ) {
 	/* Everythink is lost */
 		globalLoss = 0;		
-		return rosAFE_waitExec;
+		return rosAFE_pause_waitExec;
 	}
 
     if (*nBlocks == 0) return rosAFE_exec;
@@ -157,48 +153,59 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
  * Throws rosAFE_e_noData.
  */
 genom_event
-execGetBlocks(const rosAFE_inputProcessors *inputProcessorsSt,
+execGetBlocks(char **name,
+              const rosAFE_inputProcessors *inputProcessorsSt,
               genom_context self)
 {
+  std::string nameS = *name;
   /* The client processes the current block l and r here */
-  inputProcessorsSt->processorsAccessor->getProcessor("input")->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
+  inputProcessorsSt->processorsAccessor->getProcessor( nameS )->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
+  std::cout << nameS << std::endl;  
   return rosAFE_waitRelease;
 }
 
 /** Codel waitReleaseGetBlocks of activity GetBlocks.
  *
  * Triggered by rosAFE_waitRelease.
- * Yields to rosAFE_waitRelease, rosAFE_release, rosAFE_stop.
+ * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
  * Throws rosAFE_e_noData.
  */
 genom_event
-waitReleaseGetBlocks(const rosAFE_flagMap *flagMapSt,
+waitReleaseGetBlocks(char **name, rosAFE_flagMap **flagMapSt,
                      genom_context self)
-{
-  // Here we wait for ALL childs
-  for ( flagStConstIterator it = flagMapSt->allFlags.begin() ; it != flagMapSt->allFlags.end() ; ++it) {
-	if ( (*it)->upperDep == "input" )
-		if ( (*it)->waitFlag == true )
-			return rosAFE_waitRelease;
-  }
+{      
+  /* Waiting for all childs */
+  if ( ! SM::checkFlag( name, flagMapSt, self) )
+	return rosAFE_pause_waitRelease;  
+
+  /* Rising the flag (if any) */
+  SM::riseFlag ( name, flagMapSt, self);
+  					
   // ALL childs are done
-  return rosAFE_release;
-}
+  return rosAFE_release;}
 
 /** Codel releaseGetBlocks of activity GetBlocks.
  *
  * Triggered by rosAFE_release.
- * Yields to rosAFE_waitExec, rosAFE_stop.
+ * Yields to rosAFE_pause_waitExec, rosAFE_stop.
  * Throws rosAFE_e_noData.
  */
 genom_event
-releaseGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
-                 genom_context self)
+releaseGetBlocks(char **name,
+                 rosAFE_inputProcessors **inputProcessorsSt,
+                 rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-  (*inputProcessorsSt)->processorsAccessor->getProcessor("input")->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
-  std::cout << "Fresh data size : " << (*inputProcessorsSt)->processorsAccessor->getProcessor("input")->getFreshDataSize() << std::endl;
-  globalLoss = 0;  
-  return rosAFE_waitExec;
+  std::string nameS = *name;
+
+  /* Relasing the data */
+  (*inputProcessorsSt)->processorsAccessor->getProcessor( nameS )->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
+  (*inputProcessorsSt)->processorsAccessor->getProcessor( nameS )->calcLastChunk( );
+
+  /* Informing all the potential childs to say that this is a new chunk. */
+  SM::riseFlag ( name, newDataMapSt, self);
+  
+  globalLoss = 0;
+  return rosAFE_pause_waitExec;
 }
 
 /** Codel stopGetBlocks of activity GetBlocks.
@@ -208,11 +215,13 @@ releaseGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
  * Throws rosAFE_e_noData.
  */
 genom_event
-stopGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
+stopGetBlocks(char **name, rosAFE_inputProcessors **inputProcessorsSt,
               genom_context self)
 {
-    l.clear();
-    r.clear();
-    (*inputProcessorsSt)->processorsAccessor->clear();
+    l.clear(); r.clear();
+    
+    std::string nameS = *name;    
+    //(*inputProcessorsSt)->processorsAccessor->removeProcessor( nameS );
+    
     return rosAFE_ether;
 }
