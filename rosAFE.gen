@@ -48,17 +48,17 @@ component rosAFE {
         task        read;
         interrupts  GetBlocks;  // Only one audio input can be exist simultaneously (mono or stereo)
 
-        codel <start>   startGetBlocks(in nFramesPerBlock, in startOffs, in bufferSize_s, inout inputProcessorsSt,
+        codel <start>   startGetBlocks(in name, in nFramesPerBlock, in startOffs, in bufferSize_s, inout inputProcessorsSt,
                             port in Audio) yield waitExec;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecGetBlocks( inout nBlocks, in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
-        codel <exec>    	execGetBlocks( inout name, in inputProcessorsSt ) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleaseGetBlocks( inout name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releaseGetBlocks( inout name, inout inputProcessorsSt, out newDataMapSt) yield pause::waitExec, stop;
+        codel <exec>    	execGetBlocks( in name, in inputProcessorsSt ) yield waitRelease, stop;
+        codel <waitRelease>    	waitReleaseGetBlocks( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseGetBlocks( in name, inout inputProcessorsSt, out newDataMapSt) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <stop>    stopGetBlocks( inout name, inout inputProcessorsSt) yield ether;
+        codel <stop>    	stopGetBlocks( inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
 
         throw   e_noData;
     };
@@ -73,18 +73,18 @@ component rosAFE {
         task        preProc;
 
 
-        codel <start>   	startPreProc( inout name, inout upperDepName, inout fsIn, inout fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt ) yield waitExec, stop;
+        codel <start>   	startPreProc( in name, in upperDepName, in fsIn, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt ) yield waitExec, stop;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExecPreProc ( inout name, inout upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, stop;
-        codel <exec>    	execPreProc ( inout name, inout upperDepName, inout preProcessorsSt, out flagMapSt ) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleasePreProc ( inout name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releasePreProc ( inout name, inout preProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
+        codel <waitExec>    	waitExecPreProc ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <exec>    	execPreProc ( in name, in upperDepName, inout preProcessorsSt, out flagMapSt ) yield waitRelease;
+        codel <waitRelease>    	waitReleasePreProc ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releasePreProc ( in name, inout preProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <stop>    stopPreProc( inout name, inout preProcessorsSt ) yield ether;
+        codel <delete>    	deletePreProc( in name, inout preProcessorsSt) yield ether;
+        codel <stop>    	stopPreProc( inout preProcessorsSt ) yield ether;
 
-        throw   e_noData;
     };
 
     function RemoveProcessor (
@@ -92,7 +92,7 @@ component rosAFE {
 	) {
 	doc         "Removes the flags of this processor";
 
-	codel removeDependencie(inout name, inout flagMapSt, inout newDataMapSt );
+	codel removeProcessor(in name, inout flagMapSt, inout newDataMapSt );
     };
 
     function Stop() {

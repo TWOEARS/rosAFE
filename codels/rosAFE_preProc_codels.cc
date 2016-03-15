@@ -14,19 +14,16 @@ using namespace openAFE;
  * Throws rosAFE_e_noData.
  */
 genom_event
-startPreProc(char **name, char **upperDepName, uint32_t *fsIn,
-             uint32_t *fsOut, rosAFE_preProcessors **preProcessorsSt,
+startPreProc(const char *name, const char *upperDepName, uint32_t fsIn,
+             uint32_t fsOut, rosAFE_preProcessors **preProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              const rosAFE_inputProcessors *inputProcessorsSt,
              genom_context self)
 {
-  std::string nameS = *name;
-  std::string upperDepS = *upperDepName;
-  
-  inputProcPtr upperDepProc = inputProcessorsSt->processorsAccessor->getProcessor( upperDepS );
+  inputProcPtr upperDepProc = inputProcessorsSt->processorsAccessor->getProcessor( upperDepName );
   
   apf::parameter_map params;
-  preProcPtr preProcessor (new PreProc<preT>( nameS , *fsIn, *fsOut, 10, params) ); // test
+  preProcPtr preProcessor (new PreProc<preT>( name , fsIn, fsOut, 10, params) ); // test
 
   preProcessor->addInputProcessor ( upperDepProc );
   
@@ -42,20 +39,23 @@ startPreProc(char **name, char **upperDepName, uint32_t *fsIn,
 /** Codel waitExecPreProc of activity PreProc.
  *
  * Triggered by rosAFE_waitExec.
- * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_stop.
+ * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_ether,
+ *           rosAFE_delete.
  * Throws rosAFE_e_noData.
  */
 genom_event
-waitExecPreProc(char **name, char **upperDepName,
+waitExecPreProc(const char *name, const char *upperDepName,
                 rosAFE_flagMap **newDataMapSt, genom_context self)
 {   
   // If there is no new data, we will wait
-  unsigned int check = SM::checkFlag( name, upperDepName, newDataMapSt, self);
+  int check = SM::checkFlag( name, upperDepName, newDataMapSt, self);
   
   if (check == 0)
 	return rosAFE_pause_waitExec;
-  if (check == -1)
-	return rosAFE_stop;  // FIXME : or ether ?
+  if (check == 2) {
+	std::cout << "2 received. Going to delete : " << name << std::endl;
+	return rosAFE_delete;
+  }
   /* Nothing here */
 
   // That data is now old
@@ -67,18 +67,17 @@ waitExecPreProc(char **name, char **upperDepName,
 /** Codel execPreProc of activity PreProc.
  *
  * Triggered by rosAFE_exec.
- * Yields to rosAFE_waitRelease, rosAFE_stop.
+ * Yields to rosAFE_waitRelease.
  * Throws rosAFE_e_noData.
  */
 genom_event
-execPreProc(char **name, char **upperDepName,
+execPreProc(const char *name, const char *upperDepName,
             rosAFE_preProcessors **preProcessorsSt,
             rosAFE_flagMap **flagMapSt, genom_context self)
 {
-  std::string nameS = *name;
-  std::cout << "              " << *name << std::endl;
+  std::cout << "              " << name << std::endl;
 
-  (*preProcessorsSt)->processorsAccessor->getProcessor( nameS )->processChunk( ); 
+  (*preProcessorsSt)->processorsAccessor->getProcessor( name )->processChunk( ); 
     
     
   // Finished with this data. The upperDep can overwite it.
@@ -94,7 +93,7 @@ execPreProc(char **name, char **upperDepName,
  * Throws rosAFE_e_noData.
  */
 genom_event
-waitReleasePreProc(char **name, rosAFE_flagMap **flagMapSt,
+waitReleasePreProc(const char *name, rosAFE_flagMap **flagMapSt,
                    genom_context self)
 {
   /* Waiting for all childs */
@@ -114,14 +113,28 @@ waitReleasePreProc(char **name, rosAFE_flagMap **flagMapSt,
  * Throws rosAFE_e_noData.
  */
 genom_event
-releasePreProc(char **name, rosAFE_preProcessors **preProcessorsSt,
+releasePreProc(const char *name,
+               rosAFE_preProcessors **preProcessorsSt,
                rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-  std::string nameS = *name;
-  (*preProcessorsSt)->processorsAccessor->getProcessor( nameS )->appendChunk( ); 
+  (*preProcessorsSt)->processorsAccessor->getProcessor( name )->appendChunk( ); 
   SM::riseFlag ( name, newDataMapSt, self);
   
   return rosAFE_pause_waitExec;
+}
+
+/** Codel deletePreProc of activity PreProc.
+ *
+ * Triggered by rosAFE_delete.
+ * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noData.
+ */
+genom_event
+deletePreProc(const char *name, rosAFE_preProcessors **preProcessorsSt,
+              genom_context self)
+{
+  (*preProcessorsSt)->processorsAccessor->removeProcessor( name );
+  return rosAFE_ether;
 }
 
 /** Codel stopPreProc of activity PreProc.
@@ -131,11 +144,12 @@ releasePreProc(char **name, rosAFE_preProcessors **preProcessorsSt,
  * Throws rosAFE_e_noData.
  */
 genom_event
-stopPreProc(char **name, rosAFE_preProcessors **preProcessorsSt,
+stopPreProc(rosAFE_preProcessors **preProcessorsSt,
             genom_context self)
 {
-  std::string nameS = *name;
-  //(*preProcessorsSt)->processorsAccessor->removeProcessor( nameS );
-
+  (*preProcessorsSt)->processorsAccessor->clear( );
+  
+  delete (*preProcessorsSt);
+  
   return rosAFE_ether;
 }

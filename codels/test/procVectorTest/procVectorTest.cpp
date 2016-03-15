@@ -1,10 +1,23 @@
 #include "../testUtilities.hpp"
 
-int main() {
-	
 	const uint64_t fsIn = 7;
 	const uint64_t fsOut = 7;
 	const uint64_t bufferSize_s = 2;
+	
+void addProcs (ProcessorVector<InputProc<T> >& procVector) {
+	InputProcPtr inputProcessor (new InputProc<T>("input", fsIn, fsOut, bufferSize_s) );
+	InputProcPtr inputProcessor2 (new InputProc<T>("input2", fsIn, fsOut, bufferSize_s) );
+	InputProcPtr inputProcessor3 (new InputProc<T>("input3", fsIn, fsOut, bufferSize_s) );
+
+	procVector.addProcessor( inputProcessor );
+	procVector.addProcessor( inputProcessor2 );
+	procVector.addProcessor( inputProcessor3 );	
+	
+}
+
+int main() {
+	
+
 
 	int chunkSize = 5;
 	uint64_t cmpL = 0, cmpR = 0;
@@ -12,11 +25,10 @@ int main() {
 	std::vector< T> rightChunk(chunkSize);
 	
 	ProcessorVector<InputProc<T> > procVector;
-	InputProcPtr inputProcessor (new InputProc<T>("input", fsIn, fsOut, bufferSize_s) );
-
-	procVector.addProcessor( inputProcessor );
+	addProcs(procVector);
 	
-	std::cout << "Go!" << std::endl;	
+	
+	std::cout << "Go! : " << procVector.getSize ( ) << std::endl;	
     char key = 'a';
     while (key != 'q') {
 
@@ -61,14 +73,19 @@ int main() {
 
 		/* Print the fresh data size. */		
 		if ( key == 's' ) {
-			std::cout << "Fresh data size " << inputProcessor->getFreshDataSize() << std::endl;
+			// std::cout << "Fresh data size " << inputProcessor->getFreshDataSize() << std::endl;
 		}
 		
 		/* Print Name etc. */
 		if ( key == 'd' ) { 
 			procVector.getProcessor("input")->printSignals();	
 		}
-				
+
+		/* Clear all */
+		if ( key == 'f' ) { 
+			procVector.removeProcessor( "input2" );
+			std::cout << "Go! : " << procVector.getSize ( ) << std::endl;
+		}				
 	} // While
 
     return 0;

@@ -1,68 +1,64 @@
 #include "stateMachine.hpp"
 
-	void SM::addFlag(char **name, char **upperDep, rosAFE_flagMap **flagMapSt, genom_context& self ) {
+	void SM::addFlag(const char *name, const char *upperDep, rosAFE_flagMap **flagMapSt, genom_context& self ) {
 
 	  flagStPtr flag ( new flagSt() );
-	  flag->upperDep = (*upperDep);
-	  flag->lowerDep = (*name);
+	  flag->upperDep = upperDep;
+	  flag->lowerDep = name;
 	  flag->waitFlag = true;
 	  
 	  // And we store that flag into the flagMap
 	  (*flagMapSt)->allFlags.push_back( std::move ( flag ) );
 	}
 	
-	unsigned int SM::checkFlag ( char **name, char **upperDep, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
+	int SM::checkFlag ( const char *name, const char *upperDep, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
 
-    std::string nameS = *name;
-    std::string fatherS = *upperDep;
-  		
-	for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it)
-		if ( ( (*it)->upperDep == fatherS ) and ( (*it)->lowerDep ==  nameS ) )
-			 if ( (*it)->waitFlag == false )
-					return 0;
-			 else return 1;
-	return -1;
+		for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it) {
+			if ( ( (*it)->upperDep == upperDep ) and ( (*it)->lowerDep ==  name ) ) {
+				 if ( (*it)->waitFlag == false ) {
+						return 0;
+				 } else return 1;
+			}
+		}
+		std::cout << "Going to send 2 : " << name << std::endl;
+		return 2;
 	}
 	
-	bool SM::checkFlag ( char **name, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
-
-    std::string nameS = *name;
+	bool SM::checkFlag ( const char *name, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
       		
 	for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it)
-		if ( (*it)->upperDep ==  nameS )
+		if ( (*it)->upperDep ==  name )
 			 if ( (*it)->waitFlag == true )
 					return false;
 	return true;
 	}	
 
-	void SM::fallFlag ( char **name, char **upperDep, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
-		
-      std::string nameS = *name;
-      std::string fatherS = *upperDep;
+	void SM::fallFlag ( const char *name, const char *upperDep, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
     
 	  for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it)
-		if ( ( (*it)->upperDep == fatherS ) and ( (*it)->lowerDep ==  nameS ) )
+		if ( ( (*it)->upperDep == upperDep ) and ( (*it)->lowerDep ==  name ) )
 			 (*it)->waitFlag = false;	 		
 	}
 
-	void SM::riseFlag ( char **name, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
-		
-      std::string nameS = *name;
-          
+	void SM::riseFlag ( const char *name, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
+		          
 	  for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it)
-		if ( (*it)->upperDep ==  nameS ) 
+		if ( (*it)->upperDep ==  name ) 
 			 (*it)->waitFlag = true;	 		
 	}
-/*
-	void SM::deleteFlags ( char **name, rosAFE_flagMap **flagMapSt, genom_context& self  ) {
-	
-		  // Transformation to string
-		  std::string nameS = *name;
 
-		  for ( flagStIterator it = (*flagMapSt)->allFlags.begin() ; it != (*flagMapSt)->allFlags.end() ; ++it)
-			 if ((*it)->upperDep == nameS )
-					((*it)->lowerDep == lowerDepS ) )
-				(*flagMapSt)->allFlags.erase( it );
-		  
-	  // return genom_ok;
-	}*/	
+    void SM::removeFlag ( const char *name, rosAFE_flagMap **newDataMapSt, genom_context& self ) {
+		
+	  for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it) {
+		 if ( (*it)->upperDep == name ) {
+			 SM::removeFlag( ((*it)->lowerDep).c_str(), newDataMapSt, self);
+		 }
+	  }
+		 
+	  for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it) {
+		 if ( (*it)->lowerDep == name ) {
+			 // (*newDataMapSt)->allFlags.erase( it );
+			 std::cout << "Erased : " << name << std::endl;
+		 }
+	  }
+	}

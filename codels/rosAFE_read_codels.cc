@@ -71,8 +71,8 @@ std::vector<inputT> l, r;
  * Throws rosAFE_e_noData.
  */
 genom_event
-startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
-               uint32_t bufferSize_s,
+startGetBlocks(const char *name, uint32_t nFramesPerBlock,
+               int32_t startOffs, uint32_t bufferSize_s,
                rosAFE_inputProcessors **inputProcessorsSt,
                const rosAFE_Audio *Audio, genom_context self)
 {	
@@ -83,7 +83,7 @@ startGetBlocks(uint32_t nFramesPerBlock, int32_t startOffs,
       return rosAFE_e_noData(self);
   }
     
-  inputProcPtr inputP ( new InputProc<inputT>("input", Audio->data(self)->sampleRate, Audio->data(self)->sampleRate, bufferSize_s) );
+  inputProcPtr inputP ( new InputProc<inputT>( name, Audio->data(self)->sampleRate, Audio->data(self)->sampleRate, bufferSize_s) );
   
   /* Adding this procesor to the ids */
   (*inputProcessorsSt)->processorsAccessor->addProcessor( inputP );
@@ -153,14 +153,13 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
  * Throws rosAFE_e_noData.
  */
 genom_event
-execGetBlocks(char **name,
+execGetBlocks(const char *name,
               const rosAFE_inputProcessors *inputProcessorsSt,
               genom_context self)
 {
-  std::string nameS = *name;
   /* The client processes the current block l and r here */
-  inputProcessorsSt->processorsAccessor->getProcessor( nameS )->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
-  std::cout << nameS << std::endl;  
+  inputProcessorsSt->processorsAccessor->getProcessor( name )->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
+  std::cout << name << std::endl;  
   return rosAFE_waitRelease;
 }
 
@@ -171,7 +170,7 @@ execGetBlocks(char **name,
  * Throws rosAFE_e_noData.
  */
 genom_event
-waitReleaseGetBlocks(char **name, rosAFE_flagMap **flagMapSt,
+waitReleaseGetBlocks(const char *name, rosAFE_flagMap **flagMapSt,
                      genom_context self)
 {      
   /* Waiting for all childs */
@@ -191,15 +190,13 @@ waitReleaseGetBlocks(char **name, rosAFE_flagMap **flagMapSt,
  * Throws rosAFE_e_noData.
  */
 genom_event
-releaseGetBlocks(char **name,
+releaseGetBlocks(const char *name,
                  rosAFE_inputProcessors **inputProcessorsSt,
                  rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-  std::string nameS = *name;
-
   /* Relasing the data */
-  (*inputProcessorsSt)->processorsAccessor->getProcessor( nameS )->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
-  (*inputProcessorsSt)->processorsAccessor->getProcessor( nameS )->calcLastChunk( );
+  (*inputProcessorsSt)->processorsAccessor->getProcessor( name )->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
+  (*inputProcessorsSt)->processorsAccessor->getProcessor( name )->calcLastChunk( );
 
   /* Informing all the potential childs to say that this is a new chunk. */
   SM::riseFlag ( name, newDataMapSt, self);
@@ -215,13 +212,23 @@ releaseGetBlocks(char **name,
  * Throws rosAFE_e_noData.
  */
 genom_event
-stopGetBlocks(char **name, rosAFE_inputProcessors **inputProcessorsSt,
-              genom_context self)
+stopGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
+              rosAFE_flagMap **flagMapSt,
+              rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-    l.clear(); r.clear();
+	l.clear(); r.clear();
+	
+	/* Delting all input processors (even if there could be just one) */
+    (*inputProcessorsSt)->processorsAccessor->clear();
+	
+	/* Delting all flags */    
+    (*flagMapSt)->allFlags.clear();
+    (*newDataMapSt)->allFlags.clear();
     
-    std::string nameS = *name;    
-    //(*inputProcessorsSt)->processorsAccessor->removeProcessor( nameS );
-    
+	delete (*inputProcessorsSt);
+	
+	delete (*flagMapSt);
+	delete (*newDataMapSt);
+
     return rosAFE_ether;
 }
