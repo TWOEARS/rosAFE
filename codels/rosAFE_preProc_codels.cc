@@ -53,7 +53,6 @@ waitExecPreProc(const char *name, const char *upperDepName,
   if (check == 0)
 	return rosAFE_pause_waitExec;
   if (check == 2) {
-	std::cout << "2 received. Going to delete : " << name << std::endl;
 	return rosAFE_delete;
   }
   /* Nothing here */

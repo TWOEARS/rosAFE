@@ -12,8 +12,7 @@ removeProcessor(const char *name, rosAFE_flagMap **flagMapSt,
 {
 
   SM::removeFlag( name, newDataMapSt, self );  
-  // SM::removeFlag( name, flagMapSt, self );
-  std::cout << "Ok here" << name << std::endl;
+  SM::removeFlag( name, flagMapSt, self );
   
   return genom_ok;
 }

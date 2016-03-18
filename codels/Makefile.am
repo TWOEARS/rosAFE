@@ -28,6 +28,8 @@ librosAFE_codels_la_SOURCES+=	rosAFE_read_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_preProc_codels.cc
 librosAFE_codels_la_SOURCES+=	stateMachine.hpp
 librosAFE_codels_la_SOURCES+=	stateMachine.cpp
+librosAFE_codels_la_SOURCES+=	Ports.hpp
+librosAFE_codels_la_SOURCES+=	Ports.cpp
 
 librosAFE_codels_la_CPPFLAGS=	$(requires_CFLAGS)
 librosAFE_codels_la_CPPFLAGS+=	-Wall -g -O -std=c++11 -DHAVE_INLINE -lpthread -ljack -lsndfile -lfftw3f -Wunused-but-set-variable

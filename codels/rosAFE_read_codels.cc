@@ -1,5 +1,5 @@
 #include "stateMachine.hpp"
-
+#include "Ports.hpp"
 
 using namespace openAFE;
 
@@ -74,7 +74,9 @@ genom_event
 startGetBlocks(const char *name, uint32_t nFramesPerBlock,
                int32_t startOffs, uint32_t bufferSize_s,
                rosAFE_inputProcessors **inputProcessorsSt,
-               const rosAFE_Audio *Audio, genom_context self)
+               const rosAFE_Audio *Audio,
+               const rosAFE_inputProcessorOutput *inputProcessorOutput,
+               genom_context self)
 {	
   /* Check if the client can get data from the server */
   Audio->read(self);
@@ -95,6 +97,9 @@ startGetBlocks(const char *name, uint32_t nFramesPerBlock,
   r.resize(N); // current block of data
 
   li = l.data(); ri = r.data(); // li and ri point to the current position in the block
+
+  /* Initialization of the output port */
+  initInputPort( inputProcessorOutput, self );
   
   globalLoss = 0;
      
@@ -192,12 +197,17 @@ waitReleaseGetBlocks(const char *name, rosAFE_flagMap **flagMapSt,
 genom_event
 releaseGetBlocks(const char *name,
                  rosAFE_inputProcessors **inputProcessorsSt,
-                 rosAFE_flagMap **newDataMapSt, genom_context self)
+                 rosAFE_flagMap **newDataMapSt,
+                 const rosAFE_inputProcessorOutput *inputProcessorOutput,
+                 genom_context self)
 {
   /* Relasing the data */
   (*inputProcessorsSt)->processorsAccessor->getProcessor( name )->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
   (*inputProcessorsSt)->processorsAccessor->getProcessor( name )->calcLastChunk( );
 
+  /* Publishing on the output port */
+  publishInputPort( inputProcessorOutput, self );
+  
   /* Informing all the potential childs to say that this is a new chunk. */
   SM::riseFlag ( name, newDataMapSt, self);
   
@@ -216,7 +226,7 @@ stopGetBlocks(rosAFE_inputProcessors **inputProcessorsSt,
               rosAFE_flagMap **flagMapSt,
               rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-	l.clear(); r.clear();
+	// l.clear(); r.clear();
 	
 	/* Delting all input processors (even if there could be just one) */
     (*inputProcessorsSt)->processorsAccessor->clear();

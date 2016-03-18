@@ -49,13 +49,13 @@ component rosAFE {
         interrupts  GetBlocks;  // Only one audio input can be exist simultaneously (mono or stereo)
 
         codel <start>   startGetBlocks(in name, in nFramesPerBlock, in startOffs, in bufferSize_s, inout inputProcessorsSt,
-                            port in Audio) yield waitExec;
+                            port in Audio, port out inputProcessorOutput) yield waitExec;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecGetBlocks( inout nBlocks, in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
         codel <exec>    	execGetBlocks( in name, in inputProcessorsSt ) yield waitRelease, stop;
         codel <waitRelease>    	waitReleaseGetBlocks( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releaseGetBlocks( in name, inout inputProcessorsSt, out newDataMapSt) yield pause::waitExec, stop;
+        codel <release>    	releaseGetBlocks( in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcessorOutput) yield pause::waitExec, stop;
 	// The state Machine, end
 
         codel <stop>    	stopGetBlocks( inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;

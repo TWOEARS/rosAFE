@@ -129,7 +129,8 @@ am_librosAFE_codels_la_OBJECTS = librosAFE_codels_la-rosAFE_codels.lo \
 	librosAFE_codels_la-rosAFE_init_codels.lo \
 	librosAFE_codels_la-rosAFE_read_codels.lo \
 	librosAFE_codels_la-rosAFE_preProc_codels.lo \
-	librosAFE_codels_la-stateMachine.lo
+	librosAFE_codels_la-stateMachine.lo \
+	librosAFE_codels_la-Ports.lo
 librosAFE_codels_la_OBJECTS = $(am_librosAFE_codels_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -370,7 +371,8 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = librosAFE_codels.la
 librosAFE_codels_la_SOURCES = rosAFE_c_types.h rosAFE_codels.cc \
 	rosAFE_init_codels.cc rosAFE_read_codels.cc \
-	rosAFE_preProc_codels.cc stateMachine.hpp stateMachine.cpp
+	rosAFE_preProc_codels.cc stateMachine.hpp stateMachine.cpp \
+	Ports.hpp Ports.cpp
 librosAFE_codels_la_CPPFLAGS = $(requires_CFLAGS) -Wall -g -O \
 	-std=c++11 -DHAVE_INLINE -lpthread -ljack -lsndfile -lfftw3f \
 	-Wunused-but-set-variable
@@ -460,6 +462,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-Ports.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_init_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_preProc_codels.Plo@am__quote@
@@ -521,6 +524,13 @@ librosAFE_codels_la-stateMachine.lo: stateMachine.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='stateMachine.cpp' object='librosAFE_codels_la-stateMachine.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-stateMachine.lo `test -f 'stateMachine.cpp' || echo '$(srcdir)/'`stateMachine.cpp
+
+librosAFE_codels_la-Ports.lo: Ports.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librosAFE_codels_la-Ports.lo -MD -MP -MF $(DEPDIR)/librosAFE_codels_la-Ports.Tpo -c -o librosAFE_codels_la-Ports.lo `test -f 'Ports.cpp' || echo '$(srcdir)/'`Ports.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librosAFE_codels_la-Ports.Tpo $(DEPDIR)/librosAFE_codels_la-Ports.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='Ports.cpp' object='librosAFE_codels_la-Ports.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-Ports.lo `test -f 'Ports.cpp' || echo '$(srcdir)/'`Ports.cpp
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
