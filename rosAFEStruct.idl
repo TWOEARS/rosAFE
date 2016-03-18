@@ -2,7 +2,7 @@
 #define ROSAFESTRUCT_IDL
 
 module rosAFE {
-    struct portStruct {
+    struct TimeDomainSignalPortStruct {
         unsigned long         sampleRate;
         unsigned long         nChunksOnPort;
         unsigned long         nFramesPerChunk;
