@@ -9,7 +9,8 @@
 
 #include <string>
 
-int initInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, genom_context self);
-int publishInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, genom_context self);
+int initInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, uint32_t sampleRate,
+				  uint32_t bufferSize_s, uint32_t bytesPerFrame, genom_context self);
+int publishInputPort (const rosAFE_inputProcessorOutput *inputProcessorOutput, inputProcAccessorVector data, genom_context self);
 
 #endif /* PORTS_HPP */

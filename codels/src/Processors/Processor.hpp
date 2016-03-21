@@ -40,6 +40,9 @@ namespace openAFE {
 			using outT_SignalSharedPtr = typename outSignalT::signalSharedPtr;
 			using outT_nTwoCTypeBlockAccessorPtr = typename outSignalT::nTwoCTypeBlockAccessorPtr;
 
+			typedef std::vector<outT_nTwoCTypeBlockAccessorPtr >	 						outT_nTwoCTypeBlockAccessorPtrVector;
+			typedef typename std::vector<outT_nTwoCTypeBlockAccessorPtrVector >::iterator 	outT_AccessorIter;
+			
 			using inT_SignalSharedPtr = typename inSignalT::signalSharedPtr;	
 			using inT_nTwoCTypeBlockAccessorPtr = typename inSignalT::nTwoCTypeBlockAccessorPtr;
 						
@@ -64,9 +67,6 @@ namespace openAFE {
 
 			typedef std::vector<outT_SignalSharedPtr > 										outT_SignalSharedPtrVector;
 			typedef typename std::vector<outT_SignalSharedPtr >::iterator 					outT_SignalIter;
-			
-			typedef std::vector<outT_nTwoCTypeBlockAccessorPtr >	 						outT_nTwoCTypeBlockAccessorPtrVector;
-			typedef typename std::vector<outT_nTwoCTypeBlockAccessorPtrVector >::iterator 	outT_AccessorIter;
 
 			typedef std::vector<inT_SignalSharedPtr > 										inT_SignalSharedPtrVector;
 			typedef typename std::vector<inT_SignalSharedPtr >::iterator 					intT_SignalIter;

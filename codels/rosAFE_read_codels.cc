@@ -72,7 +72,7 @@ std::vector<inputT> l, r;
  */
 genom_event
 startGetBlocks(const char *name, uint32_t nFramesPerBlock,
-               int32_t startOffs, uint32_t bufferSize_s,
+               uint32_t bufferSize_s,
                rosAFE_inputProcessors **inputProcessorsSt,
                const rosAFE_Audio *Audio,
                const rosAFE_inputProcessorOutput *inputProcessorOutput,
@@ -92,14 +92,14 @@ startGetBlocks(const char *name, uint32_t nFramesPerBlock,
   
   /* Initialization */
   N = nFramesPerBlock; //N is the amount of frames the client requests
-  nfr = startOffs + Audio->data(self)->lastFrameIndex + 1;
+  nfr = Audio->data(self)->lastFrameIndex + 1;
   l.resize(N); // l and r are arrays containing the
   r.resize(N); // current block of data
 
   li = l.data(); ri = r.data(); // li and ri point to the current position in the block
 
   /* Initialization of the output port */
-  initInputPort( inputProcessorOutput, self );
+  initInputPort( inputProcessorOutput, Audio->data(self)->sampleRate, bufferSize_s, sizeof(inputT), self );
   
   globalLoss = 0;
      
@@ -113,7 +113,7 @@ startGetBlocks(const char *name, uint32_t nFramesPerBlock,
  * Throws rosAFE_e_noData.
  */
 genom_event
-waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
+waitExecGetBlocks(uint32_t nFramesPerBlock,
                   const rosAFE_Audio *Audio, genom_context self)
 {
     binaudio_portStruct *data;
@@ -146,9 +146,7 @@ waitExecGetBlocks(uint32_t *nBlocks, uint32_t nFramesPerBlock,
 		return rosAFE_pause_waitExec;
 	}
 
-    if (*nBlocks == 0) return rosAFE_exec;
-    if (--*nBlocks > 0) return rosAFE_exec;
-    return rosAFE_stop;
+    return rosAFE_exec;
 }
 
 /** Codel execGetBlocks of activity GetBlocks.
@@ -201,15 +199,16 @@ releaseGetBlocks(const char *name,
                  const rosAFE_inputProcessorOutput *inputProcessorOutput,
                  genom_context self)
 {
+  inputProcPtr thisProcessor = (*inputProcessorsSt)->processorsAccessor->getProcessor( name );
   /* Relasing the data */
-  (*inputProcessorsSt)->processorsAccessor->getProcessor( name )->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
-  (*inputProcessorsSt)->processorsAccessor->getProcessor( name )->calcLastChunk( );
-
+  thisProcessor->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
+  thisProcessor->calcLastChunk( );
+  
   /* Publishing on the output port */
-  publishInputPort( inputProcessorOutput, self );
+  publishInputPort( inputProcessorOutput, thisProcessor->getLastChunkAccesor(), self );
   
   /* Informing all the potential childs to say that this is a new chunk. */
-  SM::riseFlag ( name, newDataMapSt, self);
+  SM::riseFlag ( name, newDataMapSt, self );
   
   globalLoss = 0;
   return rosAFE_pause_waitExec;

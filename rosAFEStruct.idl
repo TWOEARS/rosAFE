@@ -4,11 +4,11 @@
 module rosAFE {
     struct TimeDomainSignalPortStruct {
         unsigned long         sampleRate;
-        unsigned long         nChunksOnPort;
-        unsigned long         nFramesPerChunk;
         unsigned long long    lastFrameIndex;
-        sequence<double>      left;
-        sequence<double>      right;
+        unsigned long long    framesOnPort;
+        short    	      bytesPerFrame;
+        sequence<float>       left;
+        sequence<float>       right;
     };
 };
 

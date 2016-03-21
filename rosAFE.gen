@@ -38,9 +38,7 @@ component rosAFE {
     };
 
     activity GetBlocks(
-      inout unsigned long nBlocks = 1 : "Amount of blocks, 0 for unlimited",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
-      in long startOffs = -12000 : "Starting offset (past < 0, future > 0)",
       in unsigned long bufferSize_s = 10 : "Buffer size in seconds",
       in string name = "input" : "The name of the GetBlocks activity"
       ) {
@@ -48,11 +46,11 @@ component rosAFE {
         task        read;
         interrupts  GetBlocks;  // Only one audio input can be exist simultaneously (mono or stereo)
 
-        codel <start>   startGetBlocks(in name, in nFramesPerBlock, in startOffs, in bufferSize_s, inout inputProcessorsSt,
+        codel <start>   startGetBlocks(in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
                             port in Audio, port out inputProcessorOutput) yield waitExec;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExecGetBlocks( inout nBlocks, in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
+        codel <waitExec>    	waitExecGetBlocks( in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
         codel <exec>    	execGetBlocks( in name, in inputProcessorsSt ) yield waitRelease, stop;
         codel <waitRelease>    	waitReleaseGetBlocks( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releaseGetBlocks( in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcessorOutput) yield pause::waitExec, stop;

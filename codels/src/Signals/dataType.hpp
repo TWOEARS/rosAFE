@@ -51,6 +51,11 @@ namespace openAFE {
 				delete first;
 				delete second;
 			}
+			
+			uint64_t getSize () {
+				return first->dim + second->dim;
+			}
+			
 	};
 
 	/* nTwoCTypeBlockAccessor : A multidmentinal chunk may contains multiple twoCTypeBlock(s).
