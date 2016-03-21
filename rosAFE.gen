@@ -24,39 +24,39 @@ component rosAFE {
     };
 
     exception e_noData;
-    
-    task init {
-		codel <start> initIDS(out ::ids) yield ether;
-    };
 
-    task read {
-        period      250ms;
+    task init {
+	codel <start> initIDS(out ::ids) yield ether;
+    };    
+
+    task input {
+	period      250ms;
     };
 
     task preProc {
         period      250ms;
     };
 
-    activity GetBlocks(
+    activity InputProc(
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
       in unsigned long bufferSize_s = 10 : "Buffer size in seconds",
-      in string name = "input" : "The name of the GetBlocks activity"
+      in string name = "input" : "The name of this activity"
       ) {
         doc         "Get consecutive blocks of audio data from bass";
-        task        read;
-        interrupts  GetBlocks;  // Only one audio input can be exist simultaneously (mono or stereo)
+        task        input;
+        interrupts  InputProc;  // Only one audio input can be exist simultaneously (mono or stereo)
 
-        codel <start>   startGetBlocks(in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
+        codel <start>   startInputProc(in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
                             port in Audio, port out inputProcessorOutput) yield waitExec;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExecGetBlocks( in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
-        codel <exec>    	execGetBlocks( in name, in inputProcessorsSt ) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleaseGetBlocks( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releaseGetBlocks( in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcessorOutput) yield pause::waitExec, stop;
+        codel <waitExec>    	waitExecInputProc( in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
+        codel <exec>    	execInputProc( in name, in inputProcessorsSt ) yield waitRelease, stop;
+        codel <waitRelease>    	waitReleaseInputProc( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseInputProc( in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcessorOutput) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <stop>    	stopGetBlocks( inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
+        codel <stop>    	stopInputProc( inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
 
         throw   e_noData;
     };
@@ -95,6 +95,6 @@ component rosAFE {
 
     function Stop() {
         doc         "Stop all";
-        interrupts  GetBlocks, PreProc;
+        interrupts  InputProc, PreProc;
     };
 };

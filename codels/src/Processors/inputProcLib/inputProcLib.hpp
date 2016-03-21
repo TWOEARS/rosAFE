@@ -11,7 +11,7 @@ namespace openAFE {
 		 * with the MAXCODABLEVALUE.
 		 * */
 		template<typename T>
-		void normaliseData(T* firstValue, uint64_t dim) {
+		void normaliseData(T* firstValue, uint32_t dim) {
 			for ( unsigned int i = 0 ; i < dim ; ++i )
 				*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
 		}

@@ -7,7 +7,7 @@ namespace openAFE {
 	namespace preProcLib {
 
 		template<typename T>
-		void multiply( T* firstValue, uint64_t dim, uint64_t multiple ) {
+		void multiply( T* firstValue, uint32_t dim, uint32_t multiple ) {
 			for ( unsigned int i = 0 ; i < dim ; ++i )
 				*( firstValue + i ) = *( firstValue + i ) * multiple;			
 		}

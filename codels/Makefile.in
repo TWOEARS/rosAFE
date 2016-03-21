@@ -127,7 +127,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 librosAFE_codels_la_LIBADD =
 am_librosAFE_codels_la_OBJECTS = librosAFE_codels_la-rosAFE_codels.lo \
 	librosAFE_codels_la-rosAFE_init_codels.lo \
-	librosAFE_codels_la-rosAFE_read_codels.lo \
+	librosAFE_codels_la-rosAFE_input_codels.lo \
 	librosAFE_codels_la-rosAFE_preProc_codels.lo \
 	librosAFE_codels_la-stateMachine.lo \
 	librosAFE_codels_la-Ports.lo
@@ -370,7 +370,7 @@ top_srcdir = @top_srcdir@
 #
 lib_LTLIBRARIES = librosAFE_codels.la
 librosAFE_codels_la_SOURCES = rosAFE_c_types.h rosAFE_codels.cc \
-	rosAFE_init_codels.cc rosAFE_read_codels.cc \
+	rosAFE_init_codels.cc rosAFE_input_codels.cc \
 	rosAFE_preProc_codels.cc stateMachine.hpp stateMachine.cpp \
 	Ports.hpp Ports.cpp
 librosAFE_codels_la_CPPFLAGS = $(requires_CFLAGS) -Wall -g -O \
@@ -465,8 +465,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-Ports.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_init_codels.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_input_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_preProc_codels.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_read_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-stateMachine.Plo@am__quote@
 
 .cc.o:
@@ -504,12 +504,12 @@ librosAFE_codels_la-rosAFE_init_codels.lo: rosAFE_init_codels.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-rosAFE_init_codels.lo `test -f 'rosAFE_init_codels.cc' || echo '$(srcdir)/'`rosAFE_init_codels.cc
 
-librosAFE_codels_la-rosAFE_read_codels.lo: rosAFE_read_codels.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librosAFE_codels_la-rosAFE_read_codels.lo -MD -MP -MF $(DEPDIR)/librosAFE_codels_la-rosAFE_read_codels.Tpo -c -o librosAFE_codels_la-rosAFE_read_codels.lo `test -f 'rosAFE_read_codels.cc' || echo '$(srcdir)/'`rosAFE_read_codels.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librosAFE_codels_la-rosAFE_read_codels.Tpo $(DEPDIR)/librosAFE_codels_la-rosAFE_read_codels.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rosAFE_read_codels.cc' object='librosAFE_codels_la-rosAFE_read_codels.lo' libtool=yes @AMDEPBACKSLASH@
+librosAFE_codels_la-rosAFE_input_codels.lo: rosAFE_input_codels.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librosAFE_codels_la-rosAFE_input_codels.lo -MD -MP -MF $(DEPDIR)/librosAFE_codels_la-rosAFE_input_codels.Tpo -c -o librosAFE_codels_la-rosAFE_input_codels.lo `test -f 'rosAFE_input_codels.cc' || echo '$(srcdir)/'`rosAFE_input_codels.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librosAFE_codels_la-rosAFE_input_codels.Tpo $(DEPDIR)/librosAFE_codels_la-rosAFE_input_codels.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rosAFE_input_codels.cc' object='librosAFE_codels_la-rosAFE_input_codels.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-rosAFE_read_codels.lo `test -f 'rosAFE_read_codels.cc' || echo '$(srcdir)/'`rosAFE_read_codels.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-rosAFE_input_codels.lo `test -f 'rosAFE_input_codels.cc' || echo '$(srcdir)/'`rosAFE_input_codels.cc
 
 librosAFE_codels_la-rosAFE_preProc_codels.lo: rosAFE_preProc_codels.cc
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librosAFE_codels_la-rosAFE_preProc_codels.lo -MD -MP -MF $(DEPDIR)/librosAFE_codels_la-rosAFE_preProc_codels.Tpo -c -o librosAFE_codels_la-rosAFE_preProc_codels.lo `test -f 'rosAFE_preProc_codels.cc' || echo '$(srcdir)/'`rosAFE_preProc_codels.cc
