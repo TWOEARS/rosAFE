@@ -79,7 +79,7 @@ namespace openAFE {
 			using typename PB::outT_SignalSharedPtr;
 
 			/* PreProc */
-			PreProc (const std::string nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s, apf::parameter_map& paramsArg) : PB (fsIn, fsOut, _preProc) {
+			PreProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, apf::parameter_map& paramsArg) : PB (fsIn, fsOut, _preProc) {
 				
 				this->setDefaultParams ();
 

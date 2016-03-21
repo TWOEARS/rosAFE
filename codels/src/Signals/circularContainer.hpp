@@ -36,7 +36,7 @@ namespace openAFE {
 		 * freshData : Distance between the newest and the oldest - unseen data
 		 * lastChunkSize : the size of last inputed chunk.
 		 * */
-		volatile uint64_t lastChunkSize;
+		volatile uint32_t lastChunkSize;
 		volatile long int freshData;
 						
 		inline
@@ -46,14 +46,14 @@ namespace openAFE {
 		
 		/* getLastChunkSize : return the number of samples, appended by the last chunk */
 		inline
-		uint64_t getLastChunkSize() const {
+		uint32_t getLastChunkSize() const {
 			if (this->buffer.size() > 0)
 				return this->lastChunkSize;
 			else return 0;
 		}
 
 		/* getCapacity : Returns the total capacity of this buffer */
-		uint64_t getCapacity() const {
+		uint32_t getCapacity() const {
 			return this->buffer.capacity();
 		}
 
@@ -61,7 +61,7 @@ namespace openAFE {
 		 * Call this funtion if the argument "setNow" of push_chunk
 		 * function is false.
 		 * */
-		void setLastChunkSize( uint64_t numSamples ) { // if referenced, then error in l 124 : this->setLastChunkSize ( 0 );
+		void setLastChunkSize( uint32_t numSamples ) { // if referenced, then error in l 124 : this->setLastChunkSize ( 0 );
 			
 			if (numSamples > this->getCapacity() )
 				this->lastChunkSize = this->getCapacity();
@@ -122,7 +122,7 @@ namespace openAFE {
 		 * signle c type vector, then setNow = true
 		 *
 		 * */
-		void push_chunk(T* firstValue, uint64_t dim, bool setNow = true) {
+		void push_chunk(T* firstValue, uint32_t dim, bool setNow = true) {
 			
 			if ( setNow == true )
 				this->setLastChunkSize (dim);
@@ -193,7 +193,7 @@ namespace openAFE {
 		 * 	samplesArg : the amount asked data
 		 * 
 		 * */
-		void calcLatestData(uint64_t samplesArg) {
+		void calcLatestData(uint32_t samplesArg) {
 			
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();
@@ -230,7 +230,7 @@ namespace openAFE {
 		 *  mutiple times.
 		 * 
 		 * */
-		void calcOldData(uint64_t samplesArg = 0) {
+		void calcOldData(uint32_t samplesArg = 0) {
 			
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();
@@ -293,7 +293,7 @@ namespace openAFE {
 		}
 
 		/* getFreshDataSize : Returns the number of available non seen samples */
-		uint64_t getFreshDataSize() {
+		uint32_t getFreshDataSize() {
 			return this->freshData;
 		}
 		

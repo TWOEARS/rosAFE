@@ -39,8 +39,8 @@ namespace openAFE {
 		unsigned int  FsHz;       			// Sampling frequency
 		channel Channel;         			// Flag keeping track of the channel
 
-		uint64_t bufferSizeSamples;
-		uint64Vector bufferElemSize;
+		uint32_t bufferSizeSamples;
+		uint32Vector bufferElemSize;
 		
 		bufferPtrVector bufferVector;		// The buffer(s) of the signal
 		nTwoCTypeBlockAccessorPtr allLastChunkInfo, allLastDataInfo, allOldDataInfo, allWholeBufferInfo;
@@ -73,7 +73,7 @@ namespace openAFE {
 		 *                   [dim2,dim3,...]
 		*/
 				      
-		Signal(const uint64_t fs, const uint64_t bufferSize_s, const uint64Vector& bufferElemSize = uint64Vector() ) {
+		Signal(const uint32_t fs, const uint32_t bufferSize_s, const uint32Vector& bufferElemSize = uint32Vector() ) {
 		
 		/*
 		 *  If you call the constructor with just two arguments, it is automatically a vector.
@@ -101,7 +101,7 @@ namespace openAFE {
 			unsigned int bufferNumber = 1;
 			if ( bufferElemSize.size() > 0 ) {
 				if ( bufferElemSize.size() > 1 ) {
-				for (uint64Vector::const_iterator it = bufferElemSize.begin() ; it != bufferElemSize.end(); ++it)
+				for (uint32Vector::const_iterator it = bufferElemSize.begin() ; it != bufferElemSize.end(); ++it)
 				 bufferNumber *=  *it;
 				} else bufferNumber = *( bufferElemSize.begin() );
 			}
@@ -133,7 +133,7 @@ namespace openAFE {
 			this->allWholeBufferInfo.reset ( new nTwoCTypeBlockAccessor<T>( bufferNumber ) ) ;		
 		}
 
-		uint64_t getBufferNumber() {
+		uint32_t getBufferNumber() {
 			return this->bufferVector.size();
 		}
 				
@@ -162,14 +162,14 @@ namespace openAFE {
 		void appendChunk( nTwoCTypeBlockAccessorPtr inChunk ) {
 						
 			assert( inChunk->getDimOfSignal() == bufferVector.size() );
-			uint64_t i = 0;
+			uint32_t i = 0;
 			
 			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
 				(*it)->push_chunk( inChunk->getTwoCTypeBlockAccessor( i++ ) ) ;
 		}
 		
 		/* Append one dimentional cotinious data */
-		void appendChunk( T* inChunk, uint64_t dim, uint64_t bufferNumber = 0 ) {
+		void appendChunk( T* inChunk, uint32_t dim, uint32_t bufferNumber = 0 ) {
 			assert( bufferNumber <= bufferVector.size() );
 			bufferIter it = bufferVector.begin();
 				
@@ -213,29 +213,29 @@ namespace openAFE {
 		}
 		
 		// FIXME : this may be not useful as it is. Think about it.
-		uint64_t getFreshDataSize() {
+		uint32_t getFreshDataSize() {
 			bufferIter it = bufferVector.begin(); 
 			return (*it)->getFreshDataSize();
 		}
 
 		void calcLastChunk() {
-			uint64_t i = 0;
+			uint32_t i = 0;
 			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcLastChunk();
 				allLastChunkInfo->setData ( i++, (*it)->getLastChunkAccesor() );
 			}
 		}
 
-		void calcLastData( uint64_t samplesArg ) {
-			uint64_t i = 0;
+		void calcLastData( uint32_t samplesArg ) {
+			uint32_t i = 0;
 			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcLatestData( samplesArg );
 				allLastDataInfo->setData ( i++, (*it)->getLastDataAccesor( ) );
 			}
 		}
 		
-		void calcOldData( uint64_t samplesArg = 0 ) {
-			uint64_t i = 0;
+		void calcOldData( uint32_t samplesArg = 0 ) {
+			uint32_t i = 0;
 			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcOldData( samplesArg );
 				allOldDataInfo->setData ( i++, (*it)->getOldDataAccesor( ) );
@@ -243,7 +243,7 @@ namespace openAFE {
 		}
 
 		void calcWholeBuffer() {
-			uint64_t i = 0;
+			uint32_t i = 0;
 			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcWholeBuffer( );
 				allWholeBufferInfo->setData ( i++, (*it)->getWholeBufferAccesor() );

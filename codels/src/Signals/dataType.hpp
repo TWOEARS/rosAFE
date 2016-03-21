@@ -12,7 +12,7 @@
 namespace openAFE {
 	// Alias definitions
 	typedef std::vector<unsigned int> uintVector;
-	typedef std::vector<uint64_t> uint64Vector;
+	typedef std::vector<uint32_t> uint32Vector;
 	typedef std::vector<double> doubleVector;
 	
 	
@@ -25,7 +25,7 @@ namespace openAFE {
 	template<typename T>
 	struct cTypeBlock {
 		T *firstValue;
-		uint64_t dim = 0;
+		uint32_t dim = 0;
 	};
 	
 	/* twoCTypeBlock : This is needed to save the
@@ -52,7 +52,7 @@ namespace openAFE {
 				delete second;
 			}
 			
-			uint64_t getSize () {
+			uint32_t getSize () {
 				return first->dim + second->dim;
 			}
 			
@@ -78,16 +78,16 @@ namespace openAFE {
 			using twoCTypeBlockPtr = typename twoCTypeBlock<T>::twoCTypeBlockPtr;
 			using twoCTypeBlockPtrVector = typename twoCTypeBlock<T>::twoCTypeBlockPtrVector;
 								
-			uint64_t dimOfSignal;
+			uint32_t dimOfSignal;
 			twoCTypeBlockPtrVector audioVector;
 			
-			void assertAccessor( uint64_t argDim ){
+			void assertAccessor( uint32_t argDim ){
 				assert ( argDim <= audioVector.size() );
 			}	
 					
 		public:
 
-			nTwoCTypeBlockAccessor(uint64_t dim) {
+			nTwoCTypeBlockAccessor(uint32_t dim) {
 				/* dimOfSignal : the total number of vectors :
 				 * example : signal is 44100 x 2 x 3
 				 * dimOfSignal should be 6 (6 vectors of 44100 samples)
@@ -104,17 +104,17 @@ namespace openAFE {
 				audioVector.clear();
 			}
 			
-			uint64_t getDimOfSignal() {
+			uint32_t getDimOfSignal() {
 				return this->dimOfSignal;
 			}
 
-			void setData(uint64_t dimOfSignal, twoCTypeBlockPtr toCopy) {
+			void setData(uint32_t dimOfSignal, twoCTypeBlockPtr toCopy) {
 				this->assertAccessor ( dimOfSignal );
 				this->audioVector[dimOfSignal]->first = toCopy->first;
 				this->audioVector[dimOfSignal]->second = toCopy->second;
 			}
 			
-			twoCTypeBlockPtr getTwoCTypeBlockAccessor ( uint64_t dimOfSignal ) {
+			twoCTypeBlockPtr getTwoCTypeBlockAccessor ( uint32_t dimOfSignal ) {
 				return this->audioVector[dimOfSignal];
 			}
 	};

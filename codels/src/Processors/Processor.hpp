@@ -90,8 +90,8 @@ namespace openAFE {
 			apfMap defaultParams;				// The default parameters of this processor
 			stringVector blacklist;				// The parameters which are not allowed to be modified in real time
 			
-			uint64_t fsIn;						// Sampling frequency of input (i.e., prior to processing)
-			uint64_t fsOut;			 			// Sampling frequency of output (i.e., resulting from processing)
+			uint32_t fsIn;						// Sampling frequency of input (i.e., prior to processing)
+			uint32_t fsOut;			 			// Sampling frequency of output (i.e., resulting from processing)
 
 			procType type;						// The type of this processing
 			pInfoStruct pInfo;					// The informations of this processor
@@ -168,7 +168,7 @@ namespace openAFE {
 			  * procName : Name of the processor to implement
 			  * parObj : Parameters instance to use for this processor
 			  */
-			Processor (const uint64_t fsIn, const uint64_t fsOut, procType typeArg) {
+			Processor (const uint32_t fsIn, const uint32_t fsOut, procType typeArg) {
 
 				this->setBlacklistedParameters();
 				
@@ -257,16 +257,16 @@ namespace openAFE {
 			}
 
 			// FIXME : this may be not useful as it is. Think about it.
-			uint64_t getFreshDataSize() {
+			uint32_t getFreshDataSize() {
 				outT_SignalIter it = outputSignals.begin();
 				return (*it)->getFreshDataSize();
 			}
 
-			uint64_t getFsOut() {
+			uint32_t getFsOut() {
 				return this->fsOut;
 			}
 
-			uint64_t getFsIn() {
+			uint32_t getFsIn() {
 				return this->fsIn;
 			}
 						
@@ -279,16 +279,16 @@ namespace openAFE {
 				inputProcessors.removeProcessor ( inProcessor );
 			}
 
-			const uint64_t getNumberInProcessor() {
+			const uint32_t getNumberInProcessor() {
 				return this->inputProcessors.getSize ( );
 			}
 								
-			void calcLastData( uint64_t samplesArg ) {
+			void calcLastData( uint32_t samplesArg ) {
 				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
 					(*it)->calcLastData( samplesArg );
 			}
 			
-			void calcOldData( uint64_t samplesArg = 0 ) {
+			void calcOldData( uint32_t samplesArg = 0 ) {
 				for(outT_SignalIter it = outputSignals.begin(); it != outputSignals.end(); ++it)
 					(*it)->calcOldData( samplesArg );
 			}

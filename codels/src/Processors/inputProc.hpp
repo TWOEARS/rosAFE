@@ -55,7 +55,7 @@ namespace openAFE {
 		public:
 
 			/* inputProc */
-			InputProc (const std::string& nameArg, const uint64_t fsIn, const uint64_t fsOut, const uint64_t bufferSize_s) : PB (fsIn, fsOut, _inputProc) {
+			InputProc (const std::string& nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s) : PB (fsIn, fsOut, _inputProc) {
 				
 				this->setDefaultParams ();
 
@@ -85,7 +85,7 @@ namespace openAFE {
 			 * done here and the results are stocked in that private memory zone.
 			 * However, the results are not publiched yet on the output vectors.
 			 */
-			void processChunk (T* inChunkLeft, uint64_t leftDim, T* inChunkRight, uint64_t rightDim) {
+			void processChunk (T* inChunkLeft, uint32_t leftDim, T* inChunkRight, uint32_t rightDim) {
 				
 				/* There is just one dimention */
 				std::thread leftThread(inputProcLib::normaliseData<T>, inChunkLeft, leftDim);
@@ -96,7 +96,7 @@ namespace openAFE {
 			}
 						
 			/* This funcion publishes (appends) the signals to the outputs of the processor */			
-			void appendChunk (T* inChunkLeft, uint64_t leftDim, T* inChunkRight, uint64_t rightDim) {
+			void appendChunk (T* inChunkLeft, uint32_t leftDim, T* inChunkRight, uint32_t rightDim) {
 								
 				std::thread leftAppendThread( &TimeDomainSignal<T>::appendTChunk, this->outputSignals[0], inChunkLeft, leftDim);
 				std::thread rightAppendThread( &TimeDomainSignal<T>::appendTChunk, this->outputSignals[1], inChunkRight, rightDim);

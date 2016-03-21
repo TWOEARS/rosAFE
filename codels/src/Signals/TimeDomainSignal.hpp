@@ -31,14 +31,14 @@ namespace openAFE {
 		typedef typename std::shared_ptr<TimeDomainSignal<T> > signalSharedPtr;	
 		
 		/* Create a TimeDomainSignal without initialising a first chunk */
-		TimeDomainSignal(uint64_t fs, uint64_t bufferSize_s, std::string argName = "Time", std::string argLabel = "Waveform", channel cha = _mono) : Signal<T>(fs, bufferSize_s) {
+		TimeDomainSignal(uint32_t fs, uint32_t bufferSize_s, std::string argName = "Time", std::string argLabel = "Waveform", channel cha = _mono) : Signal<T>(fs, bufferSize_s) {
 	
 			this->populateProperties(argName, argLabel);
 			Signal<T>::Channel = cha;
 		}
 
 		/* Create a TimeDomainSignal with initialising a first chunk */		 
-		TimeDomainSignal(uint64_t fs, uint64_t bufferSize_s, std::string argName, std::string argLabel, nTwoCTypeBlockAccessorPtr data, channel cha) : Signal<T>(fs, bufferSize_s) {
+		TimeDomainSignal(uint32_t fs, uint32_t bufferSize_s, std::string argName, std::string argLabel, nTwoCTypeBlockAccessorPtr data, channel cha) : Signal<T>(fs, bufferSize_s) {
 	
 		    // Check dimensionality of data
 			assert (data->getDimOfSignal() == 1);
@@ -54,7 +54,7 @@ namespace openAFE {
 			std::cout << "Destructor of a TimeDomainSignal<T>" << std::endl;
 		}
 		
-		void appendTChunk( T* inChunk, uint64_t dim ) {
+		void appendTChunk( T* inChunk, uint32_t dim ) {
 			
 			Signal<T>::appendChunk( inChunk, dim );
 		}

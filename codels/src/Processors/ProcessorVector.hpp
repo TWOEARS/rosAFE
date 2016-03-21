@@ -75,7 +75,7 @@ namespace openAFE {
 			return false;
 		}
 
-		const uint64_t getSize ( ) {
+		const uint32_t getSize ( ) {
 			return this->processorVector.size( );
 		}
 				
