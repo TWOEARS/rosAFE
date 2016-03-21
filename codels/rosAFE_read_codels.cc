@@ -84,8 +84,10 @@ startGetBlocks(const char *name, uint32_t nFramesPerBlock,
       printf("The server is not streaming or the port is not connected.\n");
       return rosAFE_e_noData(self);
   }
+  
+  uint32_t sampleRate = Audio->data(self)->sampleRate;
     
-  inputProcPtr inputP ( new InputProc<inputT>( name, Audio->data(self)->sampleRate, Audio->data(self)->sampleRate, bufferSize_s) );
+  inputProcPtr inputP ( new InputProc<inputT>( name, sampleRate, sampleRate, /*  4*(nFramesPerBlock/sampleRate)  bufferSize_s */ 1 ) );
   
   /* Adding this procesor to the ids */
   (*inputProcessorsSt)->processorsAccessor->addProcessor( inputP );
@@ -184,7 +186,8 @@ waitReleaseGetBlocks(const char *name, rosAFE_flagMap **flagMapSt,
   SM::riseFlag ( name, flagMapSt, self);
   					
   // ALL childs are done
-  return rosAFE_release;}
+  return rosAFE_release;
+}
 
 /** Codel releaseGetBlocks of activity GetBlocks.
  *
