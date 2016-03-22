@@ -39,7 +39,7 @@ struct rosAFE_preProcessors {
 struct flagSt {
 	std::string upperDep;
 	std::string lowerDep;
-	bool waitFlag = true;	 
+	bool waitFlag = true;
 };
 
 typedef std::shared_ptr<flagSt > 			flagStPtr;

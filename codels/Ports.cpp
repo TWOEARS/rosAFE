@@ -3,15 +3,15 @@
 
 /* initPort ----------------------------------------------------------------- */
 
-int initInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, uint32_t sampleRate,
+genom_event
+initInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, uint32_t sampleRate,
                   uint32_t bufferSize_s, uint32_t bytesPerFrame, genom_context self)
 {
   uint32_t fop =  sampleRate * bufferSize_s; /* total amount of Frames On the Port */
     
   if (genom_sequence_reserve(&(inputProcessorOutput->data(self)->left), fop) ||
       genom_sequence_reserve(&(inputProcessorOutput->data(self)->right), fop))
-        //return -E_NOMEM;
-      std::cout << "Memory Error" << std::endl;
+  return rosAFE_e_noMemory( self );
 
   inputProcessorOutput->data(self)->left._length = fop;
   inputProcessorOutput->data(self)->right._length = fop;
@@ -28,12 +28,13 @@ int initInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, uint3
   
   inputProcessorOutput->write(self);
   
-  return 0;
+  return genom_ok;
 }
 
 /* publishPort ------------------------------------------------------------- */
 
-int publishInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, inputProcAccessorVector inChunk, genom_context self)
+genom_event
+publishInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, inputProcAccessorVector inChunk, genom_context self)
 {
 	assert ( inChunk.size() == 2 );
 		
@@ -73,16 +74,11 @@ int publishInputPort(const rosAFE_inputProcessorOutput *inputProcessorOutput, in
 				data->right._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
 			}			
 		}
-			
-
-    
-    std::cout << "fop : " << fop << " fpc : " << fpc << " dim1 : " << dim1 << " dim2 : " << dim2 << std::endl;
  	 	
     data->lastFrameIndex += fpc;
     inputProcessorOutput->write(self);	
 	
-	
-    return 0;
+    return genom_ok;
 }
 
 

@@ -14,7 +14,7 @@ using namespace openAFE;
  * Throws rosAFE_e_noData.
  */
 genom_event
-startPreProc(const char *name, const char *upperDepName, uint32_t fsIn,
+startPreProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_preProcessors **preProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              const rosAFE_inputProcessors *inputProcessorsSt,
@@ -23,7 +23,8 @@ startPreProc(const char *name, const char *upperDepName, uint32_t fsIn,
   inputProcPtr upperDepProc = inputProcessorsSt->processorsAccessor->getProcessor( upperDepName );
   
   apf::parameter_map params;
-  preProcPtr preProcessor (new PreProc<preT>( name , fsIn, fsOut, 10, params) ); // test
+  
+  preProcPtr preProcessor (new PreProc<preT>( name, upperDepProc->getFsOut(), fsOut, 10, params) ); // test
 
   preProcessor->addInputProcessor ( upperDepProc );
   

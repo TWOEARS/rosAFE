@@ -23,7 +23,7 @@ component rosAFE {
 	flagMap newDataMapSt;
     };
 
-    exception e_noData;
+    exception e_noData, e_noMemory, e_existsAlready;
 
     task init {
 	codel <start> initIDS(out ::ids) yield ether;
@@ -45,6 +45,7 @@ component rosAFE {
         doc         "Get consecutive blocks of audio data from bass";
         task        input;
         interrupts  InputProc;  // Only one audio input can be exist simultaneously (mono or stereo)
+	validate    existsAlreadyInput ( in name, in inputProcessorsSt );
 
         codel <start>   startInputProc(in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
                             port in Audio, port out inputProcessorOutput) yield waitExec;
@@ -58,20 +59,19 @@ component rosAFE {
 
         codel <stop>    	stopInputProc( inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
 
-        throw   e_noData;
+        throw   e_noData, e_noMemory, e_existsAlready;
     };
 
     activity PreProc (
       in string name = "preProc1" : "The name of this preProc",
       in string upperDepName = "input" : "The name of the upper dependencie",
-      in unsigned long fsIn = 44100 : "fsIn",
       in unsigned long fsOut = 44100 : "fsOut"
       ) {
         doc         "preProc";
         task        preProc;
+	validate    existsAlreadyPreProc ( in name, in preProcessorsSt );
 
-
-        codel <start>   	startPreProc( in name, in upperDepName, in fsIn, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt ) yield waitExec, stop;
+        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecPreProc ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;

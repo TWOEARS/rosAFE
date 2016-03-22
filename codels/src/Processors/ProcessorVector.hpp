@@ -13,9 +13,10 @@ namespace openAFE {
 		
 	public:
 	
-		typedef std::shared_ptr<proccessorT > 					processorSharedPtr;
-		typedef std::vector<processorSharedPtr > 				processorSharedPtrVector;
-		typedef typename processorSharedPtrVector::iterator 	processorSharedPtrVectorIterator;
+		typedef std::shared_ptr<proccessorT > 						processorSharedPtr;
+		typedef std::vector<processorSharedPtr > 					processorSharedPtrVector;
+		typedef typename processorSharedPtrVector::iterator 		processorSharedPtrVectorIterator;
+		typedef typename processorSharedPtrVector::const_iterator 	processorSharedPtrVectorConstIterator;
 
 		/* Each type of processor has its own vector */		
 		processorSharedPtrVector processorVector;
@@ -27,12 +28,19 @@ namespace openAFE {
 		 * with the same parameters and with the same informations.
 		 * */
 		const bool existsProcessor( const processorSharedPtr procObjArg ) {
-			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
+			for ( processorSharedPtrVectorConstIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
 				if ( *(*it) == (*procObjArg) )
 					return true;
 			return false;
 		}
-		
+
+		const bool existsProcessorName( const char *name ) {
+			for ( processorSharedPtrVectorConstIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
+				if ( (*it)->getProcessorInfo()->name == name )
+					return true;
+			return false;
+		}
+
 		/* addInputProc : adds the argument processor to the structure if and only if
 		 * the argument doesnt exist already in the inputProcVector and is a inputProc.
 		 * 

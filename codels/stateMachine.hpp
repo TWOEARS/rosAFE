@@ -11,7 +11,7 @@
 
 namespace SM {
 	
-	void addFlag(const char *name, const char *upperDep, rosAFE_flagMap **flagMapSt, genom_context& self );
+	void addFlag( const char *name, const char *upperDep, rosAFE_flagMap **flagMapSt, genom_context& self );
 	
 	int checkFlag ( const char *name, const char *upperDep, rosAFE_flagMap **newDataMapSt, genom_context& self  );
 	

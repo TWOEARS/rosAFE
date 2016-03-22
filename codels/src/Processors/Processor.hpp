@@ -243,7 +243,7 @@ namespace openAFE {
 				if ( this->compareInfos( toCompare ) )
 					if ( this->processorParams == toCompare.processorParams )
 						return true;
-				return false;	
+				return false;
 			}
 
 			void printSignals() {
