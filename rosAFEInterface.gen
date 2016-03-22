@@ -1,7 +1,8 @@
 #include "rosAFEStruct.idl"
 
 interface rosAFEInterface {
-    port out rosAFE::TimeDomainSignalPortStruct inputProcessorOutput;
+    port multiple out rosAFE::TimeDomainSignalPortStruct inputProcessorOutput;
     port out rosAFE::TimeDomainSignalPortStruct preProcessorOutput;
+
 };
 

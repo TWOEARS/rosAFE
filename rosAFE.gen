@@ -13,6 +13,7 @@ component rosAFE {
     native inputProcessors;
     native preProcessors;
     native flagMap;
+    native portsVector;
 
     ids {
 
@@ -21,6 +22,7 @@ component rosAFE {
 
 	flagMap flagMapSt;
 	flagMap newDataMapSt;
+	portsVector pV;
     };
 
     exception e_noData, e_noMemory, e_existsAlready;
