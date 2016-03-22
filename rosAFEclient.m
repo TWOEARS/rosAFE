@@ -28,22 +28,34 @@ time = timeVector ( inputLeft, sampleRate );
 
 disp('Go go go');
  
+
 while(1)
-    inputToMatlab = rosAFE.inputProcessorOutput();
+    tic
+    inputToMatlab = rosAFE.TDSPorts('input');
+    preProc1ToMatlab = rosAFE.TDSPorts('preProc1');
 
-    inputLeft = cell2mat(inputToMatlab.inputProcessorOutput.left);
-    inputRight = cell2mat(inputToMatlab.inputProcessorOutput.right);
+    inputLeft = cell2mat(inputToMatlab.TDSPorts.left);
+    inputRight = cell2mat(inputToMatlab.TDSPorts.right);
 
-    subplot(2,1,1);
+    ppLeft = cell2mat(preProc1ToMatlab.TDSPorts.left);
+    ppRight = cell2mat(preProc1ToMatlab.TDSPorts.right);
+    
+    subplot(2,2,1);
     plot(time, inputLeft);  
     axis([min(time) max(time) -1 1]);
 
-    subplot(2,1,2);
+    subplot(2,2,2);
     plot(time, inputRight);
     axis([min(time) max(time) -1 1]);
-
-    disp(inputToMatlab.inputProcessorOutput.lastFrameIndex);
     
+    subplot(2,2,3);
+    plot(time, ppLeft);  
+    axis([min(time) max(time) -1 1]);
+
+    subplot(2,2,4);
+    plot(time, ppRight);
+    axis([min(time) max(time) -1 1]);    
+    toc
     pause(0.1);
 
 end

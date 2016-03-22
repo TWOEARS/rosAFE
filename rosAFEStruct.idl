@@ -10,6 +10,15 @@ module rosAFE {
         sequence<float>       left;
         sequence<float>       right;
     };
+
+    struct infos {
+       unsigned long sampleRate;
+       unsigned long bufferSize_s;
+       unsigned long bufferOfInnerProcs;
+    };
 };
 
+
+
 #endif /* ROSAFESTRUCT_IDL */
+

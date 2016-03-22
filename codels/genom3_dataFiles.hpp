@@ -22,7 +22,7 @@ struct rosAFE_inputProcessors {
 };
 
 /* Start : The pre processor template definitions */
-using preT = float_t;
+using preT = inputT;
 using preProcessor = PreProc<preT>;
 using preProcessorVector = ProcessorVector<preProcessor>;
 

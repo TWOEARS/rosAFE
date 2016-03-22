@@ -21,13 +21,16 @@ existsAlreadyInput(const char *name,
 /** Validation codel existsAlreadyPreProc of activity PreProc.
  *
  * Returns genom_ok.
- * Throws .
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
 genom_event
-existsAlreadyPreProc(const char *name,
+existsAlreadyPreProc(const char *name, const char *upperDepName,
+                     const rosAFE_inputProcessors *inputProcessorsSt,
                      const rosAFE_preProcessors *preProcessorsSt,
                      genom_context self)
 {
+  if ( ! ( inputProcessorsSt->processorsAccessor->existsProcessorName ( upperDepName ) ) )
+	return rosAFE_e_noUpperDependencie( self );		
   if ( preProcessorsSt->processorsAccessor->existsProcessorName ( name ) )
 	return rosAFE_e_existsAlready( self );
   return genom_ok;

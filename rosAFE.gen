@@ -16,6 +16,7 @@ component rosAFE {
     native portsVector;
 
     ids {
+	rosAFE::infos infos;
 
 	inputProcessors inputProcessorsSt;
 	preProcessors preProcessorsSt;
@@ -25,7 +26,7 @@ component rosAFE {
 	portsVector pV;
     };
 
-    exception e_noData, e_noMemory, e_existsAlready;
+    exception e_noData, e_noMemory, e_existsAlready, e_noUpperDependencie;
 
     task init {
 	codel <start> initIDS(out ::ids) yield ether;
@@ -47,19 +48,19 @@ component rosAFE {
         doc         "Get consecutive blocks of audio data from bass";
         task        input;
         interrupts  InputProc;  // Only one audio input can be exist simultaneously (mono or stereo)
-	validate    existsAlreadyInput ( in name, in inputProcessorsSt );
+	validate    existsAlreadyInput ( local in name, in inputProcessorsSt );
 
-        codel <start>   startInputProc(in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
-                            port in Audio, port out inputProcessorOutput) yield waitExec;
+        codel <start>   startInputProc( in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
+                            port in Audio, port out TDSPorts, out infos) yield waitExec;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecInputProc( in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
         codel <exec>    	execInputProc( in name, in inputProcessorsSt ) yield waitRelease, stop;
         codel <waitRelease>    	waitReleaseInputProc( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releaseInputProc( in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcessorOutput) yield pause::waitExec, stop;
+        codel <release>    	releaseInputProc( in name, inout inputProcessorsSt, out newDataMapSt, port out TDSPorts) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <stop>    	stopInputProc( inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
+        codel <stop>    	stopInputProc( in name, port inout TDSPorts, inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
 
         throw   e_noData, e_noMemory, e_existsAlready;
     };
@@ -71,20 +72,21 @@ component rosAFE {
       ) {
         doc         "preProc";
         task        preProc;
-	validate    existsAlreadyPreProc ( in name, in preProcessorsSt );
+	validate    existsAlreadyPreProc ( in name, in upperDepName, in inputProcessorsSt, in preProcessorsSt );
 
-        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt ) yield waitExec, stop;
+        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecPreProc ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
         codel <exec>    	execPreProc ( in name, in upperDepName, inout preProcessorsSt, out flagMapSt ) yield waitRelease;
         codel <waitRelease>    	waitReleasePreProc ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releasePreProc ( in name, inout preProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
+        codel <release>    	releasePreProc ( in name, inout preProcessorsSt, out newDataMapSt, port out TDSPorts ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <delete>    	deletePreProc( in name, inout preProcessorsSt) yield ether;
+        codel <delete>    	deletePreProc( in name, inout preProcessorsSt, port out TDSPorts ) yield ether;
         codel <stop>    	stopPreProc( inout preProcessorsSt ) yield ether;
 
+        throw   e_noUpperDependencie, e_existsAlready;
     };
 
     function RemoveProcessor (
