@@ -28,7 +28,7 @@ namespace openAFE {
 	public:
 	
 		using nTwoCTypeBlockAccessorPtr = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtr;
-		typedef typename std::shared_ptr<TimeDomainSignal<T> > signalSharedPtr;	
+		typedef typename std::shared_ptr<TimeDomainSignal<T> > signalSharedPtr;
 		
 		/* Create a TimeDomainSignal without initialising a first chunk */
 		TimeDomainSignal(uint32_t fs, uint32_t bufferSize_s, std::string argName = "Time", std::string argLabel = "Waveform", channel cha = _mono) : Signal<T>(fs, bufferSize_s) {
