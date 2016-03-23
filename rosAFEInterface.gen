@@ -2,7 +2,5 @@
 
 interface rosAFEInterface {
     port multiple out rosAFE::TimeDomainSignalPortStruct TDSPorts;
-    port out rosAFE::TimeDomainSignalPortStruct preProcessorOutput;
-
 };
 

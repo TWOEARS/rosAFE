@@ -19,13 +19,32 @@ startPreProc(const char *name, const char *upperDepName,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              const rosAFE_inputProcessors *inputProcessorsSt,
              const rosAFE_TDSPorts *TDSPorts,
-             const rosAFE_infos *infos, genom_context self)
+             const rosAFE_infos *infos, float bRemoveDC,
+             float cutoffHzDC, float bPreEmphasis,
+             float coefPreEmphasis, float bNormalizeRMS,
+             float bBinauralRMS, float intTimeSecRMS,
+             float bLevelScaling, float refSPLdB,
+             float bMiddleEarFiltering, const char *middleEarModel,
+             float bUnityComp, genom_context self)
 {
   inputProcPtr upperDepProc = inputProcessorsSt->processorsAccessor->getProcessor( upperDepName );
   
   apf::parameter_map params;
-  
-  preProcPtr preProcessor (new PreProc<preT>( name, upperDepProc->getFsOut(), fsOut, 1, params) ); // test
+  params.set("bRemoveDC", bRemoveDC);
+  params.set("cutoffHzDC", cutoffHzDC);
+  params.set("bPreEmphasis", bPreEmphasis);
+  params.set("coefPreEmphasis", coefPreEmphasis);
+  params.set("bNormalizeRMS", bNormalizeRMS);
+  params.set("bBinauralRMS", bBinauralRMS);
+  params.set("intTimeSecRMS", intTimeSecRMS);
+  params.set("bLevelScaling", bLevelScaling);
+  params.set("bPreEmphasis", bPreEmphasis);
+  params.set("refSPLdB", refSPLdB);
+  params.set("bMiddleEarFiltering", bMiddleEarFiltering);
+  params.set("middleEarModel", middleEarModel);
+  params.set("bUnityComp", bUnityComp);
+	  
+  preProcPtr preProcessor (new PreProc<preT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
 
   preProcessor->addInputProcessor ( upperDepProc );
   

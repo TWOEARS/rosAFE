@@ -14,7 +14,7 @@ module rosAFE {
     struct infos {
        unsigned long sampleRate;
        unsigned long bufferSize_s;
-       unsigned long bufferOfInnerProcs;
+       unsigned long innerBufferSize_s;
     };
 };
 
