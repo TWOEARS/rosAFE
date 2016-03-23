@@ -13,7 +13,6 @@ component rosAFE {
     native inputProcessors;
     native preProcessors;
     native flagMap;
-    native portsVector;
 
     ids {
 	rosAFE::infos infos;
@@ -23,7 +22,6 @@ component rosAFE {
 
 	flagMap flagMapSt;
 	flagMap newDataMapSt;
-	portsVector pV;
     };
 
     exception e_noData, e_noMemory, e_existsAlready, e_noUpperDependencie;
@@ -68,13 +66,26 @@ component rosAFE {
     activity PreProc (
       in string name = "preProc1" : "The name of this preProc",
       in string upperDepName = "input" : "The name of the upper dependencie",
-      in unsigned long fsOut = 44100 : "fsOut"
+      in unsigned long fsOut = 44100 : "fsOut",
+      in float bRemoveDC =  0 : "bRemoveDC",
+      in float cutoffHzDC =  20 : "cutoffHzDC",
+      in float bPreEmphasis =  0 : "bPreEmphasis",
+      in float coefPreEmphasis =  0.97 : "coefPreEmphasis",
+      in float bNormalizeRMS =  0 : "bNormalizeRMS",
+      in float bBinauralRMS =  1 : "bBinauralRMS",
+      in float intTimeSecRMS =  500E-3 : "intTimeSecRMS",
+      in float bLevelScaling =  0 : "bLevelScaling",
+      in float refSPLdB =  100 : "refSPLdB",
+      in float bMiddleEarFiltering =  0 : "bMiddleEarFiltering",
+      in string middleEarModel =  "jespen" : "middleEarModel",
+      in float bUnityComp =  1 : "bUnityComp"
       ) {
         doc         "preProc";
         task        preProc;
 	validate    existsAlreadyPreProc ( in name, in upperDepName, in inputProcessorsSt, in preProcessorsSt );
 
-        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos ) yield waitExec, stop;
+        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp
+	) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecPreProc ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;

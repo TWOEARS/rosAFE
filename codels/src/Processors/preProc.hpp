@@ -44,7 +44,6 @@ namespace openAFE {
 				this->defaultParams.set("bMiddleEarFiltering", 0);
 				this->defaultParams.set("middleEarModel", "jespen");
 				this->defaultParams.set("bUnityComp", 1);
-			
 			}
 			
 			void setPInfo(const std::string& nameArg,
