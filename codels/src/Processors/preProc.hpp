@@ -30,20 +30,20 @@ namespace openAFE {
 			
 			typedef std::shared_ptr< PreProc<T> > processorSharedPtr;
 			
-			void setDefaultParams () {
+			void setToDefaultParams () {
 						
-				this->defaultParams.set("bRemoveDC", 0);
-				this->defaultParams.set("cutoffHzDC", 20);
-				this->defaultParams.set("bPreEmphasis", 0);
-				this->defaultParams.set("coefPreEmphasis", 0.97);
-				this->defaultParams.set("bNormalizeRMS", 0);
-				this->defaultParams.set("bBinauralRMS", 1);
-				this->defaultParams.set("intTimeSecRMS", 500E-3);
-				this->defaultParams.set("bLevelScaling", 0);
-				this->defaultParams.set("refSPLdB", 100);
-				this->defaultParams.set("bMiddleEarFiltering", 0);
-				this->defaultParams.set("middleEarModel", "jespen");
-				this->defaultParams.set("bUnityComp", 1);
+				this->processorParams.set("bRemoveDC", 0);
+				this->processorParams.set("cutoffHzDC", 20);
+				this->processorParams.set("bPreEmphasis", 0);
+				this->processorParams.set("coefPreEmphasis", 0.97);
+				this->processorParams.set("bNormalizeRMS", 0);
+				this->processorParams.set("bBinauralRMS", 1);
+				this->processorParams.set("intTimeSecRMS", 500E-3);
+				this->processorParams.set("bLevelScaling", 0);
+				this->processorParams.set("refSPLdB", 100);
+				this->processorParams.set("bMiddleEarFiltering", 0);
+				this->processorParams.set("middleEarModel", "jespen");
+				this->processorParams.set("bUnityComp", 1);
 			}
 			
 			void setPInfo(const std::string& nameArg,
@@ -79,14 +79,10 @@ namespace openAFE {
 
 			/* PreProc */
 			PreProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, apf::parameter_map& paramsArg) : PB (fsIn, fsOut, _preProc) {
-				
-				this->setDefaultParams ();
 
 				/* Setting the user's parameters */
 				this->processorParams = paramsArg;
 				
-				/* Extending with default parameters */			
-				this->extendParameters ();
 				/* Setting the name of this processor and other informations */
 				this->setPInfo(nameArg);
 				

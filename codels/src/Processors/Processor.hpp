@@ -53,7 +53,7 @@ namespace openAFE {
 			/* This function fills the defaultParams map with default
 			 * parameters for each processor
 			 * */
-			virtual void setDefaultParams () = 0;
+			virtual void setToDefaultParams () = 0;
 			
 			/* This function fills the pInfoStruct of the processor */
 			virtual void setPInfo(const std::string& nameArg,
@@ -87,7 +87,7 @@ namespace openAFE {
 			outT_nTwoCTypeBlockAccessorPtrVector outT_lastChunkInfo, outT_lastDataInfo, outT_oldDataInfo, outT_wholeBufferInfo;
 						
 			apfMap processorParams;				// The parameters used by this processor
-			apfMap defaultParams;				// The default parameters of this processor
+			// apfMap defaultParams;				// The default parameters of this processor
 			stringVector blacklist;				// The parameters which are not allowed to be modified in real time
 			
 			uint32_t fsIn;						// Sampling frequency of input (i.e., prior to processing)
@@ -105,9 +105,6 @@ namespace openAFE {
 			//bool isBinaural;         			// Flag indicating the need for two inputs
 			bool hasTwoOutputs = false; 		// Flag indicating the need for two outputs
 			// channel Channel;					// On which channel (left, right or mono) the processor operates
-			
-			/* Wont be included in rosAFE, but exists in Matlab AFE : why ? */
-			// bool bHidden = false;            	// Set to true to hide the processor from the framework
 
            /* This method is called at setup of a processor parameters, to verify that the
              * provided parameters are valid, and correct conflicts if needed.
@@ -116,13 +113,13 @@ namespace openAFE {
              * */
 			virtual void verifyParameters() {}
 			
-			/* Add default value(s) to missing parameters in a processor */
+			/* Add default value(s) to missing parameters in a processor 
 			void extendParameters() {
 				for(mapIterator it = this->defaultParams.begin(); it != this->defaultParams.end(); it++)
 					if ( this->processorParams.has_key( it->first ) == 0 )
 						this->processorParams.set( it->first, it->second );
 					// else do nothing
-			}
+			} */
 			
             /* Returns the list of parameters that cannot be affected in real-time. Most
              * (all) of them cannot be modified as they involve a change in dimension of
@@ -206,7 +203,7 @@ namespace openAFE {
             
 			/* MODIFYPARAMETER Requests a change of value of one parameter */
 			void modifyParameter(std::string parName, std::string newValue) {
-				if ( defaultParams.has_key( parName ) )
+				if ( processorParams.has_key( parName ) )
 					this->processorParams.set( parName, newValue );
 				// else std::cout << "parName is not a parameter of this processor" std::endl;
 			}
@@ -314,7 +311,7 @@ namespace openAFE {
 				return this->outT_wholeBufferInfo;
 			}
 			
-			/* This funcion publishes (appends) the signals to the outputs of the processor */			
+			/* This funcion publishes (appends) the signals to the outputs of the processor */
 			void appendChunk () {
 				
 				assert( this->outPrivateMemoryZone.size() == this->outputSignals.size() );

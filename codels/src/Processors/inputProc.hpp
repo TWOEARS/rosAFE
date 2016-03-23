@@ -32,8 +32,8 @@ namespace openAFE {
 			
 			using typename PB::outT_SignalSharedPtr;
 			
-			void setDefaultParams () {
-				this->defaultParams.set("Type", "Input Processor");
+			void setToDefaultParams () {
+				this->processorParams.set("Type", "Input Processor");
 			}
 			
 			void setPInfo(const std::string& nameArg,
@@ -57,10 +57,8 @@ namespace openAFE {
 			/* inputProc */
 			InputProc (const std::string& nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s) : PB (fsIn, fsOut, _inputProc) {
 				
-				this->setDefaultParams ();
+				this->setToDefaultParams ();
 
-				/* Extending with default parameters */			
-				this->extendParameters ();
 				/* Setting the name of this processor and other informations */
 				this->setPInfo(nameArg);
 				
