@@ -19,12 +19,12 @@ startPreProc(const char *name, const char *upperDepName,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              const rosAFE_inputProcessors *inputProcessorsSt,
              const rosAFE_TDSPorts *TDSPorts,
-             const rosAFE_infos *infos, float bRemoveDC,
-             float cutoffHzDC, float bPreEmphasis,
-             float coefPreEmphasis, float bNormalizeRMS,
-             float bBinauralRMS, float intTimeSecRMS,
-             float bLevelScaling, float refSPLdB,
-             float bMiddleEarFiltering, const char *middleEarModel,
+             const rosAFE_infos *infos, uint16_t bRemoveDC,
+             float cutoffHzDC, uint16_t bPreEmphasis,
+             float coefPreEmphasis, uint16_t bNormalizeRMS,
+             uint16_t bBinauralRMS, float intTimeSecRMS,
+             uint16_t bLevelScaling, float refSPLdB,
+             uint16_t bMiddleEarFiltering, const char *middleEarModel,
              float bUnityComp, genom_context self)
 {
   inputProcPtr upperDepProc = inputProcessorsSt->processorsAccessor->getProcessor( upperDepName );

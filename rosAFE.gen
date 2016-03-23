@@ -24,7 +24,7 @@ component rosAFE {
 	flagMap newDataMapSt;
     };
 
-    exception e_noData, e_noMemory, e_existsAlready, e_noUpperDependencie;
+    exception e_noData, e_noMemory, e_existsAlready, e_noSuchProcessor, e_noSuchParameter, e_noUpperDependencie;
 
     task init {
 	codel <start> initIDS(out ::ids) yield ether;
@@ -39,13 +39,13 @@ component rosAFE {
     };
 
     activity InputProc(
+      in string name = "input" : "The name of this activity",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
-      in unsigned long bufferSize_s = 10 : "Buffer size in seconds",
-      in string name = "input" : "The name of this activity"
+      in unsigned long bufferSize_s = 10 : "Buffer size in seconds"
       ) {
-        doc         "Get consecutive blocks of audio data from bass";
+        doc         "Get consecutive blocks of audio data from bass and normalizes that data";
         task        input;
-        interrupts  InputProc;  // Only one audio input can be exist simultaneously (mono or stereo)
+        interrupts  InputProc;  // Only one audio input can exist simultaneously
 	validate    existsAlreadyInput ( local in name, in inputProcessorsSt );
 
         codel <start>   startInputProc( in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
@@ -67,25 +67,24 @@ component rosAFE {
       in string name = "preProc1" : "The name of this preProc",
       in string upperDepName = "input" : "The name of the upper dependencie",
       in unsigned long fsOut = 44100 : "fsOut",
-      in float bRemoveDC =  0 : "bRemoveDC",
-      in float cutoffHzDC =  20 : "cutoffHzDC",
-      in float bPreEmphasis =  0 : "bPreEmphasis",
-      in float coefPreEmphasis =  0.97 : "coefPreEmphasis",
-      in float bNormalizeRMS =  0 : "bNormalizeRMS",
-      in float bBinauralRMS =  1 : "bBinauralRMS",
-      in float intTimeSecRMS =  500E-3 : "intTimeSecRMS",
-      in float bLevelScaling =  0 : "bLevelScaling",
-      in float refSPLdB =  100 : "refSPLdB",
-      in float bMiddleEarFiltering =  0 : "bMiddleEarFiltering",
-      in string middleEarModel =  "jespen" : "middleEarModel",
-      in float bUnityComp =  1 : "bUnityComp"
+      in unsigned short bRemoveDC =  0 : "'Flag to activate DC-removal filter",
+      in float cutoffHzDC =  20 : "Cutoff frequency (Hz) of DC-removal high-pass filter",
+      in unsigned short bPreEmphasis =  0 : "Flag to activate the pre-emphasis high-pass filter",
+      in float coefPreEmphasis =  0.97 : "Coefficient for pre-emphasis compensation (usually between 0.9 and 1)",
+      in unsigned short bNormalizeRMS =  0 : "Flag for activating automatic gain control",
+      in unsigned short bBinauralRMS =  1 : "Flag indicating the use of unified automatic gain control over left and right channel, for preserving channel relative differences.",
+      in float intTimeSecRMS =  500E-3 : "Time constant (s) for automatic gain control",
+      in unsigned short bLevelScaling =  0 : "Flag to apply level scaling to the given reference",
+      in float refSPLdB =  100 : "Reference dB SPL value to correspond to input signal RMS value of 1",
+      in unsigned short bMiddleEarFiltering =  0 : "Flag to apply middle ear filtering",
+      in string middleEarModel =  "jespen" : "Middle ear filter model (jepsen or lopezpoveda)",
+      in float bUnityComp =  1 : "Compensation to have maximum of unity gain for middle ear filter (automatically true for Gammatone and false for drnl filterbanks)"
       ) {
-        doc         "preProc";
+        doc         "Prior to computing any of the supported auditory representations, the input signal can be pre-processed with one of the following elements: 1. Direct current (DC) bias removal 2. Pre-emphasis 3. Root mean square (RMS) normalization [1] 4. Level scaling to a pre-defiend sound pressure level (SPL) reference 5. Middle ear filtering [2]";
         task        preProc;
 	validate    existsAlreadyPreProc ( in name, in upperDepName, in inputProcessorsSt, in preProcessorsSt );
 
-        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp
-	) yield waitExec, stop;
+        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecPreProc ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
@@ -98,6 +97,18 @@ component rosAFE {
         codel <stop>    	stopPreProc( inout preProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready;
+    };
+
+    function ModifyParameter (
+	in string nameProc = "nameProc" : "The name of the processor to change the parameter",
+	in string nameParam = "nameParam" : "The name of the parameter to be changed",
+	in string newValue = "newValue" : "The new value of the parameter to be changed"
+	) {
+	doc         "Modifies the parameter of a processor";
+
+	codel modifyParameter(in nameProc, in nameParam, in newValue, in inputProcessorsSt, in preProcessorsSt );
+
+	throw e_noSuchProcessor, e_noSuchParameter;
     };
 
     function RemoveProcessor (

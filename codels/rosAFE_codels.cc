@@ -37,6 +37,32 @@ existsAlreadyPreProc(const char *name, const char *upperDepName,
 }
 
 
+/* --- Function ModifyParameter ----------------------------------------- */
+
+/** Codel modifyParameter of function ModifyParameter.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noSuchProcessor, rosAFE_e_noSuchParameter.
+ */
+genom_event
+modifyParameter(const char *nameProc, const char *nameParam,
+                const char *newValue,
+                const rosAFE_inputProcessors *inputProcessorsSt,
+                const rosAFE_preProcessors *preProcessorsSt,
+                genom_context self)
+{
+  if ( inputProcessorsSt->processorsAccessor->getProcessor ( nameProc ) ) {
+	inputProcessorsSt->processorsAccessor->getProcessor ( nameProc )->modifyParameter( nameParam, newValue);
+	return genom_ok;
+  }
+  if ( preProcessorsSt->processorsAccessor->getProcessor ( nameProc ) ) {
+	preProcessorsSt->processorsAccessor->getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+	return genom_ok;
+  } 
+  return rosAFE_e_noSuchProcessor( self );
+}
+
+
 /* --- Function RemoveProcessor ----------------------------------------- */
 
 /** Codel removeProcessor of function RemoveProcessor.

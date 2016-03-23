@@ -15,7 +15,7 @@ p=1;
 acquire = bass.Acquire('-a', 'hw:2,0', sampleRate, nFramesPerChunk, nChunksOnPort);
 pause(p);
 
-get = rosAFE.InputProc('-a', 12000, bufferSize_s, 'input');
+get = rosAFE.InputProc('-a', 'input', 12000, bufferSize_s);
 pause(p);
 
 preProc = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
@@ -28,7 +28,6 @@ time = timeVector ( inputLeft, sampleRate );
 
 disp('Go go go');
  
-
 while(1)
     tic
     inputToMatlab = rosAFE.TDSPorts('input');
