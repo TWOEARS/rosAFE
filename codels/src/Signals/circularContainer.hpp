@@ -79,14 +79,12 @@ namespace openAFE {
 
 		/* Ctor with copy */
 		CircularContainer( CircularContainer<T>& toCopy ) {
-			
 			this->init( toCopy );
 		}
 		
 		/* Destroys the circular_buffer. */
 		~CircularContainer() {
 			this->clear();
-			std::cout << "Destructor of a buffer" << std::endl;
 		}
 	
 		/* This is the main initialisation, for each constructor */

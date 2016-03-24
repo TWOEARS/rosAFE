@@ -33,26 +33,23 @@ namespace openAFE {
 
 	protected:
 
-		stringP Label;           			// Used to label the signal
-		stringP Name;            			// Used as an instance name
-		stringP Dimensions;      			// String describing the dimensions of the signal
-		unsigned int  FsHz;       			// Sampling frequency
-		channel Channel;         			// Flag keeping track of the channel
+		std::string Label;           			// Used to label the signal
+		std::string Name;            			// Used as an instance name
+		std::string Dimensions;      			// String describing the dimensions of the signal
+		uint32_t  FsHz;       					// Sampling frequency
+		channel Channel;         				// Flag keeping track of the channel
 
 		uint32_t bufferSizeSamples;
 		uint32Vector bufferElemSize;
 		
-		bufferPtrVector bufferVector;		// The buffer(s) of the signal
+		bufferPtrVector bufferVector;			// The buffer(s) of the signal
 		nTwoCTypeBlockAccessorPtr allLastChunkInfo, allLastDataInfo, allOldDataInfo, allWholeBufferInfo;
 		
-		void populateProperties(apf::parameter_map& params) {
+		void populateProperties( const std::string& labelArg, const std::string& nameArg, std::string dimensionsArg) {
 			
-			if (params.has_key("Label"))
-				Label.reset( new std::string(params["Label"]) );
-			if (params.has_key("Name"))
-				Name.reset( new std::string(params["Name"]) );
-			if (params.has_key("Dimensions"))
-				Dimensions.reset( new std::string(params["Dimensions"]) );
+			Label = labelArg;
+			Name = nameArg;
+			Dimensions = dimensionsArg;
 		}
 
 		void clearData() {
@@ -62,8 +59,6 @@ namespace openAFE {
 				
 
 	public:
-
-		typedef typename std::shared_ptr<Signal<T> > signalBaseSharedPtr;
 
 		/*	
 		 *  INPUT ARGUMENTS:
@@ -87,12 +82,11 @@ namespace openAFE {
 			this->bufferElemSize = bufferElemSize;
 			
 			this->init();
-		}    
+		}
 		
 		~Signal() {
-			// Buf, Label, Name and Dimensions are smart pointrs
-			// this->bufferVector.clear();
-			std::cout << "Destructor of a Signal<T>" << std::endl;
+			this->clearData();
+			this->bufferVector.clear();
 		}
 		
 		void init() {
@@ -178,22 +172,22 @@ namespace openAFE {
 
 		}
 				
-		stringP getName(){
+		std::string getName() {
 			return Name;
 		}
 		
-		/* getChannel : returns a pointer to the channel of this signal */
-		channel* getChannel() {  // try const
-			return &Channel;
+		/* getChannel : returns the channel of this signal */
+		channel getChannel() {  // try const
+			return Channel;
 		}
 		
 		/* printSignal() : prints this signals informatinos */		
 		virtual void printSignal() {
-			std::cout << "Label : " << *(this->Label) << std::endl;
-			std::cout << "Name : " << *(this->Name) << std::endl;	
-			std::cout << "Dimensions : " << *(this->Dimensions) << std::endl;
-			std::cout << "FsHz : " << (this->FsHz) << std::endl;				
-			std::cout << "Channel : " << (this->Channel) << std::endl;
+			std::cout << "Label : " << this->Label << std::endl;
+			std::cout << "Name : " << this->Name << std::endl;	
+			std::cout << "Dimensions : " << this->Dimensions << std::endl;
+			std::cout << "FsHz : " << this->FsHz << std::endl;				
+			std::cout << "Channel : " << this->Channel << std::endl;
 		}
 		
 		nTwoCTypeBlockAccessorPtr getLastChunkAccesor() {
