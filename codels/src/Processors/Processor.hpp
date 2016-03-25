@@ -19,7 +19,8 @@ namespace openAFE {
 	/* The type of the processing */
 	enum procType {
 		_inputProc,
-		_preProc
+		_preProc,
+		_gammatone
 	};
 	
 	/* Processor Info struct */            
@@ -88,7 +89,6 @@ namespace openAFE {
 						
 			apfMap processorParams;				// The parameters used by this processor
 			// apfMap defaultParams;				// The default parameters of this processor
-			stringVector blacklist;				// The parameters which are not allowed to be modified in real time
 			
 			uint32_t fsIn;						// Sampling frequency of input (i.e., prior to processing)
 			uint32_t fsOut;			 			// Sampling frequency of output (i.e., resulting from processing)
@@ -130,16 +130,14 @@ namespace openAFE {
              * deleted and a new one, with the new parameter value, instantiated via a 
              * user request.
              */
-			void setBlacklistedParameters() {
-				this->blacklist.push_back( "fb_type" );
-				this->blacklist.push_back( "fb_lowFreqHz" );
-				this->blacklist.push_back( "fb_highFreqHz" );
-				this->blacklist.push_back( "fb_nERBs" );
-				this->blacklist.push_back( "fb_cfHz" );				
-			}
-			
-			stringVector& getBlacklistedParameters() {
-				return this->blacklist;
+			bool verifyBlacklistedParameters(std::string& paramToChange) {
+				if ( ( paramToChange == "type" ) or 
+				     ( paramToChange == "lowFreqHz" ) or 
+				     ( paramToChange == "highFreqHz" ) or 
+				     ( paramToChange == "nERBs" ) or 
+				     ( paramToChange == "nCfHz" ) )
+					return true;
+				return false;
 			}
 			
 			void linkAccesors () {
@@ -166,9 +164,7 @@ namespace openAFE {
 			  * parObj : Parameters instance to use for this processor
 			  */
 			Processor (const uint32_t fsIn, const uint32_t fsOut, procType typeArg) {
-
-				this->setBlacklistedParameters();
-				
+								
 				this->fsIn = fsIn;
 				this->fsOut = fsOut;
 				this->type = typeArg;
@@ -201,30 +197,31 @@ namespace openAFE {
 				return processorParams.has_key( parName );
 			}
             
-			/* MODIFYPARAMETER Requests a change of value of one parameter */
+			/* MODIFYPARAMETER Requests a change of value of one parameter.
+			 * The modification will be done if the parameter is not blacklisted and if it is a real parameter. */
 			void modifyParameter(std::string parName, std::string newValue) {
-				if ( processorParams.has_key( parName ) )
-					this->processorParams.set( parName, newValue );
-				// else std::cout << "parName is not a parameter of this processor" std::endl;
+				if ( ! verifyBlacklistedParameters(parName) )
+					if ( processorParams.has_key( parName ) )
+						this->processorParams.set( parName, newValue );
 			}
 
-			/* Returns a pointer to the type of this processor */		
-			procType* getType () {
-				return &type;
+			/* Returns a const reference of the type of this processor */		
+			const procType& getType () {
+				return type;
 			}
 			
-			/* Returns a pointer to the infos struct of this processor */
-			pInfoStruct* getProcessorInfo() {
-				return &pInfo;
+			/* Returns a const reference of the infos struct of this processor */
+			const pInfoStruct& getProcessorInfo() {
+				return pInfo;
 			}
 
 			/* Getter methods : This funtion sends a const reference for the asked parameter's value */
 			const std::string& getParameter( std::string paramArg ) {
-				return Processor::processorParams[ paramArg ];
+				return this->processorParams[ paramArg ];
 			}
 			
 			/* Compare only the information of the two processors */
-			bool compareInfos (const Processor& toCompare) {
+			const bool compareInfos (const Processor& toCompare) {
 				if ( this->pInfo.name == toCompare.pInfo.name )
 					if ( this->pInfo.label == toCompare.pInfo.label )
 						if ( this->pInfo.requestName == toCompare.pInfo.requestName )

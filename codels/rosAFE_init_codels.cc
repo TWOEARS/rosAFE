@@ -20,6 +20,9 @@ initIDS(rosAFE_ids *ids, genom_context self)
 
   ids->preProcessorsSt = new rosAFE_preProcessors();
   ids->preProcessorsSt->processorsAccessor.reset( new preProcessorVector() );
+
+  ids->gammatoneProcessorsSt = new rosAFE_gammatoneProcessors();
+  ids->gammatoneProcessorsSt->processorsAccessor.reset( new gammatoneProcVector() );
   
   // Creating the structure which will contain all flags.
   ids->flagMapSt = new rosAFE_flagMap();

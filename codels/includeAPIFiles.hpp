@@ -10,6 +10,7 @@
 #include "src/Processors/Processor.hpp"
 #include "src/Processors/inputProc.hpp"
 #include "src/Processors/preProc.hpp"
+#include "src/Processors/gammatoneProc.hpp"
 
 #include "src/Processors/ProcessorVector.hpp"
 

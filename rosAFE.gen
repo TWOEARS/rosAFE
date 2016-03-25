@@ -12,6 +12,7 @@ component rosAFE {
 
     native inputProcessors;
     native preProcessors;
+    native gammatoneProcessors;
     native flagMap;
 
     ids {
@@ -19,6 +20,7 @@ component rosAFE {
 
 	inputProcessors inputProcessorsSt;
 	preProcessors preProcessorsSt;
+	gammatoneProcessors gammatoneProcessorsSt;
 
 	flagMap flagMapSt;
 	flagMap newDataMapSt;

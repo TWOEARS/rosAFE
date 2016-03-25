@@ -35,6 +35,18 @@ struct rosAFE_preProcessors {
 /* End : The pre processor template definitions */
 
 
+/* Start : The Gammatone template definitions */
+using gammatoneT = preT;
+using gammatoneProcessor = GamamtoneProc<gammatoneT>;
+using gammatoneProcVector = ProcessorVector<gammatoneProcessor>;
+
+using gammatoneProcPtr = typename gammatoneProcVector::processorSharedPtr;
+typedef std::shared_ptr< gammatoneProcVector > gammatoneProcVectorPtr;
+
+struct rosAFE_gammatoneProcessors {
+	gammatoneProcVectorPtr processorsAccessor; 
+};
+/* End : The Gammatone template definitions */
 
 struct flagSt {
 	std::string upperDep;

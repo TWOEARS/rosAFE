@@ -22,16 +22,7 @@ namespace openAFE {
 	private:
 
 		/* cfHz : Center frequencies of the frequency channels */
-		doubleVector cfHz;
-		
-		uint32Vector createDims( const doubleVector& cfHzArg ) {
-			uint32Vector dims(1);
-			if ( cfHzArg.size() )
-				dims[0] = cfHzArg.size();
-			else dims[0] = 1;
-			
-			return dims;
-		}		
+		doubleVector cfHz;	
 		
 	protected:
 	
@@ -55,7 +46,7 @@ namespace openAFE {
 		TimeFrequencySignal( const uint32_t fs, const uint32_t bufferSize_s, const doubleVector& argCfHz,
 							 const std::string argName = "tfRepresentation", 
 							 const std::string argLabel = "tfRepresentation",
-							 std::string argScaling = "magnitude", channel cha = _mono) : Signal<T>(fs, bufferSize_s, createDims( argCfHz ) ) {
+							 std::string argScaling = "magnitude", channel cha = _mono) : Signal<T>(fs, bufferSize_s, uint32Vector( 1, argCfHz.size() ) ) {
 													
 			this->populateProperties( argLabel, argName, "nSamples x nFilters" );
 			this->Channel = cha;
