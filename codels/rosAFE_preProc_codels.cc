@@ -60,7 +60,7 @@ startPreProc(const char *name, const char *upperDepName,
   return rosAFE_waitExec;
 }
 
-/** Codel waitExecPreProc of activity PreProc.
+/** Codel waitExec of activity PreProc.
  *
  * Triggered by rosAFE_waitExec.
  * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_ether,
@@ -68,7 +68,7 @@ startPreProc(const char *name, const char *upperDepName,
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
 genom_event
-waitExecPreProc(const char *name, const char *upperDepName,
+waitExec (const char *name, const char *upperDepName,
                 rosAFE_flagMap **newDataMapSt, genom_context self)
 {   
   // If there is no new data, we will wait
@@ -109,25 +109,14 @@ execPreProc(const char *name, const char *upperDepName,
   return rosAFE_waitRelease;
 }
 
-/** Codel waitReleasePreProc of activity PreProc.
+/** Codel waitRelease of activity PreProc.
  *
  * Triggered by rosAFE_waitRelease.
  * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
-genom_event
-waitReleasePreProc(const char *name, rosAFE_flagMap **flagMapSt,
-                   genom_context self)
-{
-  /* Waiting for all childs */
-  if ( ! SM::checkFlag( name, flagMapSt, self) )
-	return rosAFE_pause_waitRelease;  
+/* already defined in service InputProc */
 
-  /* Rising the flag (if any) */
-  SM::riseFlag ( name, flagMapSt, self);
-
-  return rosAFE_release;
-}
 
 /** Codel releasePreProc of activity PreProc.
  *

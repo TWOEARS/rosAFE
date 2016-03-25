@@ -18,7 +18,10 @@ pause(p);
 get = rosAFE.InputProc('-a', 'input', 12000, bufferSize_s);
 pause(p);
 
-preProc = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
+preProc = rosAFE.PreProc('-a', 'preProc', 'input', 44100);
+pause(p);
+
+gammatoneProc = rosAFE.GammatoneProc('-a', 'gammatone', 'preProc', 44100);
 pause(p);
 
 inputLeft = zeros(sampleRate*bufferSize_s, 1);
@@ -31,7 +34,7 @@ disp('Go go go');
 while(1)
     tic
     inputToMatlab = rosAFE.TDSPorts('input');
-    preProc1ToMatlab = rosAFE.TDSPorts('preProc1');
+    preProc1ToMatlab = rosAFE.TDSPorts('preProc');
 
     inputLeft = cell2mat(inputToMatlab.TDSPorts.left);
     inputRight = cell2mat(inputToMatlab.TDSPorts.right);

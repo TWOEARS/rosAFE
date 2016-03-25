@@ -37,7 +37,11 @@ component rosAFE {
     };
 
     task preProc {
-        period      250ms;
+        period      50ms;
+    };
+
+    task gammatoneProc {
+        period      50ms;
     };
 
     activity InputProc(
@@ -48,15 +52,14 @@ component rosAFE {
         doc         "Get consecutive blocks of audio data from bass and normalizes that data";
         task        input;
         interrupts  InputProc;  // Only one audio input can exist simultaneously
-	validate    existsAlreadyInput ( local in name, in inputProcessorsSt );
 
-        codel <start>   startInputProc( in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
-                            port in Audio, port out TDSPorts, out infos) yield waitExec;
+        codel <start>   	startInputProc( in name, in nFramesPerBlock, in bufferSize_s, inout inputProcessorsSt,
+                            		port in Audio, port out TDSPorts, out infos) yield waitExec;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecInputProc( in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
         codel <exec>    	execInputProc( in name, in inputProcessorsSt ) yield waitRelease, stop;
-        codel <waitRelease>    	waitReleaseInputProc( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <waitRelease>    	waitRelease( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releaseInputProc( in name, inout inputProcessorsSt, out newDataMapSt, port out TDSPorts) yield pause::waitExec, stop;
 	// The state Machine, end
 
@@ -84,19 +87,51 @@ component rosAFE {
       ) {
         doc         "Prior to computing any of the supported auditory representations, the input signal can be pre-processed with one of the following elements: 1. Direct current (DC) bias removal 2. Pre-emphasis 3. Root mean square (RMS) normalization [1] 4. Level scaling to a pre-defiend sound pressure level (SPL) reference 5. Middle ear filtering [2]";
         task        preProc;
-	validate    existsAlreadyPreProc ( in name, in upperDepName, in inputProcessorsSt, in preProcessorsSt );
+	validate    		existsAlready ( local in name, local in upperDepName, in ::ids );
 
         codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp) yield waitExec, stop;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExecPreProc ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <waitExec>    	waitExec ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
         codel <exec>    	execPreProc ( in name, in upperDepName, inout preProcessorsSt, out flagMapSt ) yield waitRelease;
-        codel <waitRelease>    	waitReleasePreProc ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <waitRelease>    	waitRelease ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releasePreProc ( in name, inout preProcessorsSt, out newDataMapSt, port out TDSPorts ) yield pause::waitExec, stop;
 	// The state Machine, end
 
         codel <delete>    	deletePreProc( in name, inout preProcessorsSt, port out TDSPorts ) yield ether;
         codel <stop>    	stopPreProc( inout preProcessorsSt ) yield ether;
+
+        throw   e_noUpperDependencie, e_existsAlready;
+    };
+
+    activity GammatoneProc (
+      in string name = "preProc1" : "The name of this preProc",
+      in string upperDepName = "input" : "The name of the upper dependencie",
+      in unsigned long fsOut = 44100 : "fsOut",
+      in string type =  "gammatone" : "Filterbank type (''gammatone'' or ''drnl'')",
+      in float lowFreqHz =  80 : "Lowest center frequency (Hz)",
+      in float highFreqHz =  80000 : "Highest center frequency (Hz)",
+      in float nERBs =  1 : "Distance between neighbor filters in ERBs",
+      in unsigned long nChannels =  1 : "Number of channels",
+      in unsigned long cfHz =  1 : "Channels center frequencies (Hz)",
+      in unsigned long nGamma =  4 : "Gammatone rising slope order",
+      in float bwERBs =  1.018 : "Bandwidth of the filters (ERBs)"
+      ) {
+        doc         "Gammatone auditory filterbank processor. The Gammatone filterbank models the frequency selectivity of the peripheral auditory system according following [1]. It operates on a time-domain signal and returns a time-frequency representation of the signal.";
+        task        gammatoneProc;
+	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
+
+        codel <start>   	startGammatoneProc ( in name, in upperDepName, in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, in preProcessorsSt, in infos, /* Arguments Of processor*/ local in type, local in lowFreqHz, local in highFreqHz, local in nERBs, local in nChannels, local in cfHz, local in nGamma, local in bwERBs ) yield waitExec, stop;
+	
+	// The state Machine, start
+        codel <waitExec>    	waitExec ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <exec>    	execGammatoneProc ( in name, in upperDepName, inout gammatoneProcessorsSt, out flagMapSt ) yield waitRelease;
+        codel <waitRelease>    	waitRelease ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseGammatoneProc ( in name, inout gammatoneProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
+	// The state Machine, end
+
+        codel <delete>    	deleteGammatoneProc( in name, inout gammatoneProcessorsSt ) yield ether;
+        codel <stop>    	stopGammatoneProc( inout gammatoneProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready;
     };

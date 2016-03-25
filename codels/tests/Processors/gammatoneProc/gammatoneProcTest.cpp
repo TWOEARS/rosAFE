@@ -27,7 +27,7 @@ int main() {
 
 	preProcessor->addInputProcessor ( inputProcessor );
 	
-	GammatoneProcPtr gammatoneProcessor (new GamamtoneProc<T>("GammatoneProcTest", fsIn, fsOut, bufferSize_s, params) );
+	GammatoneProcPtr gammatoneProcessor (new GamamtoneProc<T>("gammatoneProcTest", fsIn, fsOut, bufferSize_s, params) );
 	
 	gammatoneProcessor->addInputProcessor ( preProcessor );
 

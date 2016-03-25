@@ -1,40 +1,41 @@
 #include "stateMachine.hpp"
 
-/** Codel removePependencie of function RemovePependencie.
- *
- * Returns genom_ok.
- * Throws rosAFE_e_noData, rosAFE_e_noMemory, rosAFE_e_existsAlready.
- */
-genom_event
-existsAlreadyInput(const char *name,
-                   const rosAFE_inputProcessors *inputProcessorsSt,
-                   genom_context self)
-{
-  if ( inputProcessorsSt->processorsAccessor->existsProcessorName ( name ) )
-	return rosAFE_e_existsAlready( self );
-  return genom_ok;
+bool checkExists ( const char *name, const rosAFE_ids *ids ) {
+	if ( ( ids->inputProcessorsSt->processorsAccessor->existsProcessorName ( name ) ) or
+	     ( ids->preProcessorsSt->processorsAccessor->existsProcessorName ( name ) ) or
+	     ( ids->gammatoneProcessorsSt->processorsAccessor->existsProcessorName ( name ) ) )
+	     return true;
+	return false;
 }
-
 
 /* --- Activity PreProc ------------------------------------------------- */
 
-/** Validation codel existsAlreadyPreProc of activity PreProc.
+/** Validation codel existsAlready of activity PreProc.
  *
  * Returns genom_ok.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
 genom_event
-existsAlreadyPreProc(const char *name, const char *upperDepName,
-                     const rosAFE_inputProcessors *inputProcessorsSt,
-                     const rosAFE_preProcessors *preProcessorsSt,
-                     genom_context self)
+existsAlready(const char *name, const char *upperDepName,
+              const rosAFE_ids *ids, genom_context self)
 {
-  if ( ! ( inputProcessorsSt->processorsAccessor->existsProcessorName ( upperDepName ) ) )
+  if ( ! checkExists ( upperDepName, ids ) ) 
 	return rosAFE_e_noUpperDependencie( self );		
-  if ( preProcessorsSt->processorsAccessor->existsProcessorName ( name ) )
+  if ( checkExists ( name, ids ) )
 	return rosAFE_e_existsAlready( self );
   return genom_ok;
 }
+
+
+/* --- Activity GammatoneProc ------------------------------------------- */
+
+/** Validation codel existsAlready of activity GammatoneProc.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ */
+/* already defined in service PreProc validation */
+
 
 
 /* --- Function ModifyParameter ----------------------------------------- */

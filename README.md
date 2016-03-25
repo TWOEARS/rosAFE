@@ -14,7 +14,7 @@ APF : http://audioprocessingframework.github.io/ and place the apf folder to /us
 
 ## Install :
 
-./skeleton
+./skeleton.py
 
 enter "n" if you see "Apply this patch [y,n,c,q,?]?" on your terminal
 

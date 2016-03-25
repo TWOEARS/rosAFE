@@ -36,7 +36,7 @@ namespace openAFE {
 
 		const bool existsProcessorName( const char *name ) {
 			for ( processorSharedPtrVectorConstIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
-				if ( (*it)->getProcessorInfo()->name == name )
+				if ( (*it)->getProcessorInfo().name == name )
 					return true;
 			return false;
 		}
@@ -67,7 +67,7 @@ namespace openAFE {
 		 * */		
 		const processorSharedPtr getProcessor ( const std::string& nameArg ) {
 			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
-				if ( (*it)->getProcessorInfo()->name == nameArg )
+				if ( (*it)->getProcessorInfo().name == nameArg )
 					return *it;
 			return nullptr;
 		}
@@ -76,7 +76,7 @@ namespace openAFE {
 		 * returns false if the processor doesnt exist */
 		const bool removeProcessor ( const std::string& nameArg ) {
 			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
-				if ( (*it)->getProcessorInfo()->name == nameArg ) {
+				if ( (*it)->getProcessorInfo().name == nameArg ) {
 					this->processorVector.erase( it );
 					return true;
 				}
