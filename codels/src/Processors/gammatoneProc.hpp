@@ -65,10 +65,15 @@ namespace openAFE {
 			/* PreProc */
 			GamamtoneProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, apf::parameter_map& paramsArg) : PB (fsIn, fsOut, _gammatone) {
 
+				/* Setting the user's parameters */
+				this->processorParams = paramsArg;
+				
+				/* Setting the name of this processor and other informations */
+				this->setPInfo(nameArg);
 			}
 				
 			~GamamtoneProc () {
-				std::cout << "Destructor of a Gamamtone processor" << std::endl;
+				std::cout << "Destructor of a Gammatone processor" << std::endl;
 			}
 
 	}; /* class GamamtoneProc */

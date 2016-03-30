@@ -22,7 +22,9 @@ namespace openAFE {
 		processorSharedPtrVector processorVector;
 				
 		ProcessorVector() {}
-		~ProcessorVector() {}
+		~ProcessorVector() {
+			this->clear ( );
+		}
 
 		/* existsInputProcessor : return true if the asked processor exists alreadys
 		 * with the same parameters and with the same informations.

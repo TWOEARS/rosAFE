@@ -17,7 +17,7 @@ genom_event
 startPreProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_preProcessors **preProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
-             const rosAFE_inputProcessors *inputProcessorsSt,
+             rosAFE_inputProcessors **inputProcessorsSt,
              const rosAFE_TDSPorts *TDSPorts,
              const rosAFE_infos *infos, uint16_t bRemoveDC,
              float cutoffHzDC, uint16_t bPreEmphasis,
@@ -27,7 +27,7 @@ startPreProc(const char *name, const char *upperDepName,
              uint16_t bMiddleEarFiltering, const char *middleEarModel,
              float bUnityComp, genom_context self)
 {
-  inputProcPtr upperDepProc = inputProcessorsSt->processorsAccessor->getProcessor( upperDepName );
+  inputProcPtr upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
   params.set("bRemoveDC", bRemoveDC);
@@ -45,15 +45,17 @@ startPreProc(const char *name, const char *upperDepName,
   params.set("bUnityComp", bUnityComp);
 	  
   preProcPtr preProcessor (new PreProc<preT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
-
   preProcessor->addInputProcessor ( upperDepProc );
   
   /* Adding this procesor to the ids */
-  (*preProcessorsSt)->processorsAccessor->addProcessor( preProcessor );
+  ((*preProcessorsSt)->processorsAccessor).addProcessor( preProcessor );
 
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
+  upperDepProc.reset();
+  preProcessor.reset();
+  
   /* Initialization of the output port */
   initTDSPort( name, TDSPorts, fsOut, infos->bufferSize_s, sizeof(preT), self );
   	      
@@ -100,9 +102,8 @@ execPreProc(const char *name, const char *upperDepName,
 {
   std::cout << "              " << name << std::endl;
 
-  (*preProcessorsSt)->processorsAccessor->getProcessor( name )->processChunk( ); 
-    
-    
+  (((*preProcessorsSt)->processorsAccessor).getProcessor( name ))->processChunk( );
+      
   // Finished with this data. The upperDep can overwite it.
   SM::fallFlag ( name, upperDepName, flagMapSt, self);
   
@@ -130,7 +131,7 @@ releasePreProc(const char *name,
                rosAFE_flagMap **newDataMapSt,
                const rosAFE_TDSPorts *TDSPorts, genom_context self)
 {
-  preProcPtr thisProcessor = (*preProcessorsSt)->processorsAccessor->getProcessor( name );
+  preProcPtr thisProcessor = ((*preProcessorsSt)->processorsAccessor).getProcessor( name );
 	
   thisProcessor->appendChunk( );
   thisProcessor->calcLastChunk( );
@@ -140,6 +141,7 @@ releasePreProc(const char *name,
   
   SM::riseFlag ( name, newDataMapSt, self);
   
+  thisProcessor.reset();
   return rosAFE_pause_waitExec;
 }
 
@@ -156,8 +158,8 @@ deletePreProc(const char *name, rosAFE_preProcessors **preProcessorsSt,
   /* Delting the port out */
   deleteTDSPort( name, TDSPorts, self );
 
-  /* Delting the processor */	
-  (*preProcessorsSt)->processorsAccessor->removeProcessor( name );
+  /* Delting the processor */
+  ((*preProcessorsSt)->processorsAccessor).removeProcessor( name );
   return rosAFE_ether;
 }
 
@@ -171,7 +173,7 @@ genom_event
 stopPreProc(rosAFE_preProcessors **preProcessorsSt,
             genom_context self)
 {
-  (*preProcessorsSt)->processorsAccessor->clear( );
+  ((*preProcessorsSt)->processorsAccessor).clear();
   
   delete (*preProcessorsSt);
   

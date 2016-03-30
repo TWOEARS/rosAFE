@@ -91,7 +91,7 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   inputProcPtr inputP ( new InputProc<inputT>( name, infos->sampleRate, infos->sampleRate, infos->innerBufferSize_s ) );
   
   /* Adding this procesor to the ids */
-  (*inputProcessorsSt)->processorsAccessor->addProcessor( inputP );
+  ((*inputProcessorsSt)->processorsAccessor).addProcessor( inputP );
   
   /* Initialization */
   N = nFramesPerBlock; //N is the amount of frames the client requests
@@ -105,7 +105,8 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   initTDSPort( name, TDSPorts, infos->sampleRate, infos->bufferSize_s, sizeof(inputT), self );
  
   globalLoss = 0;
-     
+  
+  inputP.reset();   
   return rosAFE_waitExec;
 }
 
@@ -160,12 +161,13 @@ waitExecInputProc(uint32_t nFramesPerBlock, const rosAFE_Audio *Audio,
  */
 genom_event
 execInputProc(const char *name,
-              const rosAFE_inputProcessors *inputProcessorsSt,
+              rosAFE_inputProcessors **inputProcessorsSt,
               genom_context self)
 {
-  /* The client processes the current block l and r here */
-  inputProcessorsSt->processorsAccessor->getProcessor( name )->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
-  std::cout << name << std::endl;  
+  /* The client processes the current block l and r here */  
+  (((*inputProcessorsSt)->processorsAccessor).getProcessor( name ))->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
+  std::cout << name << std::endl;
+  
   return rosAFE_waitRelease;
 }
 
@@ -202,7 +204,7 @@ releaseInputProc(const char *name,
                  rosAFE_flagMap **newDataMapSt,
                  const rosAFE_TDSPorts *TDSPorts, genom_context self)
 {
-  inputProcPtr thisProcessor = (*inputProcessorsSt)->processorsAccessor->getProcessor( name );
+  inputProcPtr thisProcessor = ((*inputProcessorsSt)->processorsAccessor).getProcessor( name );
   /* Relasing the data */
   thisProcessor->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
   thisProcessor->calcLastChunk( );
@@ -214,6 +216,8 @@ releaseInputProc(const char *name,
   SM::riseFlag ( name, newDataMapSt, self );
   
   globalLoss = 0;
+  
+  thisProcessor.reset();
   return rosAFE_pause_waitExec;
 }
 
@@ -229,20 +233,20 @@ stopInputProc(const char *name, const rosAFE_TDSPorts *TDSPorts,
               rosAFE_flagMap **flagMapSt,
               rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-	// l.clear(); r.clear();
     deleteTDSPort( name, TDSPorts, self );
-	
-	/* Delting all input processors (even if there could be just one) */
-    (*inputProcessorsSt)->processorsAccessor->clear();
-	
-	/* Delting all flags */    
+
+	l.clear(); r.clear();
+		
+	/* Deleting all flags */
     (*flagMapSt)->allFlags.clear();
     (*newDataMapSt)->allFlags.clear();
-    
-	delete (*inputProcessorsSt);
 	
 	delete (*flagMapSt);
 	delete (*newDataMapSt);
+	
+	((*inputProcessorsSt)->processorsAccessor).removeProcessor( name );
+	((*inputProcessorsSt)->processorsAccessor).clear();
+	delete (*inputProcessorsSt);
 
     return rosAFE_ether;
 }

@@ -106,7 +106,7 @@ namespace openAFE {
 			/* TODO : Resets the internat states. */		
 			void reset() {
 				PB::reset();
-			}							
+			}		
 
 	}; /* class InputProc */
 }; /* namespace openAFE */

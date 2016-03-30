@@ -58,7 +58,7 @@ component rosAFE {
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecInputProc( in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
-        codel <exec>    	execInputProc( in name, in inputProcessorsSt ) yield waitRelease, stop;
+        codel <exec>    	execInputProc( in name, inout inputProcessorsSt ) yield waitRelease, stop;
         codel <waitRelease>    	waitRelease( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releaseInputProc( in name, inout inputProcessorsSt, out newDataMapSt, port out TDSPorts) yield pause::waitExec, stop;
 	// The state Machine, end
@@ -69,7 +69,7 @@ component rosAFE {
     };
 
     activity PreProc (
-      in string name = "preProc1" : "The name of this preProc",
+      in string name = "preProc" : "The name of this preProc",
       in string upperDepName = "input" : "The name of the upper dependencie",
       in unsigned long fsOut = 44100 : "fsOut",
       in unsigned short bRemoveDC =  0 : "'Flag to activate DC-removal filter",
@@ -86,10 +86,10 @@ component rosAFE {
       in float bUnityComp =  1 : "Compensation to have maximum of unity gain for middle ear filter (automatically true for Gammatone and false for drnl filterbanks)"
       ) {
         doc         "Prior to computing any of the supported auditory representations, the input signal can be pre-processed with one of the following elements: 1. Direct current (DC) bias removal 2. Pre-emphasis 3. Root mean square (RMS) normalization [1] 4. Level scaling to a pre-defiend sound pressure level (SPL) reference 5. Middle ear filtering [2]";
-        task        preProc;
-	validate    		existsAlready ( local in name, local in upperDepName, in ::ids );
+        task        		preProc;
+	validate    		existsAlready ( in name, in upperDepName, in ::ids );
 
-        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, in inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp) yield waitExec, stop;
+        codel <start>   	startPreProc( in name, in upperDepName, in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
@@ -105,8 +105,8 @@ component rosAFE {
     };
 
     activity GammatoneProc (
-      in string name = "preProc1" : "The name of this preProc",
-      in string upperDepName = "input" : "The name of the upper dependencie",
+      in string name = "gammatone" : "The name of this gammatone processor",
+      in string upperDepName = "preProc" : "The name of the upper dependencie",
       in unsigned long fsOut = 44100 : "fsOut",
       in string type =  "gammatone" : "Filterbank type (''gammatone'' or ''drnl'')",
       in float lowFreqHz =  80 : "Lowest center frequency (Hz)",
@@ -119,13 +119,13 @@ component rosAFE {
       ) {
         doc         "Gammatone auditory filterbank processor. The Gammatone filterbank models the frequency selectivity of the peripheral auditory system according following [1]. It operates on a time-domain signal and returns a time-frequency representation of the signal.";
         task        gammatoneProc;
-	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
+	validate    existsAlready ( in name, in upperDepName, in ::ids );
 
-        codel <start>   	startGammatoneProc ( in name, in upperDepName, in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, in preProcessorsSt, in infos, /* Arguments Of processor*/ local in type, local in lowFreqHz, local in highFreqHz, local in nERBs, local in nChannels, local in cfHz, local in nGamma, local in bwERBs ) yield waitExec, stop;
+        codel <start>   	startGammatoneProc ( in name, in upperDepName, in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, inout preProcessorsSt, in infos, /* Arguments Of processor*/ local in type, local in lowFreqHz, local in highFreqHz, local in nERBs, local in nChannels, local in cfHz, local in nGamma, local in bwERBs ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
-        codel <exec>    	execGammatoneProc ( in name, in upperDepName, inout gammatoneProcessorsSt, out flagMapSt ) yield waitRelease;
+        codel <exec>    	execGammatoneProc ( in name, in upperDepName, in gammatoneProcessorsSt, out flagMapSt ) yield waitRelease;
         codel <waitRelease>    	waitRelease ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releaseGammatoneProc ( in name, inout gammatoneProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
 	// The state Machine, end
@@ -143,7 +143,7 @@ component rosAFE {
 	) {
 	doc         "Modifies the parameter of a processor";
 
-	codel modifyParameter(in nameProc, in nameParam, in newValue, in inputProcessorsSt, in preProcessorsSt );
+	codel modifyParameter(in nameProc, in nameParam, in newValue, inout inputProcessorsSt, inout preProcessorsSt );
 
 	throw e_noSuchProcessor, e_noSuchParameter;
     };

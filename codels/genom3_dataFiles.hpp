@@ -15,10 +15,9 @@ using inputProcAccessorVectorIter = typename inputProcessor::outT_AccessorIter;
 
 
 using inputProcPtr = typename inputProcessorVector::processorSharedPtr;
-typedef std::shared_ptr< inputProcessorVector > inputProcessorVectorPtr;
 
 struct rosAFE_inputProcessors {
-	inputProcessorVectorPtr processorsAccessor; 
+	inputProcessorVector processorsAccessor; 
 };
 
 /* Start : The pre processor template definitions */
@@ -27,10 +26,9 @@ using preProcessor = PreProc<preT>;
 using preProcessorVector = ProcessorVector<preProcessor>;
 
 using preProcPtr = typename preProcessorVector::processorSharedPtr;
-typedef std::shared_ptr< preProcessorVector > preProcessorVectorPtr;
 
 struct rosAFE_preProcessors {
-	preProcessorVectorPtr processorsAccessor; 
+	preProcessorVector processorsAccessor; 
 };
 /* End : The pre processor template definitions */
 
@@ -41,10 +39,9 @@ using gammatoneProcessor = GamamtoneProc<gammatoneT>;
 using gammatoneProcVector = ProcessorVector<gammatoneProcessor>;
 
 using gammatoneProcPtr = typename gammatoneProcVector::processorSharedPtr;
-typedef std::shared_ptr< gammatoneProcVector > gammatoneProcVectorPtr;
 
 struct rosAFE_gammatoneProcessors {
-	gammatoneProcVectorPtr processorsAccessor; 
+	gammatoneProcVector processorsAccessor; 
 };
 /* End : The Gammatone template definitions */
 

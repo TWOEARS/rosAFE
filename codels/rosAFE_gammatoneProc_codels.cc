@@ -19,13 +19,13 @@ startGammatoneProc(const char *name, const char *upperDepName,
                    rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
                    rosAFE_flagMap **flagMapSt,
                    rosAFE_flagMap **newDataMapSt,
-                   const rosAFE_preProcessors *preProcessorsSt,
+                   rosAFE_preProcessors **preProcessorsSt,
                    const rosAFE_infos *infos, const char *type,
                    float lowFreqHz, float highFreqHz, float nERBs,
                    uint32_t nChannels, uint32_t cfHz, uint32_t nGamma,
                    float bwERBs, genom_context self)
 {
-  preProcPtr upperDepProc = preProcessorsSt->processorsAccessor->getProcessor( upperDepName );
+  preProcPtr upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
   params.set("type", type);
@@ -38,15 +38,16 @@ startGammatoneProc(const char *name, const char *upperDepName,
   params.set("bwERBs", bwERBs);
 	  
   gammatoneProcPtr gammatoneProcessor (new GamamtoneProc<gammatoneT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
-
   gammatoneProcessor->addInputProcessor ( upperDepProc );
   
   /* Adding this procesor to the ids */
-  (*gammatoneProcessorsSt)->processorsAccessor->addProcessor( gammatoneProcessor );
+  ((*gammatoneProcessorsSt)->processorsAccessor).addProcessor( gammatoneProcessor );
 
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
+  upperDepProc.reset();
+  gammatoneProcessor.reset();
   /* Initialization of the output port */
   	      
   return rosAFE_waitExec;
@@ -70,7 +71,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
  */
 genom_event
 execGammatoneProc(const char *name, const char *upperDepName,
-                  rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
+                  const rosAFE_gammatoneProcessors *gammatoneProcessorsSt,
                   rosAFE_flagMap **flagMapSt, genom_context self)
 {
   std::cout << "                            " << name << std::endl;    
@@ -118,9 +119,9 @@ deleteGammatoneProc(const char *name,
                     rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
                     genom_context self)
 {
-
-  /* Delting the processor */	
-  (*gammatoneProcessorsSt)->processorsAccessor->removeProcessor( name );
+  /* Deleting the processor */
+  ((*gammatoneProcessorsSt)->processorsAccessor).removeProcessor( name );
+  
   return rosAFE_ether;
 }
 
@@ -134,8 +135,8 @@ genom_event
 stopGammatoneProc(rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
                   genom_context self)
 {
-  (*gammatoneProcessorsSt)->processorsAccessor->clear( );
-  
+  ((*gammatoneProcessorsSt)->processorsAccessor).clear();
+
   delete (*gammatoneProcessorsSt);
   
   return rosAFE_ether;

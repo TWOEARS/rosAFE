@@ -110,8 +110,10 @@ namespace openAFE {
 
 			void setData(uint32_t dimOfSignal, twoCTypeBlockPtr toCopy) {
 				this->assertAccessor ( dimOfSignal );
-				this->audioVector[dimOfSignal]->first = toCopy->first;
-				this->audioVector[dimOfSignal]->second = toCopy->second;
+				this->audioVector[dimOfSignal]->first->firstValue = toCopy->first->firstValue;
+				this->audioVector[dimOfSignal]->first->dim = toCopy->first->dim;				
+				this->audioVector[dimOfSignal]->second->firstValue = toCopy->second->firstValue;
+				this->audioVector[dimOfSignal]->second->dim = toCopy->second->dim;
 			}
 			
 			twoCTypeBlockPtr getTwoCTypeBlockAccessor ( uint32_t dimOfSignal ) {

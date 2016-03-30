@@ -120,14 +120,14 @@ namespace openAFE {
 			 * However, the results are not publiched yet on the output vectors.
 			 */
 			void processChunk () {
-				inputPtrIterator it = this->inputProcessors.processorVector.begin();
-				int i = 0;
-			    for ( outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin() ; itPMZ != this->outPrivateMemoryZone.end() ; ++itPMZ) {
-					(*itPMZ)->appendChunk( ((*it)->getLastChunkAccesor())[i++] );
-					(*itPMZ)->calcLastChunk();
-					preProcLib::multiply ((*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim, this->processorParams );
-					preProcLib::multiply ((*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim, this->processorParams );
-				}
+					inputPtrIterator it = this->inputProcessors.processorVector.begin();
+					int i = 0;
+					for ( outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin() ; itPMZ != this->outPrivateMemoryZone.end() ; ++itPMZ) {
+						(*itPMZ)->appendChunk( ((*it)->getLastChunkAccesor())[i++] );
+						(*itPMZ)->calcLastChunk();
+						preProcLib::multiply ((*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim, this->processorParams );
+						preProcLib::multiply ((*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim, this->processorParams );
+					}
 			}
 									
 			/* TODO : Resets the internat states. */		

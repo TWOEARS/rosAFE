@@ -172,9 +172,11 @@ namespace openAFE {
 			}
 			
 			~Processor () {
-				// inputProcessors.clear();
-				// outputSignals.clear();
-				std::cout << "Destructor of Processor class named as : '" << pInfo.name << "'" << std::endl;		
+				inputProcessors.clear();
+				outputSignals.clear();
+				inPrivateMemoryZone.clear();
+				outPrivateMemoryZone.clear();
+				outT_lastChunkInfo.clear(); outT_lastDataInfo.clear(); outT_oldDataInfo.clear(); outT_wholeBufferInfo.clear();
 			}
 			
 			/* PROCESSOR abstract methods (to be implemented by each subclasses): */
@@ -316,7 +318,6 @@ namespace openAFE {
 				outT_SignalIter itOut = this->outputSignals.begin();
 				for ( outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin() ; itPMZ != this->outPrivateMemoryZone.end() ; ++itPMZ ) {
 					(*itPMZ)->calcOldData();
-					
 					(*itOut)->appendChunk( (*itPMZ)->getOldDataAccesor() );
 					itOut++;
 				}

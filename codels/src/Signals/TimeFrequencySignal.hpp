@@ -22,7 +22,7 @@ namespace openAFE {
 	private:
 
 		/* cfHz : Center frequencies of the frequency channels */
-		doubleVector cfHz;	
+		doubleVector cfHz;
 		
 	protected:
 	

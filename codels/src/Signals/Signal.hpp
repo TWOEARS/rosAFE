@@ -30,6 +30,7 @@ namespace openAFE {
 
 	    typedef std::vector<containerPtr > bufferPtrVector;
 	    typedef typename std::vector<containerPtr >::iterator bufferIter;
+	    typedef typename std::vector<containerPtr >::const_iterator bufferConstIter;
 
 	protected:
 
@@ -132,7 +133,7 @@ namespace openAFE {
 		}
 				
 		void reset () {
-			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
+			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
 				(*it)->reset();
 		}
 
@@ -158,14 +159,14 @@ namespace openAFE {
 			assert( inChunk->getDimOfSignal() == bufferVector.size() );
 			uint32_t i = 0;
 			
-			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
+			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
 				(*it)->push_chunk( inChunk->getTwoCTypeBlockAccessor( i++ ) ) ;
 		}
 		
 		/* Append one dimentional cotinious data */
 		void appendChunk( T* inChunk, uint32_t dim, uint32_t bufferNumber = 0 ) {
 			assert( bufferNumber <= bufferVector.size() );
-			bufferIter it = bufferVector.begin();
+			bufferConstIter it = bufferVector.begin();
 				
 			/* The first array */
 			( *(it + bufferNumber) )->push_chunk( inChunk, dim );
@@ -208,13 +209,13 @@ namespace openAFE {
 		
 		// FIXME : this may be not useful as it is. Think about it.
 		uint32_t getFreshDataSize() {
-			bufferIter it = bufferVector.begin(); 
+			bufferConstIter it = bufferVector.begin(); 
 			return (*it)->getFreshDataSize();
 		}
 
 		void calcLastChunk() {
 			uint32_t i = 0;
-			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
+			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcLastChunk();
 				allLastChunkInfo->setData ( i++, (*it)->getLastChunkAccesor() );
 			}
@@ -222,7 +223,7 @@ namespace openAFE {
 
 		void calcLastData( uint32_t samplesArg ) {
 			uint32_t i = 0;
-			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
+			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcLatestData( samplesArg );
 				allLastDataInfo->setData ( i++, (*it)->getLastDataAccesor( ) );
 			}
@@ -230,7 +231,7 @@ namespace openAFE {
 		
 		void calcOldData( uint32_t samplesArg = 0 ) {
 			uint32_t i = 0;
-			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
+			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcOldData( samplesArg );
 				allOldDataInfo->setData ( i++, (*it)->getOldDataAccesor( ) );
 			}
@@ -238,7 +239,7 @@ namespace openAFE {
 
 		void calcWholeBuffer() {
 			uint32_t i = 0;
-			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
+			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it) {
 				(*it)->calcWholeBuffer( );
 				allWholeBufferInfo->setData ( i++, (*it)->getWholeBufferAccesor() );
 			}
