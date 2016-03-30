@@ -13,6 +13,8 @@
 	
 	int SM::checkFlag ( const char *name, const char *upperDep, rosAFE_flagMap **newDataMapSt, genom_context& self  ) {
 
+		// std::cout << "Flag check of : Name : " << name << " - upperDep : " << upperDep << std::endl;
+		
 		for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it) {
 			if ( ( (*it)->upperDep == upperDep ) and ( (*it)->lowerDep ==  name ) ) {
 				 if ( (*it)->waitFlag == false ) {
@@ -49,15 +51,16 @@
 
     void SM::removeFlag ( const char *name, rosAFE_flagMap **newDataMapSt, genom_context& self ) {
 
-	  for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it) {
-		 if ( (*it)->upperDep == name ) {
-			 SM::removeFlag( ((*it)->lowerDep).c_str(), newDataMapSt, self);
+	  for ( flagStIterator it = (*newDataMapSt)->allFlags.end() ; it != (*newDataMapSt)->allFlags.begin() ; it--) {
+		 if ( (*(it-1))->upperDep == name ) {
+			 SM::removeFlag( ((*(it-1))->lowerDep).c_str(), newDataMapSt, self);
 		 }
 	  }
 
-	  for ( flagStIterator it = (*newDataMapSt)->allFlags.begin() ; it != (*newDataMapSt)->allFlags.end() ; ++it) {
-		 if ( (*it)->lowerDep == name ) {
-			 (*newDataMapSt)->allFlags.erase( it );
+	  for ( flagStIterator it = (*newDataMapSt)->allFlags.end() ; it != (*newDataMapSt)->allFlags.begin() ; it--) {
+		 if ( ( ((*(it-1)))->lowerDep == name ) /*|| ( (*it)->upperDep == name ) */ ) {
+			 (*newDataMapSt)->allFlags.erase( it-1 );
 		 }
 	  }
+
 	}
