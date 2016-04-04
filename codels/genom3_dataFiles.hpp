@@ -45,6 +45,30 @@ struct rosAFE_gammatoneProcessors {
 };
 /* End : The Gammatone template definitions */
 
+/* Start : The IHC template definitions */
+using ihcT = gammatoneT;
+using ihcProcessor = IHCProc<ihcT>;
+using ihcProcVector = ProcessorVector<ihcProcessor>;
+
+using ihcProcPtr = typename ihcProcVector::processorSharedPtr;
+
+struct rosAFE_ihcProcessors {
+	ihcProcVector processorsAccessor; 
+};
+/* End : The IHC template definitions */
+
+/* Start : The ILD template definitions */
+using ildT = ihcT;
+using ildProcessor = ILDProc<ildT>;
+using ildProcVector = ProcessorVector<ildProcessor>;
+
+using ildProcPtr = typename ildProcVector::processorSharedPtr;
+
+struct rosAFE_ildProcessors {
+	ildProcVector processorsAccessor; 
+};
+/* End : The ILD template definitions */
+
 struct flagSt {
 	std::string upperDep;
 	std::string lowerDep;

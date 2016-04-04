@@ -13,6 +13,9 @@ component rosAFE {
     native inputProcessors;
     native preProcessors;
     native gammatoneProcessors;
+    native ihcProcessors;
+    native ildProcessors;
+
     native flagMap;
 
     ids {
@@ -21,6 +24,8 @@ component rosAFE {
 	inputProcessors inputProcessorsSt;
 	preProcessors preProcessorsSt;
 	gammatoneProcessors gammatoneProcessorsSt;
+	ihcProcessors ihcProcessorsSt;
+	ildProcessors ildProcessorsSt;
 
 	flagMap flagMapSt;
 	flagMap newDataMapSt;
@@ -41,6 +46,14 @@ component rosAFE {
     };
 
     task gammatoneProc {
+        period      50ms;
+    };
+
+    task ihcProc {
+        period      50ms;
+    };
+
+    task ildProc {
         period      50ms;
     };
 
@@ -136,6 +149,56 @@ component rosAFE {
         throw   e_noUpperDependencie, e_existsAlready;
     };
 
+   activity IhcProc (
+      in string name = "ihc" : "The name of this ihc processor",
+      in string upperDepName = "gammatone" : "The name of the upper dependencie",
+      in unsigned long fsOut = 44100 : "fsOut",
+      in double dummy =  8 : "Dummy value"
+      ) {
+        doc         "Dummy processor. Change it.";
+        task        ihcProc;
+	validate    existsAlready ( in name, in upperDepName, in ::ids );
+
+        codel <start>   	startIhcProc ( in name, in upperDepName, in fsOut, inout ihcProcessorsSt, inout flagMapSt, inout newDataMapSt, inout gammatoneProcessorsSt, in infos, /* Arguments Of processor */ local in dummy ) yield waitExec, stop;
+	
+	// The state Machine, start
+        codel <waitExec>    	waitExec ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <exec>    	execIhcProc ( in name, in upperDepName, in ihcProcessorsSt, out flagMapSt ) yield waitRelease;
+        codel <waitRelease>    	waitRelease ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseIhcProc ( in name, inout ihcProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
+	// The state Machine, end
+
+        codel <delete>    	deleteIhcProc ( in name, inout ihcProcessorsSt ) yield ether;
+        codel <stop>    	stopIhcProc ( inout ihcProcessorsSt ) yield ether;
+
+        throw   e_noUpperDependencie, e_existsAlready;
+    };
+
+   activity IldProc (
+      in string name = "ild" : "The name of this ild processor",
+      in string upperDepName = "ihc" : "The name of the upper dependencie",
+      in unsigned long fsOut = 44100 : "fsOut",
+      in double dummy =  8 : "Dummy value"
+      ) {
+        doc         "Dummy processor. Change it.";
+        task        ildProc;
+	validate    existsAlready ( in name, in upperDepName, in ::ids );
+
+        codel <start>   	startIldProc ( in name, in upperDepName, in fsOut, inout ildProcessorsSt, inout flagMapSt, inout newDataMapSt, inout ihcProcessorsSt, in infos, /* Arguments Of processor */ local in dummy ) yield waitExec, stop;
+	
+	// The state Machine, start
+        codel <waitExec>    	waitExec ( in name, in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <exec>    	execIldProc ( in name, in upperDepName, in ildProcessorsSt, out flagMapSt ) yield waitRelease;
+        codel <waitRelease>    	waitRelease ( in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseIldProc ( in name, inout ildProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
+	// The state Machine, end
+
+        codel <delete>    	deleteIldProc ( in name, inout ildProcessorsSt ) yield ether;
+        codel <stop>    	stopIldProc ( inout ildProcessorsSt ) yield ether;
+
+        throw   e_noUpperDependencie, e_existsAlready;
+    };
+
     function ModifyParameter (
 	in string nameProc = "nameProc" : "The name of the processor to change the parameter",
 	in string nameParam = "nameParam" : "The name of the parameter to be changed",
@@ -143,7 +206,7 @@ component rosAFE {
 	) {
 	doc         "Modifies the parameter of a processor";
 
-	codel modifyParameter(in nameProc, in nameParam, in newValue, inout inputProcessorsSt, inout preProcessorsSt );
+	codel modifyParameter( in nameProc, in nameParam, in newValue, in ::ids );
 
 	throw e_noSuchProcessor, e_noSuchParameter;
     };
@@ -158,6 +221,6 @@ component rosAFE {
 
     function Stop() {
         doc         "Stop all";
-        interrupts  InputProc, PreProc;
+        interrupts  InputProc, PreProc, GammatoneProc, IhcProc, IldProc;
     };
 };

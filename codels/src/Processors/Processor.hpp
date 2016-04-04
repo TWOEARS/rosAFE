@@ -20,7 +20,8 @@ namespace openAFE {
 	enum procType {
 		_inputProc,
 		_preProc,
-		_gammatone
+		_gammatone,
+		_ihc
 	};
 	
 	/* Processor Info struct */            

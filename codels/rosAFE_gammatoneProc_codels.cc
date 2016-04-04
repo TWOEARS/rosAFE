@@ -104,8 +104,10 @@ releaseGammatoneProc(const char *name,
                      rosAFE_flagMap **newDataMapSt,
                      genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return rosAFE_pause_waitExec;
+  
+  
+  SM::riseFlag ( name, newDataMapSt, self);
+  return rosAFE_pause_waitExec;
 }
 
 /** Codel deleteGammatoneProc of activity GammatoneProc.

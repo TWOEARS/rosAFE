@@ -21,15 +21,23 @@ pause(p);
 preProc = rosAFE.PreProc('-a', 'preProc', 'input', 44100);
 pause(p);
 
-preProc1 = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
-pause(p);
+%preProc1 = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
+%pause(p);
 
 gammatoneProc = rosAFE.GammatoneProc('-a', 'gammatone', 'preProc', 44100);
 pause(p);
 
-gammatoneProc2 = rosAFE.GammatoneProc('-a', 'gammatone2', 'preProc', 44100);
+%gammatoneProc2 = rosAFE.GammatoneProc('-a', 'gammatone2', 'preProc', 44100);
+%pause(p);
+
+%gammatoneProc3 = rosAFE.GammatoneProc('-a', 'gammatone3', 'preProc', 44100);
+%pause(p);
+
+ichProc = rosAFE.IhcProc('-a', 'ihc', 'gammatone', 44100);
 pause(p);
-gammatoneProc3 = rosAFE.GammatoneProc('-a', 'gammatone3', 'preProc', 44100);
+
+ildProc = rosAFE.IldProc('-a', 'ild', 'ihc', 44100);
+pause(p);
 
 newParam = rosAFE.ModifyParameter('-a','preProc', 'bRemoveDC', '3');
 

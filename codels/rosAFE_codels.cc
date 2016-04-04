@@ -3,7 +3,10 @@
 bool checkExists ( const char *name, const rosAFE_ids *ids ) {
 	if ( ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
 	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) )
+	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
+	     ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
+	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )	     	     
+	   )
 	     return true;
 	return false;
 }
@@ -40,6 +43,28 @@ existsAlready(const char *name, const char *upperDepName,
 
 
 
+/* --- Activity IhcProc ------------------------------------------------- */
+
+/** Validation codel existsAlready of activity IhcProc.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ */
+/* already defined in service PreProc validation */
+
+
+
+/* --- Activity IldProc ------------------------------------------------- */
+
+/** Validation codel existsAlready of activity IldProc.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ */
+/* already defined in service PreProc validation */
+
+
+
 /* --- Function ModifyParameter ----------------------------------------- */
 
 /** Codel modifyParameter of function ModifyParameter.
@@ -49,20 +74,31 @@ existsAlready(const char *name, const char *upperDepName,
  */
 genom_event
 modifyParameter(const char *nameProc, const char *nameParam,
-                const char *newValue,
-                rosAFE_inputProcessors **inputProcessorsSt,
-                rosAFE_preProcessors **preProcessorsSt,
+                const char *newValue, const rosAFE_ids *ids,
                 genom_context self)
 {
 
-  if ( ((*inputProcessorsSt)->processorsAccessor).getProcessor ( nameProc ) ) {
-	((*inputProcessorsSt)->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue);
+  if ( (ids->inputProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
+	(ids->inputProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue);
 	return genom_ok;
   }
-  if ( ((*preProcessorsSt)->processorsAccessor).getProcessor ( nameProc ) ) {
-	((*preProcessorsSt)->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+  if ( (ids->preProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
+	(ids->preProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
 	return genom_ok;
-  } 
+  }
+  if ( (ids->gammatoneProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
+	(ids->gammatoneProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+	return genom_ok;
+  }
+  if ( (ids->ihcProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
+	(ids->ihcProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+	return genom_ok;
+  }
+  if ( (ids->ildProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
+	(ids->ildProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+	return genom_ok;
+  }
+  
   return rosAFE_e_noSuchProcessor( self );
 }
 
