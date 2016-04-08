@@ -67,13 +67,23 @@ namespace openAFE {
 		/* getInputProcessor : returns a shared pointer to the asked input processor.
 		 * If the processor doesn't exists, returns a null pointer.
 		 * */		
+		const processorSharedPtr getProcessor ( const int32_t rangArg ) {
+			if ( rangArg <= this->getSize ( ) )
+				return this->processorVector[rangArg];
+			else
+				return nullptr;
+		}
+
+		/* getInputProcessor : returns a shared pointer to the asked input processor.
+		 * If the processor doesn't exists, returns a null pointer.
+		 * */		
 		const processorSharedPtr getProcessor ( const std::string& nameArg ) {
 			for ( processorSharedPtrVectorIterator it = processorVector.begin() ; it != processorVector.end() ; ++it )
 				if ( (*it)->getProcessorInfo().name == nameArg )
 					return *it;
 			return nullptr;
 		}
-		
+				
 		/* removeInputProcessor : returns true if the asked processor is removed.
 		 * returns false if the processor doesnt exist */
 		const bool removeProcessor ( const std::string& nameArg ) {

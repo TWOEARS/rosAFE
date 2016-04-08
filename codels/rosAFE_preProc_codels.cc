@@ -1,5 +1,4 @@
-#include "stateMachine.hpp"
-#include "Ports.hpp"
+#include "processorCommon.hpp"
 
 
 /* --- Task preProc ----------------------------------------------------- */
@@ -53,12 +52,11 @@ startPreProc(const char *name, const char *upperDepName,
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
-  upperDepProc.reset();
-  preProcessor.reset();
-  
   /* Initialization of the output port */
   initTDSPort( name, TDSPorts, fsOut, infos->bufferSize_s, sizeof(preT), self );
-  	      
+
+  upperDepProc.reset();
+  preProcessor.reset();
   return rosAFE_waitExec;
 }
 
@@ -70,7 +68,7 @@ startPreProc(const char *name, const char *upperDepName,
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
 genom_event
-waitExec (const char *name, const char *upperDepName,
+waitExec(const char *name, const char *upperDepName,
                 rosAFE_flagMap **newDataMapSt, genom_context self)
 {   
   // If there is no new data, we will wait
@@ -89,24 +87,21 @@ waitExec (const char *name, const char *upperDepName,
 
 }
 
-/** Codel execPreProc of activity PreProc.
+/** Codel exec of activity PreProc.
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
 genom_event
-execPreProc(const char *name, const char *upperDepName,
-            rosAFE_preProcessors **preProcessorsSt,
-            rosAFE_flagMap **flagMapSt, genom_context self)
+exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
+     rosAFE_flagMap **flagMapSt, genom_context self)
 {
-  std::cout << "              " << name << std::endl;
-
-  (((*preProcessorsSt)->processorsAccessor).getProcessor( name ))->processChunk( );
-      
-  // Finished with this data. The upperDep can overwite it.
-  SM::fallFlag ( name, upperDepName, flagMapSt, self);
+  PC::execAnyProc( name, ids, self );
   
+  // At the end of this codel, the upperDep will be able to overwite the data.
+  SM::fallFlag ( name, upperDepName, flagMapSt, self);
+	  
   return rosAFE_waitRelease;
 }
 
@@ -138,6 +133,7 @@ releasePreProc(const char *name,
   
   /* Publishing on the output port */
   publishTDSPort( name, TDSPorts, thisProcessor->getLastChunkAccesor(), self );
+  // publishPreProcParamPort( name, self );
   
   SM::riseFlag ( name, newDataMapSt, self);
   
@@ -155,7 +151,7 @@ genom_event
 deletePreProc(const char *name, rosAFE_preProcessors **preProcessorsSt,
               const rosAFE_TDSPorts *TDSPorts, genom_context self)
 {
-  /* Delting the port out */
+  /* Delting the output port */
   deleteTDSPort( name, TDSPorts, self );
 
   /* Delting the processor */

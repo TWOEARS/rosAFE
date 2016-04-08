@@ -20,7 +20,8 @@ using namespace openAFE;
    were lost in *loss (*loss equals 0 if no loss).
  */
 
-int getAudioData(binaudio_portStruct *src, inputT *destL, inputT *destR,
+int
+getAudioData(binaudio_portStruct *src, inputT *destL, inputT *destR,
                  int N, int64_t *nfr, int *loss)
 {
     int n;       /* amount of frames the function will be able to get */
@@ -166,7 +167,7 @@ execInputProc(const char *name,
 {
   /* The client processes the current block l and r here */  
   (((*inputProcessorsSt)->processorsAccessor).getProcessor( name ))->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
-  std::cout << name << std::endl;
+  globalLoss = 0;
   
   return rosAFE_waitRelease;
 }
@@ -178,7 +179,7 @@ execInputProc(const char *name,
  * Throws rosAFE_e_noData, rosAFE_e_noMemory, rosAFE_e_existsAlready.
  */
 genom_event
-waitRelease (const char *name, rosAFE_flagMap **flagMapSt,
+waitRelease(const char *name, rosAFE_flagMap **flagMapSt,
                      genom_context self)
 {      
   /* Waiting for all childs */
@@ -214,9 +215,7 @@ releaseInputProc(const char *name,
   
   /* Informing all the potential childs to say that this is a new chunk. */
   SM::riseFlag ( name, newDataMapSt, self );
-  
-  globalLoss = 0;
-  
+    
   thisProcessor.reset();
   return rosAFE_pause_waitExec;
 }

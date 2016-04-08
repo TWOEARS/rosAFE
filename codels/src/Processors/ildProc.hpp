@@ -74,6 +74,10 @@ namespace openAFE {
 			~ILDProc () {
 				std::cout << "Destructor of a ILD processor" << std::endl;
 			}
+			
+			void processChunk ( ) {
+				
+			}			
 
 	}; /* class ILDProc */
 }; /* namespace openAFE */

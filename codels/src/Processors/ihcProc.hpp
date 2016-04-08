@@ -74,6 +74,10 @@ namespace openAFE {
 			~IHCProc () {
 				std::cout << "Destructor of a IHC processor" << std::endl;
 			}
+			
+			void processChunk ( ) {
+				
+			}			
 
 	}; /* class IHCProc */
 }; /* namespace openAFE */

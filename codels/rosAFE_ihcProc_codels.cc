@@ -18,13 +18,13 @@ startIhcProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_ihcProcessors **ihcProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
-             const rosAFE_infos *infos, double dummy,
+             const rosAFE_infos *infos, const char *method,
              genom_context self)
 {
   gammatoneProcPtr upperDepProc = ((*gammatoneProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
-  params.set("dummy", dummy);
+  params.set("method", method);
   
   ihcProcPtr ihcProcessor (new IHCProc<ihcT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
   ihcProcessor->addInputProcessor ( upperDepProc );
@@ -50,24 +50,14 @@ startIhcProc(const char *name, const char *upperDepName,
 /* already defined in service PreProc */
 
 
-/** Codel execIhcProc of activity IhcProc.
+/** Codel exec of activity IhcProc.
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
-genom_event
-execIhcProc(const char *name, const char *upperDepName,
-            const rosAFE_ihcProcessors *ihcProcessorsSt,
-            rosAFE_flagMap **flagMapSt, genom_context self)
-{
-  std::cout << "                                          " << name << std::endl;  
-    
-  // Finished with this data. The upperDep can overwite it.
-  SM::fallFlag ( name, upperDepName, flagMapSt, self);
-  
-  return rosAFE_waitRelease;
-}
+/* already defined in service PreProc */
+
 
 /** Codel waitRelease of activity IhcProc.
  *

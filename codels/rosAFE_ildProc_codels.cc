@@ -18,14 +18,17 @@ startIldProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_ildProcessors **ildProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_ihcProcessors **ihcProcessorsSt,
-             const rosAFE_infos *infos, double dummy,
+             const rosAFE_infos *infos, const char *ild_wname,
+             float ild_wSizeSec, float ild_hSizeSec,
              genom_context self)
 {
   ihcProcPtr upperDepProc = ((*ihcProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
-  params.set("dummy", dummy);
-  
+  params.set("ild_wname", ild_wname);
+  params.set("ild_wSizeSec", ild_wSizeSec);
+  params.set("ild_hSizeSec", ild_hSizeSec);
+      
   ildProcPtr ildProcessor (new ILDProc<ildT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
   ildProcessor->addInputProcessor ( upperDepProc );
   
@@ -50,24 +53,14 @@ startIldProc(const char *name, const char *upperDepName,
 /* already defined in service PreProc */
 
 
-/** Codel execIldProc of activity IldProc.
+/** Codel exec of activity IldProc.
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
-genom_event
-execIldProc(const char *name, const char *upperDepName,
-            const rosAFE_ildProcessors *ildProcessorsSt,
-            rosAFE_flagMap **flagMapSt, genom_context self)
-{
-  std::cout << "                                                        " << name << std::endl;  
-    
-  // Finished with this data. The upperDep can overwite it.
-  SM::fallFlag ( name, upperDepName, flagMapSt, self);
-  
-  return rosAFE_waitRelease;
-}
+/* already defined in service PreProc */
+
 
 /** Codel waitRelease of activity IldProc.
  *

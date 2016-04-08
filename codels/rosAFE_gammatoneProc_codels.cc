@@ -63,25 +63,14 @@ startGammatoneProc(const char *name, const char *upperDepName,
 /* already defined in service PreProc */
 
 
-/** Codel execGammatoneProc of activity GammatoneProc.
+/** Codel exec of activity GammatoneProc.
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
  */
-genom_event
-execGammatoneProc(const char *name, const char *upperDepName,
-                  const rosAFE_gammatoneProcessors *gammatoneProcessorsSt,
-                  rosAFE_flagMap **flagMapSt, genom_context self)
-{
-  std::cout << "                            " << name << std::endl;    
-    
-    
-  // Finished with this data. The upperDep can overwite it.
-  SM::fallFlag ( name, upperDepName, flagMapSt, self);
-  
-  return rosAFE_waitRelease;
-}
+/* already defined in service PreProc */
+
 
 /** Codel waitRelease of activity GammatoneProc.
  *

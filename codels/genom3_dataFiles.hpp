@@ -19,6 +19,7 @@ using inputProcPtr = typename inputProcessorVector::processorSharedPtr;
 struct rosAFE_inputProcessors {
 	inputProcessorVector processorsAccessor; 
 };
+/* End : The Input processor template definitions */
 
 /* Start : The pre processor template definitions */
 using preT = inputT;

@@ -75,6 +75,10 @@ namespace openAFE {
 			~GamamtoneProc () {
 				std::cout << "Destructor of a Gammatone processor" << std::endl;
 			}
+			
+			void processChunk ( ) {
+				
+			}			
 
 	}; /* class GamamtoneProc */
 }; /* namespace openAFE */

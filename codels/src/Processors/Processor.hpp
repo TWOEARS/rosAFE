@@ -83,7 +83,7 @@ namespace openAFE {
 		    
 			outT_SignalSharedPtrVector outputSignals;
 
-			inT_SignalSharedPtrVector inPrivateMemoryZone;			
+			inT_SignalSharedPtrVector inPrivateMemoryZone;
 			outT_SignalSharedPtrVector outPrivateMemoryZone;
 			
 			outT_nTwoCTypeBlockAccessorPtrVector outT_lastChunkInfo, outT_lastDataInfo, outT_oldDataInfo, outT_wholeBufferInfo;
@@ -182,7 +182,7 @@ namespace openAFE {
 			
 			/* PROCESSOR abstract methods (to be implemented by each subclasses): */
 			/* PROCESSCHUNK : Returns the output from the processing of a new chunk of input */
-			// virtual void processChunk () {} // = 0;
+			virtual void processChunk () {} // = 0;
 			/* RESET : Resets internal states of the processor, if any */
 			virtual void reset () {
 				for(outT_SignalIter it = outputSignals.begin() ; it != outputSignals.end() ; ++it)
@@ -218,6 +218,11 @@ namespace openAFE {
 				return pInfo;
 			}
 
+			/* Returns a const reference of the infos struct of the in processor of this processor */
+			const pInfoStruct& getInProcessorInfo( const uint32_t inProcNumber ) {
+				return this->inputProcessors.getProcessor(inProcNumber)->getProcessorInfo();
+			}
+			
 			/* Getter methods : This funtion sends a const reference for the asked parameter's value */
 			const std::string& getParameter( std::string paramArg ) {
 				return this->processorParams[ paramArg ];

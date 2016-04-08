@@ -21,16 +21,16 @@ pause(p);
 preProc = rosAFE.PreProc('-a', 'preProc', 'input', 44100);
 pause(p);
 
-%preProc1 = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
+preProc1 = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
 %pause(p);
 
 gammatoneProc = rosAFE.GammatoneProc('-a', 'gammatone', 'preProc', 44100);
 pause(p);
 
-%gammatoneProc2 = rosAFE.GammatoneProc('-a', 'gammatone2', 'preProc', 44100);
+gammatoneProc2 = rosAFE.GammatoneProc('-a', 'gammatone2', 'preProc', 44100);
 %pause(p);
 
-%gammatoneProc3 = rosAFE.GammatoneProc('-a', 'gammatone3', 'preProc', 44100);
+gammatoneProc3 = rosAFE.GammatoneProc('-a', 'gammatone3', 'preProc', 44100);
 %pause(p);
 
 ichProc = rosAFE.IhcProc('-a', 'ihc', 'gammatone', 44100);
@@ -46,38 +46,43 @@ inputRight = zeros(sampleRate*bufferSize_s, 1);
 
 time = timeVector ( inputLeft, sampleRate );
 
+rp = rosAFE.runningProcessors();
+rp.runningProcessors
+
 disp('Go go go');
- 
-% while(1)
-%     tic
-%     inputToMatlab = rosAFE.TDSPorts('input');
-%     preProc1ToMatlab = rosAFE.TDSPorts('preProc');
-% 
-%     inputLeft = cell2mat(inputToMatlab.TDSPorts.left);
-%     inputRight = cell2mat(inputToMatlab.TDSPorts.right);
-% 
-%     ppLeft = cell2mat(preProc1ToMatlab.TDSPorts.left);
-%     ppRight = cell2mat(preProc1ToMatlab.TDSPorts.right);
-%     
-%     subplot(2,2,1);
-%     plot(time, inputLeft);  
-%     axis([min(time) max(time) -1 1]);
-% 
-%     subplot(2,2,2);
-%     plot(time, inputRight);
-%     axis([min(time) max(time) -1 1]);
-%     
-%     subplot(2,2,3);
-%     plot(time, ppLeft);  
-%     axis([min(time) max(time) -1 1]);
-% 
-%     subplot(2,2,4);
-%     plot(time, ppRight);
-%     axis([min(time) max(time) -1 1]);    
-%     toc
-%     pause(0.1);
-% 
-% end
+
+while(1)
+    tic
+    inputToMatlab = rosAFE.TDSPorts('input');
+    preProc1ToMatlab = rosAFE.TDSPorts('preProc');
+
+    inputLeft = cell2mat(inputToMatlab.TDSPorts.left);
+    inputRight = cell2mat(inputToMatlab.TDSPorts.right);
+
+    ppLeft = cell2mat(preProc1ToMatlab.TDSPorts.left);
+    ppRight = cell2mat(preProc1ToMatlab.TDSPorts.right);
+    
+    subplot(2,2,1);
+    plot(time, inputLeft);  
+    axis([min(time) max(time) -1 1]);
+
+    subplot(2,2,2);
+    plot(time, inputRight);
+    axis([min(time) max(time) -1 1]);
+    
+    subplot(2,2,3);
+    plot(time, ppLeft);  
+    axis([min(time) max(time) -1 1]);
+
+    subplot(2,2,4);
+    plot(time, ppRight);
+    axis([min(time) max(time) -1 1]);    
+    toc
+    pause(0.1);
+
+end
+pause(3);
+rosAFE.RemoveProcessor('-a','ihc');
 pause(3);
 rosAFE.RemoveProcessor('-a','gammatone');
 pause(3);
