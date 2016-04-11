@@ -1,5 +1,6 @@
 #include "processorCommon.hpp"
-
+#include "stateMachine.hpp"
+#include "Ports.hpp"
 
 /* --- Task preProc ----------------------------------------------------- */
 

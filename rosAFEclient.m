@@ -9,10 +9,10 @@ rosAFE.connect_port('Audio', 'bass/Audio');
 sampleRate = 44100;
 nFramesPerChunk = 2205;
 nChunksOnPort = 20;
-bufferSize_s = 10;
+bufferSize_s = 1;
 
 p=0.25;
-acquire = bass.Acquire('-a', 'hw:2,0', sampleRate, nFramesPerChunk, nChunksOnPort);
+acquire = bass.Acquire('-a', 'hw:1,0', sampleRate, nFramesPerChunk, nChunksOnPort);
 pause(p);
 
 get = rosAFE.InputProc('-a', 'input', 12000, bufferSize_s);
@@ -22,16 +22,16 @@ preProc = rosAFE.PreProc('-a', 'preProc', 'input', 44100);
 pause(p);
 
 preProc1 = rosAFE.PreProc('-a', 'preProc1', 'input', 44100);
-%pause(p);
+pause(p);
 
 gammatoneProc = rosAFE.GammatoneProc('-a', 'gammatone', 'preProc', 44100);
 pause(p);
 
 gammatoneProc2 = rosAFE.GammatoneProc('-a', 'gammatone2', 'preProc', 44100);
-%pause(p);
+pause(p);
 
 gammatoneProc3 = rosAFE.GammatoneProc('-a', 'gammatone3', 'preProc', 44100);
-%pause(p);
+pause(p);
 
 ichProc = rosAFE.IhcProc('-a', 'ihc', 'gammatone', 44100);
 pause(p);

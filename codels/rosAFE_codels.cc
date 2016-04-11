@@ -78,24 +78,24 @@ modifyParameter(const char *nameProc, const char *nameParam,
                 genom_context self)
 {
 
-  if ( (ids->inputProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
-	(ids->inputProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue);
+  if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue);
 	return genom_ok;
   }
-  if ( (ids->preProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
-	(ids->preProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+  if ( ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
 	return genom_ok;
   }
-  if ( (ids->gammatoneProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
-	(ids->gammatoneProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+  if ( ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
 	return genom_ok;
   }
-  if ( (ids->ihcProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
-	(ids->ihcProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+  if ( ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
 	return genom_ok;
   }
-  if ( (ids->ildProcessorsSt->processorsAccessor).getProcessor ( nameProc ) ) {
-	(ids->ildProcessorsSt->processorsAccessor).getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
+  if ( ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
 	return genom_ok;
   }
   
