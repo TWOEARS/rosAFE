@@ -7,7 +7,7 @@ namespace openAFE {
 
 		template<typename T>
 		void multiply( T* firstValue, uint32_t dim, apfMap& map ) {
-			uint32_t val = map.get<int>("bRemoveDC");
+			uint32_t val = map.get<int>("pp_bRemoveDC");
 			for ( unsigned int i = 0 ; i < dim ; ++i )
 				*( firstValue + i ) = *( firstValue + i ) * val;			
 		}

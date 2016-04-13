@@ -23,10 +23,8 @@ existsAlready(const char *name, const char *upperDepName,
               const rosAFE_ids *ids, genom_context self)
 {
   if ( ! checkExists ( upperDepName, ids ) ) {
-	std::cout << "No existing upper dep" << std::endl;
 	return rosAFE_e_noUpperDependencie( self );
   } else if ( checkExists ( name, ids ) ) {
-	std::cout << "Name exists already" << std::endl;
 	return rosAFE_e_existsAlready( self );
   } else return genom_ok;
 }
@@ -77,26 +75,35 @@ modifyParameter(const char *nameProc, const char *nameParam,
                 const char *newValue, const rosAFE_ids *ids,
                 genom_context self)
 {
-
   if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue);
-	return genom_ok;
+	if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue) )
+		return genom_ok;
+	else
+		return rosAFE_e_noSuchParameter(self);
   }
   if ( ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
-	return genom_ok;
+	if (ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return genom_ok;
+	else
+		return rosAFE_e_noSuchParameter(self);
   }
   if ( ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
-	return genom_ok;
+	if (ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return genom_ok;
+	else
+		return rosAFE_e_noSuchParameter(self);
   }
   if ( ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
-	return genom_ok;
+	if (ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return genom_ok;
+	else
+		return rosAFE_e_noSuchParameter(self);
   }
   if ( ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue );
-	return genom_ok;
+	if (ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return genom_ok;
+	else
+		return rosAFE_e_noSuchParameter(self);
   }
   
   return rosAFE_e_noSuchProcessor( self );
@@ -108,13 +115,15 @@ modifyParameter(const char *nameProc, const char *nameParam,
 /** Codel removeProcessor of function RemoveProcessor.
  *
  * Returns genom_ok.
+ * Throws rosAFE_e_noSuchProcessor.
  */
 genom_event
 removeProcessor(const char *name, rosAFE_flagMap **flagMapSt,
                 rosAFE_flagMap **newDataMapSt, genom_context self)
 {
   SM::removeFlag( name, newDataMapSt, self );
-  SM::removeFlag( name, flagMapSt, self );
-  
-  return genom_ok;
+  if ( SM::removeFlag( name, flagMapSt, self ) )
+	return genom_ok;
+  else
+	return rosAFE_e_noSuchProcessor( self );
 }

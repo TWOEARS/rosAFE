@@ -34,6 +34,31 @@ publish(const rosAFE_ids *ids,
   rosAFE_RunningProcessorsSt *data;
 
   data = runningProcessors->data( self );
+
+/* ****************************  Input START  ************************************ */
+
+  uint32_t sizeInputProc = ids->inputProcessorsSt->processorsAccessor.getSize();
+  if ( data->paramsInputProc._length > sizeInputProc )
+	data->paramsInputProc._length = 0;
+  
+  if ( data->paramsInputProc._length != sizeInputProc ) {
+	data->paramsInputProc._length = sizeInputProc;
+	if (genom_sequence_reserve(&(data->paramsInputProc), sizeInputProc))
+		return rosAFE_e_noMemory( self );
+  }
+
+ for (uint32_t ii = 0 ; ii < data->paramsInputProc._length ; ii++) {
+	 
+	inputProcPtr thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
+		  
+	data->paramsInputProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );
+    
+    thisProcessor.reset();
+  }
+  
+/* *****************************  Input END  ************************************* */
+
+
   
 /* ****************************  PREPR START  ************************************ */
   uint32_t sizePreProc = ids->preProcessorsSt->processorsAccessor.getSize();
@@ -51,21 +76,21 @@ publish(const rosAFE_ids *ids,
 	preProcPtr thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
 	apfMap thisParams = thisProcessor->getCurrentParameters();
 		  
-	data->paramsPreProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );  	
+    data->paramsPreProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );  
+    data->paramsPreProc._buffer[ii].upperDepName = strdup( thisProcessor->getInProcessorInfo(0).name.c_str() );	
     data->paramsPreProc._buffer[ii].fsOut = thisProcessor->getFsOut();
-    data->paramsPreProc._buffer[ii].bRemoveDC = thisParams.get<unsigned long>("bRemoveDC");
-    data->paramsPreProc._buffer[ii].cutoffHzDC = thisParams.get<float>("cutoffHzDC");
-    data->paramsPreProc._buffer[ii].bPreEmphasis = thisParams.get<unsigned long>("bPreEmphasis");
-    data->paramsPreProc._buffer[ii].coefPreEmphasis = thisParams.get<float>("coefPreEmphasis");
-    data->paramsPreProc._buffer[ii].bNormalizeRMS = thisParams.get<unsigned long>("bNormalizeRMS");
-    data->paramsPreProc._buffer[ii].bBinauralRMS = thisParams.get<unsigned long>("bBinauralRMS");
-    data->paramsPreProc._buffer[ii].intTimeSecRMS = thisParams.get<float>("intTimeSecRMS");
-    data->paramsPreProc._buffer[ii].bLevelScaling = thisParams.get<unsigned long>("bLevelScaling");
-    data->paramsPreProc._buffer[ii].refSPLdB = thisParams.get<float>("refSPLdB");
-    data->paramsPreProc._buffer[ii].bMiddleEarFiltering = thisParams.get<unsigned long>("bMiddleEarFiltering");    
-	data->paramsPreProc._buffer[ii].middleEarModel = strdup( thisParams["middleEarModel"].c_str() );
-    
-    data->paramsPreProc._buffer[ii].bUnityComp = thisParams.get<float>("bUnityComp");
+    data->paramsPreProc._buffer[ii].pp_bRemoveDC = thisParams.get<unsigned long>("pp_bRemoveDC");
+    data->paramsPreProc._buffer[ii].pp_cutoffHzDC = thisParams.get<float>("pp_cutoffHzDC");
+    data->paramsPreProc._buffer[ii].pp_bPreEmphasis = thisParams.get<unsigned long>("pp_bPreEmphasis");
+    data->paramsPreProc._buffer[ii].pp_coefPreEmphasis = thisParams.get<float>("pp_coefPreEmphasis");
+    data->paramsPreProc._buffer[ii].pp_bNormalizeRMS = thisParams.get<unsigned long>("pp_bNormalizeRMS");
+    data->paramsPreProc._buffer[ii].pp_bBinauralRMS = thisParams.get<unsigned long>("pp_bBinauralRMS");
+    data->paramsPreProc._buffer[ii].pp_intTimeSecRMS = thisParams.get<float>("pp_intTimeSecRMS");
+    data->paramsPreProc._buffer[ii].pp_bLevelScaling = thisParams.get<unsigned long>("pp_bLevelScaling");
+    data->paramsPreProc._buffer[ii].pp_refSPLdB = thisParams.get<float>("pp_refSPLdB");
+    data->paramsPreProc._buffer[ii].pp_bMiddleEarFiltering = thisParams.get<unsigned long>("pp_bMiddleEarFiltering");    
+    data->paramsPreProc._buffer[ii].pp_middleEarModel = strdup( thisParams["pp_middleEarModel"].c_str() );
+    data->paramsPreProc._buffer[ii].pp_bUnityComp = thisParams.get<float>("pp_bUnityComp");
     
     thisProcessor.reset();
   }
@@ -90,17 +115,17 @@ publish(const rosAFE_ids *ids,
 	gammatoneProcPtr thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( ii );
 	apfMap thisParams = thisProcessor->getCurrentParameters();
 		  
-	data->paramsGammatoneProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );
-	data->paramsGammatoneProc._buffer[ii].upperDepName = strdup( thisProcessor->getInProcessorInfo(0).name.c_str() );
+    data->paramsGammatoneProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );
+    data->paramsGammatoneProc._buffer[ii].upperDepName = strdup( thisProcessor->getInProcessorInfo(0).name.c_str() );
     data->paramsGammatoneProc._buffer[ii].fsOut = thisProcessor->getFsOut();
-    data->paramsGammatoneProc._buffer[ii].type = strdup( thisParams["type"].c_str() );
-    data->paramsGammatoneProc._buffer[ii].lowFreqHz = thisParams.get<float>("lowFreqHz");
-    data->paramsGammatoneProc._buffer[ii].highFreqHz = thisParams.get<float>("highFreqHz");
-    data->paramsGammatoneProc._buffer[ii].nERBs = thisParams.get<float>("nERBs");
-    data->paramsGammatoneProc._buffer[ii].nChannels = thisParams.get<unsigned long>("nChannels");
-    data->paramsGammatoneProc._buffer[ii].cfHz = thisParams.get<unsigned long>("cfHz");
-    data->paramsGammatoneProc._buffer[ii].nGamma = thisParams.get<unsigned long>("nGamma");
-    data->paramsGammatoneProc._buffer[ii].bwERBs = thisParams.get<float>("bwERBs");
+    data->paramsGammatoneProc._buffer[ii].fb_type = strdup( thisParams["fb_type"].c_str() );
+    data->paramsGammatoneProc._buffer[ii].fb_lowFreqHz = thisParams.get<float>("fb_lowFreqHz");
+    data->paramsGammatoneProc._buffer[ii].fb_highFreqHz = thisParams.get<float>("fb_highFreqHz");
+    data->paramsGammatoneProc._buffer[ii].fb_nERBs = thisParams.get<float>("fb_nERBs");
+    data->paramsGammatoneProc._buffer[ii].fb_nChannels = thisParams.get<unsigned long>("fb_nChannels");
+    data->paramsGammatoneProc._buffer[ii].fb_cfHz = thisParams.get<unsigned long>("fb_cfHz");
+    data->paramsGammatoneProc._buffer[ii].fb_nGamma = thisParams.get<unsigned long>("fb_nGamma");
+    data->paramsGammatoneProc._buffer[ii].fb_bwERBs = thisParams.get<float>("fb_bwERBs");
     
     thisProcessor.reset();
   }
@@ -127,7 +152,7 @@ publish(const rosAFE_ids *ids,
 	data->paramsIhcProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );
 	data->paramsIhcProc._buffer[ii].upperDepName = strdup( thisProcessor->getInProcessorInfo(0).name.c_str() );
     data->paramsIhcProc._buffer[ii].fsOut = thisProcessor->getFsOut();
-    data->paramsIhcProc._buffer[ii].method = strdup( thisParams["method"].c_str() );
+    data->paramsIhcProc._buffer[ii].ihc_method = strdup( thisParams["ihc_method"].c_str() );
     
     thisProcessor.reset();
   }

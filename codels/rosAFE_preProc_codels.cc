@@ -19,30 +19,31 @@ startPreProc(const char *name, const char *upperDepName,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_inputProcessors **inputProcessorsSt,
              const rosAFE_TDSPorts *TDSPorts,
-             const rosAFE_infos *infos, uint16_t bRemoveDC,
-             float cutoffHzDC, uint16_t bPreEmphasis,
-             float coefPreEmphasis, uint16_t bNormalizeRMS,
-             uint16_t bBinauralRMS, float intTimeSecRMS,
-             uint16_t bLevelScaling, float refSPLdB,
-             uint16_t bMiddleEarFiltering, const char *middleEarModel,
-             float bUnityComp, genom_context self)
+             const rosAFE_infos *infos, uint16_t pp_bRemoveDC,
+             float pp_cutoffHzDC, uint16_t pp_bPreEmphasis,
+             float pp_coefPreEmphasis, uint16_t pp_bNormalizeRMS,
+             uint16_t pp_bBinauralRMS, float pp_intTimeSecRMS,
+             uint16_t pp_bLevelScaling, float pp_refSPLdB,
+             uint16_t pp_bMiddleEarFiltering,
+             const char *pp_middleEarModel, float pp_bUnityComp,
+             genom_context self)
 {
   inputProcPtr upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
-  params.set("bRemoveDC", bRemoveDC);
-  params.set("cutoffHzDC", cutoffHzDC);
-  params.set("bPreEmphasis", bPreEmphasis);
-  params.set("coefPreEmphasis", coefPreEmphasis);
-  params.set("bNormalizeRMS", bNormalizeRMS);
-  params.set("bBinauralRMS", bBinauralRMS);
-  params.set("intTimeSecRMS", intTimeSecRMS);
-  params.set("bLevelScaling", bLevelScaling);
-  params.set("bPreEmphasis", bPreEmphasis);
-  params.set("refSPLdB", refSPLdB);
-  params.set("bMiddleEarFiltering", bMiddleEarFiltering);
-  params.set("middleEarModel", middleEarModel);
-  params.set("bUnityComp", bUnityComp);
+  params.set("pp_bRemoveDC", pp_bRemoveDC);
+  params.set("pp_cutoffHzDC", pp_cutoffHzDC);
+  params.set("pp_bPreEmphasis", pp_bPreEmphasis);
+  params.set("pp_coefPreEmphasis", pp_coefPreEmphasis);
+  params.set("pp_bNormalizeRMS", pp_bNormalizeRMS);
+  params.set("pp_bBinauralRMS", pp_bBinauralRMS);
+  params.set("pp_intTimeSecRMS", pp_intTimeSecRMS);
+  params.set("pp_bLevelScaling", pp_bLevelScaling);
+  params.set("pp_bPreEmphasis", pp_bPreEmphasis);
+  params.set("pp_refSPLdB", pp_refSPLdB);
+  params.set("pp_bMiddleEarFiltering", pp_bMiddleEarFiltering);
+  params.set("pp_middleEarModel", pp_middleEarModel);
+  params.set("pp_bUnityComp", pp_bUnityComp);
 	  
   preProcPtr preProcessor (new PreProc<preT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
   preProcessor->addInputProcessor ( upperDepProc );

@@ -26,42 +26,47 @@ module rosAFE {
        unsigned long innerBufferSize_s;
     };
 
+    struct inputProcsParametres {
+      string name;
+    };
+
     struct preProcsParametres {
       string name;
+      string upperDepName;
       unsigned long fsOut;
-      unsigned short bRemoveDC;
-      float cutoffHzDC;
-      unsigned short bPreEmphasis;
-      float coefPreEmphasis;
-      unsigned short bNormalizeRMS;
-      unsigned short bBinauralRMS;
-      float intTimeSecRMS;
-      unsigned short bLevelScaling;
-      float refSPLdB;
-      unsigned short bMiddleEarFiltering;
-      string middleEarModel;
-      float bUnityComp;
+      unsigned short pp_bRemoveDC;
+      float pp_cutoffHzDC;
+      unsigned short pp_bPreEmphasis;
+      float pp_coefPreEmphasis;
+      unsigned short pp_bNormalizeRMS;
+      unsigned short pp_bBinauralRMS;
+      float pp_intTimeSecRMS;
+      unsigned short pp_bLevelScaling;
+      float pp_refSPLdB;
+      unsigned short pp_bMiddleEarFiltering;
+      string pp_middleEarModel;
+      float pp_bUnityComp;
     };
 
     struct gammatoneProcsParametres {
       string name;
       string upperDepName;
       unsigned long fsOut;
-      string type;
-      float lowFreqHz;
-      float highFreqHz;
-      float nERBs;
-      unsigned long nChannels;
-      unsigned long cfHz;
-      unsigned long nGamma;
-      float bwERBs;
+      string fb_type;
+      float fb_lowFreqHz;
+      float fb_highFreqHz;
+      float fb_nERBs;
+      unsigned long fb_nChannels;
+      unsigned long fb_cfHz;
+      unsigned long fb_nGamma;
+      float fb_bwERBs;
     };
 
     struct ihcProcsParametres {
       string name;
       string upperDepName;
       unsigned long fsOut;
-      string method;
+      string ihc_method;
     };
 
     struct ildProcsParametres {
@@ -74,6 +79,7 @@ module rosAFE {
     };
 
     struct RunningProcessorsSt {
+      sequence<inputProcsParametres> 		paramsInputProc;
       sequence<preProcsParametres>      	paramsPreProc;
       sequence<gammatoneProcsParametres>        paramsGammatoneProc;
       sequence<ihcProcsParametres>      	paramsIhcProc;

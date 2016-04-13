@@ -20,22 +20,23 @@ startGammatoneProc(const char *name, const char *upperDepName,
                    rosAFE_flagMap **flagMapSt,
                    rosAFE_flagMap **newDataMapSt,
                    rosAFE_preProcessors **preProcessorsSt,
-                   const rosAFE_infos *infos, const char *type,
-                   float lowFreqHz, float highFreqHz, float nERBs,
-                   uint32_t nChannels, uint32_t cfHz, uint32_t nGamma,
-                   float bwERBs, genom_context self)
+                   const rosAFE_infos *infos, const char *fb_type,
+                   float fb_lowFreqHz, float fb_highFreqHz,
+                   float fb_nERBs, uint32_t fb_nChannels,
+                   uint32_t fb_cfHz, uint32_t fb_nGamma,
+                   float fb_bwERBs, genom_context self)
 {
   preProcPtr upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
-  params.set("type", type);
-  params.set("lowFreqHz", lowFreqHz);
-  params.set("highFreqHz", highFreqHz);
-  params.set("nERBs", nERBs);
-  params.set("nChannels", nChannels);
-  params.set("cfHz", cfHz);
-  params.set("nGamma", nGamma);
-  params.set("bwERBs", bwERBs);
+  params.set("fb_type", fb_type);
+  params.set("fb_lowFreqHz", fb_lowFreqHz);
+  params.set("fb_highFreqHz", fb_highFreqHz);
+  params.set("fb_nERBs", fb_nERBs);
+  params.set("fb_nChannels", fb_nChannels);
+  params.set("fb_cfHz", fb_cfHz);
+  params.set("fb_nGamma", fb_nGamma);
+  params.set("fb_bwERBs", fb_bwERBs);
 	  
   gammatoneProcPtr gammatoneProcessor (new GamamtoneProc<gammatoneT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
   gammatoneProcessor->addInputProcessor ( upperDepProc );

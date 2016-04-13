@@ -18,13 +18,13 @@ startIhcProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_ihcProcessors **ihcProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
-             const rosAFE_infos *infos, const char *method,
+             const rosAFE_infos *infos, const char *ihc_method,
              genom_context self)
 {
   gammatoneProcPtr upperDepProc = ((*gammatoneProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
   
   apf::parameter_map params;
-  params.set("method", method);
+  params.set("ihc_method", ihc_method);
   
   ihcProcPtr ihcProcessor (new IHCProc<ihcT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
   ihcProcessor->addInputProcessor ( upperDepProc );

@@ -58,7 +58,7 @@ component rosAFE {
     };
 
     task publishInfos {
-        period      1000ms;
+        period      50ms;
 
 	codel<start> initPublish( ) yield exec;
 	codel<exec>  publish( in ::ids, inout runningProcessors ) yield pause::exec, ether;
@@ -95,24 +95,24 @@ component rosAFE {
       in string name = "preProc" : "The name of this preProc",
       in string upperDepName = "input" : "The name of the upper dependencie",
       in unsigned long fsOut = 44100 : "fsOut",
-      in unsigned short bRemoveDC =  0 : "'Flag to activate DC-removal filter",
-      in float cutoffHzDC =  20 : "Cutoff frequency (Hz) of DC-removal high-pass filter",
-      in unsigned short bPreEmphasis =  0 : "Flag to activate the pre-emphasis high-pass filter",
-      in float coefPreEmphasis =  0.97 : "Coefficient for pre-emphasis compensation (usually between 0.9 and 1)",
-      in unsigned short bNormalizeRMS =  0 : "Flag for activating automatic gain control",
-      in unsigned short bBinauralRMS =  1 : "Flag indicating the use of unified automatic gain control over left and right channel, for preserving channel relative differences.",
-      in float intTimeSecRMS =  500E-3 : "Time constant (s) for automatic gain control",
-      in unsigned short bLevelScaling =  0 : "Flag to apply level scaling to the given reference",
-      in float refSPLdB =  100 : "Reference dB SPL value to correspond to input signal RMS value of 1",
-      in unsigned short bMiddleEarFiltering =  0 : "Flag to apply middle ear filtering",
-      in string middleEarModel =  "jespen" : "Middle ear filter model (jepsen or lopezpoveda)",
-      in float bUnityComp =  1 : "Compensation to have maximum of unity gain for middle ear filter (automatically true for Gammatone and false for drnl filterbanks)"
+      in unsigned short pp_bRemoveDC =  0 : "'Flag to activate DC-removal filter",
+      in float pp_cutoffHzDC =  20 : "Cutoff frequency (Hz) of DC-removal high-pass filter",
+      in unsigned short pp_bPreEmphasis =  0 : "Flag to activate the pre-emphasis high-pass filter",
+      in float pp_coefPreEmphasis =  0.97 : "Coefficient for pre-emphasis compensation (usually between 0.9 and 1)",
+      in unsigned short pp_bNormalizeRMS =  0 : "Flag for activating automatic gain control",
+      in unsigned short pp_bBinauralRMS =  1 : "Flag indicating the use of unified automatic gain control over left and right channel, for preserving channel relative differences.",
+      in float pp_intTimeSecRMS =  500E-3 : "Time constant (s) for automatic gain control",
+      in unsigned short pp_bLevelScaling =  0 : "Flag to apply level scaling to the given reference",
+      in float pp_refSPLdB =  100 : "Reference dB SPL value to correspond to input signal RMS value of 1",
+      in unsigned short pp_bMiddleEarFiltering =  0 : "Flag to apply middle ear filtering",
+      in string pp_middleEarModel =  "jepsen" : "Middle ear filter model (jepsen or lopezpoveda)",
+      in float pp_bUnityComp =  1 : "Compensation to have maximum of unity gain for middle ear filter (automatically true for Gammatone and false for drnl filterbanks)"
       ) {
         doc         "Prior to computing any of the supported auditory representations, the input signal can be pre-processed with one of the following elements: 1. Direct current (DC) bias removal 2. Pre-emphasis 3. Root mean square (RMS) normalization [1] 4. Level scaling to a pre-defiend sound pressure level (SPL) reference 5. Middle ear filtering [2]";
         task        		preProc;
 	validate    		existsAlready ( local in name, local in upperDepName, in ::ids );
 
-        codel <start>   	startPreProc( local in name, local in upperDepName, local in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in bRemoveDC, local in cutoffHzDC, local in bPreEmphasis, local in coefPreEmphasis, local in bNormalizeRMS, local in bBinauralRMS, local in intTimeSecRMS, local in bLevelScaling, local in refSPLdB, local in bMiddleEarFiltering, local in middleEarModel, local in bUnityComp) yield waitExec, stop;
+        codel <start>   	startPreProc( local in name, local in upperDepName, local in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, port out TDSPorts, in infos, /* Arguments Of processor*/ local in pp_bRemoveDC, local in pp_cutoffHzDC, local in pp_bPreEmphasis, local in pp_coefPreEmphasis, local in pp_bNormalizeRMS, local in pp_bBinauralRMS, local in pp_intTimeSecRMS, local in pp_bLevelScaling, local in pp_refSPLdB, local in pp_bMiddleEarFiltering, local in pp_middleEarModel, local in pp_bUnityComp ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
@@ -131,20 +131,20 @@ component rosAFE {
       in string name = "gammatone" : "The name of this gammatone processor",
       in string upperDepName = "preProc" : "The name of the upper dependencie",
       in unsigned long fsOut = 44100 : "fsOut",
-      in string type =  "gammatone" : "Filterbank type (''gammatone'' or ''drnl'')",
-      in float lowFreqHz =  80 : "Lowest center frequency (Hz)",
-      in float highFreqHz =  80000 : "Highest center frequency (Hz)",
-      in float nERBs =  1 : "Distance between neighbor filters in ERBs",
-      in unsigned long nChannels =  1 : "Number of channels",
-      in unsigned long cfHz =  1 : "Channels center frequencies (Hz)",
-      in unsigned long nGamma =  4 : "Gammatone rising slope order",
-      in float bwERBs =  1.018 : "Bandwidth of the filters (ERBs)"
+      in string fb_type =  "gammatone" : "Filterbank type (''gammatone'' or ''drnl'')",
+      in float fb_lowFreqHz =  80 : "Lowest center frequency (Hz)",
+      in float fb_highFreqHz =  8000 : "Highest center frequency (Hz)",
+      in float fb_nERBs =  1 : "Distance between neighbor filters in ERBs",
+      in unsigned long fb_nChannels =  0 : "Number of channels",
+      in unsigned long fb_cfHz =  0 : "Channels center frequencies (Hz)",
+      in unsigned long fb_nGamma =  4 : "Gammatone rising slope order",
+      in float fb_bwERBs =  1.0180 : "Bandwidth of the filters (ERBs)"
       ) {
         doc         "Gammatone auditory filterbank processor. The Gammatone filterbank models the frequency selectivity of the peripheral auditory system according following [1]. It operates on a time-domain signal and returns a time-frequency representation of the signal.";
         task        gammatoneProc;
 	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
 
-        codel <start>   	startGammatoneProc ( local in name, local in upperDepName, local in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, inout preProcessorsSt, in infos, /* Arguments Of processor*/ local in type, local in lowFreqHz, local in highFreqHz, local in nERBs, local in nChannels, local in cfHz, local in nGamma, local in bwERBs ) yield waitExec, stop;
+        codel <start>   	startGammatoneProc ( local in name, local in upperDepName, local in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, inout preProcessorsSt, in infos, /* Arguments Of processor*/ local in fb_type, local in fb_lowFreqHz, local in fb_highFreqHz, local in fb_nERBs, local in fb_nChannels, local in fb_cfHz, local in fb_nGamma, local in fb_bwERBs ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
@@ -163,13 +163,13 @@ component rosAFE {
       in string name = "ihc" : "The name of this ihc processor",
       in string upperDepName = "gammatone" : "The name of the upper dependencie",
       in unsigned long fsOut = 44100 : "fsOut",
-      in string method = "dau" : "Inner hair-cell envelope extraction method"
+      in string ihc_method = "dau" : "Inner hair-cell envelope extraction method"
       ) {
         doc         "An inner hair-cell envelope extractor processor.";
         task        ihcProc;
 	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
 
-        codel <start>   	startIhcProc ( local in name, local in upperDepName, local in fsOut, inout ihcProcessorsSt, inout flagMapSt, inout newDataMapSt, inout gammatoneProcessorsSt, in infos, /* Arguments Of processor */ local in method ) yield waitExec, stop;
+        codel <start>   	startIhcProc ( local in name, local in upperDepName, local in fsOut, inout ihcProcessorsSt, inout flagMapSt, inout newDataMapSt, inout gammatoneProcessorsSt, in infos, /* Arguments Of processor */ local in ihc_method ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
@@ -223,23 +223,14 @@ component rosAFE {
 	throw e_noSuchProcessor, e_noSuchParameter;
     };
 
-/*    activity PublishInfos () {
-	doc         "Publishes active module informations on a genom port.";
-        task        publishInfos;
-        interrupts  PublishInfos;  // Only one audio input can exist simultaneously
-
-	codel<start> initPublish( ) yield exec;
-	codel<exec>  publish( in ::ids, inout numberOfProcessors ) yield exec, ether;
-	codel<stop>  stopPublish( ) yield ether;
-    };
-*/
-
     function RemoveProcessor (
 	in string name = "name" : "The name of the processor to delete"
 	) {
 	doc         "Removes the flags of this processor";
 
 	codel removeProcessor( local in name, inout flagMapSt, inout newDataMapSt );
+
+	throw e_noSuchProcessor;
     };
 
     function Stop() {

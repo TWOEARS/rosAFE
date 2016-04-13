@@ -202,10 +202,13 @@ namespace openAFE {
             
 			/* MODIFYPARAMETER Requests a change of value of one parameter.
 			 * The modification will be done if the parameter is not blacklisted and if it is a real parameter. */
-			void modifyParameter(std::string parName, std::string newValue) {
+			bool modifyParameter(std::string parName, std::string newValue) {
 				if ( ! verifyBlacklistedParameters(parName) )
-					if ( processorParams.has_key( parName ) )
+					if ( processorParams.has_key( parName ) ) {
 						this->processorParams.set( parName, newValue );
+						return true;
+					}
+				return false;	
 			}
 
 			/* Returns a const reference of the type of this processor */		
