@@ -5,5 +5,5 @@
      startTwoEars('AuditoryFrontEnd.xml'); -->
 
 <requirements>
-    <TwoEarsPart startup="startRosAFE">ros-AFE</TwoEarsPart>
+    <TwoEarsPart startup="startRosAFE">Ros-AFE</TwoEarsPart>
 </requirements>

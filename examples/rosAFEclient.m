@@ -1,48 +1,51 @@
-%clear all;
-%close all;
-%clc;
+clear all;
+close all;
+clc;
 p=0.25;
 
 %% Paths
 addpath(genpath('~/openrobots/lib/matlab'));
-addpath(genpath('~/TwoEars/AuditoryModel/TwoEars-1.2/RosAFE/'));
+addpath(genpath('~/genom_ws/rosAFE/AuditoryModel'));
 startRosAFE;
 
 %% Genom
 client = genomix.client;
 bass = client.load('bass');
 rosAFE = client.load('rosAFE');
-rosAFE.connect_port('Audio', 'bass/Audio');
 
-%% Params
+%% Data Object
 sampleRate = 44100;
-nFramesPerChunk = 2205;
-nChunksOnPort = 20;
-bufferSize_s = 1;
+dObj = dataObject_RosAFE( bass, rosAFE, 'hw:2,0', sampleRate );
+
+%% Manager
+mObj = manager_RosAFE(dObj);
+mObj.addProcessor('ild'); % With default parameters
+pause(p);
+
+mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
+
+mObj.processChunk( );
 
 %% ILD Params
 % Parameters of crosscorrelation processor
-fb_lowFreqHz  = 8;
+fb_lowFreqHz  = 80;
+fb_nChannels  = 3;
 ild_wSizeSec  = 2;
-ild_hSizeSec  = 1;
+ild_hSizeSec  = 10;
 
 % Summary of parameters 
 par = genParStruct('ild_wSizeSec',ild_wSizeSec,...
                    'ild_hSizeSec',ild_hSizeSec,...
-                   'fb_lowFreqHz',fb_lowFreqHz); 
+                   'fb_lowFreqHz',fb_lowFreqHz,...
+                   'fb_nChannels',fb_nChannels); 
                
-%% BASS
-acquire = bass.Acquire('-a', 'hw:2,0', sampleRate, nFramesPerChunk, nChunksOnPort);
-pause(p);
 
-%% Manager
-mObj = manager_rosAFE(rosAFE);
 
-mObj.addProcessor('ild'); % With default parameters
-pause(p);
+
+
+
 mObj.addProcessor('ild', par); % With given parameters
 pause(p);
 
-mObj.ModifyParameter('ild_innerhaircell_filterbank_time_input_0_0_0_0_0', 'ild_wSizeSec', '3');
 mObj.deleteProcessor('filterbank_time_input_0_0_0');
 mObj.cleanup();
