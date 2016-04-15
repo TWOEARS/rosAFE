@@ -15,6 +15,11 @@ module rosAFE {
         timestamp stamp;
     };
 
+    struct signal
+    {
+        sequence<float>       oneDsignal;
+    };
+
     struct TimeDomainSignalPortStruct {
         unsigned long         sampleRate;
         unsigned long long    lastFrameIndex;
@@ -30,6 +35,8 @@ module rosAFE {
         unsigned long long    framesOnPort;
         short    	      bytesPerFrame;
         unsigned long         numberOfSignas;
+        sequence<signal>      left;
+        sequence<signal>      right;
     };
 
     struct infos {
@@ -102,6 +109,7 @@ module rosAFE {
     struct dataObjSt {
       std_msgs__Header header;
       sequence<TimeDomainSignalPortStruct>	allTDSPorts;
+      sequence<TimeFrequencySignalPortStruct>	allTFSPorts;
     };
 };
 

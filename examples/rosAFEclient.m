@@ -22,6 +22,9 @@ mObj = manager_RosAFE(dObj);
 mObj.addProcessor('ild'); % With default parameters
 pause(p);
 
+mObj.RosAFE.SendToMatlab();
+dObj_RosAFE = mObj.RosAFE.dataObj();
+
 mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
 tic
 mObj.processChunk( );

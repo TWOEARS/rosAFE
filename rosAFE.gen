@@ -67,7 +67,11 @@ component rosAFE {
 	throw   e_noMemory;
     };
 
-    task sendToMatlab;
+    task sendToMatlab {
+        // period      50ms;
+
+	codel<start> initSendToMatlabTask( inout dataObj, in runningProcessors ) yield ether;
+    };
 
     activity InputProc(
       in string name = "input" : "The name of this activity",
@@ -218,8 +222,7 @@ component rosAFE {
 	doc         "Published only the new (unseen) processed chunks on a port.";
         task        sendToMatlab;
 
-	codel<start> initSendToMatlab( inout dataObj, in runningProcessors ) yield exec;
-	codel<exec>  send( inout dataObj, in ::ids, in runningProcessors ) yield exec, ether;
+	codel<start> initSendToMatlab( inout dataObj, in ::ids, in runningProcessors ) yield ether;
 	codel<stop>  stopSendToMatlab( ) yield ether;
 
 	// throw   e_noMemory;

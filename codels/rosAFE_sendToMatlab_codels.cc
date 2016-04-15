@@ -8,42 +8,43 @@
 /** Codel initSendToMatlab of activity SendToMatlab.
  *
  * Triggered by rosAFE_start.
- * Yields to rosAFE_exec.
+ * Yields to rosAFE_ether.
  */
 genom_event
-initSendToMatlab(const rosAFE_dataObj *dataObj,
-                 const rosAFE_runningProcessors *runningProcessors,
-                 genom_context self)
+initSendToMatlabTask(const rosAFE_dataObj *dataObj,
+                     const rosAFE_runningProcessors *runningProcessors,
+                     genom_context self)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
 	 
-  dataObj->data(self)->header.seq = 0;
-  dataObj->data(self)->header.stamp.sec = tv.tv_sec;
-  dataObj->data(self)->header.stamp.usec = tv.tv_usec;
+  dataObj->data( self )->header.seq = 0;
+  dataObj->data( self )->header.stamp.sec = tv.tv_sec;
+  dataObj->data( self )->header.stamp.usec = tv.tv_usec;
 	    
   dataObj->write( self );
   	
-  return rosAFE_exec;
+  return rosAFE_ether;
 }
 
 /** Codel send of activity SendToMatlab.
  *
- * Triggered by rosAFE_exec.
- * Yields to rosAFE_exec, rosAFE_ether.
+ * Triggered by rosAFE_start.
+ * Yields to rosAFE_ether.
  */
 genom_event
-send(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
-     const rosAFE_runningProcessors *runningProcessors,
-     genom_context self)
+initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
+                 const rosAFE_runningProcessors *runningProcessors,
+                 genom_context self)
 {
+	
   struct timeval tv;
   rosAFE_dataObjSt *data;
-  rosAFE_RunningProcessorsSt *running;
-
   data = dataObj->data( self );
+
+  rosAFE_RunningProcessorsSt *running;  
   running = runningProcessors->data( self );
-  	
+
   gettimeofday(&tv, NULL);
 	 
   data->header.seq += 1;
@@ -63,11 +64,11 @@ send(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
   
   for (uint32_t ii = 0 ; ii < data->allTDSPorts._length ; ii++) {
 	 
-	// publish here
+	// ids->
   }  
-  
+ 
   dataObj->write( self );
-  return rosAFE_exec;
+  return rosAFE_ether;
 }
 
 /** Codel stopSendToMatlab of activity SendToMatlab.
