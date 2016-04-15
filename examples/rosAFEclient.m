@@ -23,9 +23,9 @@ mObj.addProcessor('ild'); % With default parameters
 pause(p);
 
 mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
-
+tic
 mObj.processChunk( );
-
+toc
 %% ILD Params
 % Parameters of crosscorrelation processor
 fb_lowFreqHz  = 80;

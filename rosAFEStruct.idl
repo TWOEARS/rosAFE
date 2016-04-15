@@ -3,6 +3,18 @@
 
 module rosAFE {	
 
+    struct timestamp
+    {
+        unsigned long sec;
+        unsigned long usec;
+    };
+
+    struct std_msgs__Header
+    {
+        unsigned long seq;
+        timestamp stamp;
+    };
+
     struct TimeDomainSignalPortStruct {
         unsigned long         sampleRate;
         unsigned long long    lastFrameIndex;
@@ -79,11 +91,17 @@ module rosAFE {
     };
 
     struct RunningProcessorsSt {
+      std_msgs__Header header;
       sequence<inputProcsParametres> 		paramsInputProc;
       sequence<preProcsParametres>      	paramsPreProc;
       sequence<gammatoneProcsParametres>        paramsGammatoneProc;
       sequence<ihcProcsParametres>      	paramsIhcProc;
       sequence<ildProcsParametres>      	paramsIldProc;
+    };
+
+    struct dataObjSt {
+      std_msgs__Header header;
+      sequence<TimeDomainSignalPortStruct>	allTDSPorts;
     };
 };
 

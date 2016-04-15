@@ -60,12 +60,14 @@ component rosAFE {
     task publishInfos {
         period      50ms;
 
-	codel<start> initPublish( ) yield exec;
+	codel<start> initPublish( inout runningProcessors ) yield exec;
 	codel<exec>  publish( in ::ids, inout runningProcessors ) yield pause::exec, ether;
 	codel<stop>  stopPublish( inout runningProcessors ) yield ether;
 
 	throw   e_noMemory;
     };
+
+    task sendToMatlab;
 
     activity InputProc(
       in string name = "input" : "The name of this activity",
@@ -210,6 +212,18 @@ component rosAFE {
 
         throw   e_noUpperDependencie, e_existsAlready;
     };
+
+   activity SendToMatlab () {
+
+	doc         "Published only the new (unseen) processed chunks on a port.";
+        task        sendToMatlab;
+
+	codel<start> initSendToMatlab( inout dataObj, in runningProcessors ) yield exec;
+	codel<exec>  send( inout dataObj, in ::ids, in runningProcessors ) yield exec, ether;
+	codel<stop>  stopSendToMatlab( ) yield ether;
+
+	// throw   e_noMemory;
+   };
 
     function ModifyParameter (
 	in string nameProc = "nameProc" : "The name of the processor to change the parameter",

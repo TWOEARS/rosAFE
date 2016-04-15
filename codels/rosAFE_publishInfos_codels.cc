@@ -3,6 +3,10 @@
 #include "rosAFE_c_types.h"
 #include "genom3_dataFiles.hpp"
 
+#include <sys/time.h>
+
+struct timeval tv;
+
 /* --- Task publishInfos ------------------------------------------------ */
 
 
@@ -13,10 +17,18 @@
  * Throws rosAFE_e_noMemory.
  */
 genom_event
-initPublish(genom_context self)
+initPublish(const rosAFE_runningProcessors *runningProcessors,
+            genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return rosAFE_exec;
+  gettimeofday(&tv, NULL);
+	 
+  runningProcessors->data(self)->header.seq = 0;
+  runningProcessors->data(self)->header.stamp.sec = tv.tv_sec;
+  runningProcessors->data(self)->header.stamp.usec = tv.tv_usec;
+	    
+  runningProcessors->write( self );
+  	
+  return rosAFE_exec;
 }
 
 
@@ -35,6 +47,12 @@ publish(const rosAFE_ids *ids,
 
   data = runningProcessors->data( self );
 
+  gettimeofday(&tv, NULL);
+	 
+  data->header.seq += 1;
+  data->header.stamp.sec = tv.tv_sec;
+  data->header.stamp.usec = tv.tv_usec;
+  
 /* ****************************  Input START  ************************************ */
 
   uint32_t sizeInputProc = ids->inputProcessorsSt->processorsAccessor.getSize();
