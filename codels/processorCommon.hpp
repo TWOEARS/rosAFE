@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include <sys/time.h>
+
 namespace PC {
 	
 	genom_event

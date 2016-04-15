@@ -1,11 +1,4 @@
-#include "acrosAFE.h"
-
-#include "rosAFE_c_types.h"
-#include "genom3_dataFiles.hpp"
-
-#include <sys/time.h>
-
-struct timeval tv;
+#include "processorCommon.hpp"
 
 /* --- Task publishInfos ------------------------------------------------ */
 
@@ -20,6 +13,7 @@ genom_event
 initPublish(const rosAFE_runningProcessors *runningProcessors,
             genom_context self)
 {
+  struct timeval tv;
   gettimeofday(&tv, NULL);
 	 
   runningProcessors->data(self)->header.seq = 0;
@@ -43,6 +37,7 @@ publish(const rosAFE_ids *ids,
         const rosAFE_runningProcessors *runningProcessors,
         genom_context self)
 {
+  struct timeval tv;
   rosAFE_RunningProcessorsSt *data;
 
   data = runningProcessors->data( self );

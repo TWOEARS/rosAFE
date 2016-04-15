@@ -1,10 +1,4 @@
-#include "acrosAFE.h"
-
-#include "rosAFE_c_types.h"
-
-#include <sys/time.h>
-
-struct timeval tv;
+#include "processorCommon.hpp"
 
 /* --- Task sendToMatlab ------------------------------------------------ */
 
@@ -21,6 +15,7 @@ initSendToMatlab(const rosAFE_dataObj *dataObj,
                  const rosAFE_runningProcessors *runningProcessors,
                  genom_context self)
 {
+  struct timeval tv;
   gettimeofday(&tv, NULL);
 	 
   dataObj->data(self)->header.seq = 0;
@@ -42,15 +37,36 @@ send(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
      const rosAFE_runningProcessors *runningProcessors,
      genom_context self)
 {
+  struct timeval tv;
+  rosAFE_dataObjSt *data;
+  rosAFE_RunningProcessorsSt *running;
+
+  data = dataObj->data( self );
+  running = runningProcessors->data( self );
+  	
   gettimeofday(&tv, NULL);
 	 
-  dataObj->data(self)->header.seq += 1;
-  dataObj->data(self)->header.stamp.sec = tv.tv_sec;
-  dataObj->data(self)->header.stamp.usec = tv.tv_usec;
-	    
-	    
-	    
-  dataObj->write( self );  
+  data->header.seq += 1;
+  data->header.stamp.sec = tv.tv_sec;
+  data->header.stamp.usec = tv.tv_usec;
+	
+  uint32_t numTDS = running->paramsInputProc._length + running->paramsPreProc._length; 
+
+  if ( data->allTDSPorts._length > numTDS )
+	data->allTDSPorts._length = 0;
+  
+  if ( data->allTDSPorts._length != numTDS ) {
+	data->allTDSPorts._length = numTDS;
+	if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
+		return rosAFE_e_noMemory( self );
+  }
+  
+  for (uint32_t ii = 0 ; ii < data->allTDSPorts._length ; ii++) {
+	 
+	// publish here
+  }  
+  
+  dataObj->write( self );
   return rosAFE_exec;
 }
 
