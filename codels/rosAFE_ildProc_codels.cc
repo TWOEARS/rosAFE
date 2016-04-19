@@ -11,7 +11,8 @@
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_waitExec, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 startIldProc(const char *name, const char *upperDepName,
@@ -48,7 +49,8 @@ startIldProc(const char *name, const char *upperDepName,
  * Triggered by rosAFE_waitExec.
  * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_ether,
  *           rosAFE_delete.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc */
 
@@ -57,7 +59,8 @@ startIldProc(const char *name, const char *upperDepName,
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc */
 
@@ -66,38 +69,33 @@ startIldProc(const char *name, const char *upperDepName,
  *
  * Triggered by rosAFE_waitRelease.
  * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service InputProc */
 
 
-/** Codel releaseIldProc of activity IldProc.
+/** Codel release of activity IldProc.
  *
  * Triggered by rosAFE_release.
  * Yields to rosAFE_pause_waitExec, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
-genom_event
-releaseIldProc(const char *name,
-               rosAFE_ildProcessors **ildProcessorsSt,
-               rosAFE_flagMap **newDataMapSt, genom_context self)
-{
-  
-  SM::riseFlag ( name, newDataMapSt, self);
-  return rosAFE_pause_waitExec;
-}
+/* already defined in service PreProc */
+
 
 /** Codel deleteIldProc of activity IldProc.
  *
  * Triggered by rosAFE_delete.
  * Yields to rosAFE_ether.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 deleteIldProc(const char *name, rosAFE_ildProcessors **ildProcessorsSt,
               genom_context self)
 {
-
   ((*ildProcessorsSt)->processorsAccessor).removeProcessor( name );
   return rosAFE_ether;
 }
@@ -106,7 +104,8 @@ deleteIldProc(const char *name, rosAFE_ildProcessors **ildProcessorsSt,
  *
  * Triggered by rosAFE_stop.
  * Yields to rosAFE_ether.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 stopIldProc(rosAFE_ildProcessors **ildProcessorsSt,

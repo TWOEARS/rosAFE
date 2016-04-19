@@ -11,7 +11,8 @@
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_waitExec, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 startGammatoneProc(const char *name, const char *upperDepName,
@@ -49,8 +50,6 @@ startGammatoneProc(const char *name, const char *upperDepName,
 
   upperDepProc.reset();
   gammatoneProcessor.reset();
-  /* Initialization of the output port */
-  	      
   return rosAFE_waitExec;
 }
 
@@ -59,7 +58,8 @@ startGammatoneProc(const char *name, const char *upperDepName,
  * Triggered by rosAFE_waitExec.
  * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_ether,
  *           rosAFE_delete.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc */
 
@@ -68,7 +68,8 @@ startGammatoneProc(const char *name, const char *upperDepName,
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc */
 
@@ -77,34 +78,28 @@ startGammatoneProc(const char *name, const char *upperDepName,
  *
  * Triggered by rosAFE_waitRelease.
  * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service InputProc */
 
 
-/** Codel releaseGammatoneProc of activity GammatoneProc.
+/** Codel release of activity GammatoneProc.
  *
  * Triggered by rosAFE_release.
  * Yields to rosAFE_pause_waitExec, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
-genom_event
-releaseGammatoneProc(const char *name,
-                     rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
-                     rosAFE_flagMap **newDataMapSt,
-                     genom_context self)
-{
-  
-  
-  SM::riseFlag ( name, newDataMapSt, self);
-  return rosAFE_pause_waitExec;
-}
+/* already defined in service PreProc */
+
 
 /** Codel deleteGammatoneProc of activity GammatoneProc.
  *
  * Triggered by rosAFE_delete.
  * Yields to rosAFE_ether.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 deleteGammatoneProc(const char *name,
@@ -121,7 +116,8 @@ deleteGammatoneProc(const char *name,
  *
  * Triggered by rosAFE_stop.
  * Yields to rosAFE_ether.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 stopGammatoneProc(rosAFE_gammatoneProcessors **gammatoneProcessorsSt,

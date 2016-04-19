@@ -1,6 +1,5 @@
 #include "processorCommon.hpp"
 #include "stateMachine.hpp"
-#include "Ports.hpp"
 
 /* --- Task preProc ----------------------------------------------------- */
 
@@ -11,14 +10,14 @@
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_waitExec, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 startPreProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_preProcessors **preProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_inputProcessors **inputProcessorsSt,
-             const rosAFE_TDSPorts *TDSPorts,
              const rosAFE_infos *infos, uint16_t pp_bRemoveDC,
              float pp_cutoffHzDC, uint16_t pp_bPreEmphasis,
              float pp_coefPreEmphasis, uint16_t pp_bNormalizeRMS,
@@ -54,9 +53,6 @@ startPreProc(const char *name, const char *upperDepName,
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
-  /* Initialization of the output port */
-  initTDSPort( name, TDSPorts, fsOut, infos->bufferSize_s, sizeof(preT), self );
-
   upperDepProc.reset();
   preProcessor.reset();
   return rosAFE_waitExec;
@@ -67,7 +63,8 @@ startPreProc(const char *name, const char *upperDepName,
  * Triggered by rosAFE_waitExec.
  * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_ether,
  *           rosAFE_delete.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 waitExec(const char *name, const char *upperDepName,
@@ -93,7 +90,8 @@ waitExec(const char *name, const char *upperDepName,
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
@@ -111,35 +109,27 @@ exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
  *
  * Triggered by rosAFE_waitRelease.
  * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 /* already defined in service InputProc */
 
 
-/** Codel releasePreProc of activity PreProc.
+/** Codel release of activity PreProc.
  *
  * Triggered by rosAFE_release.
  * Yields to rosAFE_pause_waitExec, rosAFE_stop.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
-releasePreProc(const char *name,
-               rosAFE_preProcessors **preProcessorsSt,
-               rosAFE_flagMap **newDataMapSt,
-               const rosAFE_TDSPorts *TDSPorts, genom_context self)
+release(const char *name, rosAFE_ids *ids,
+        rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-  preProcPtr thisProcessor = ((*preProcessorsSt)->processorsAccessor).getProcessor( name );
-	
-  thisProcessor->appendChunk( );
-  thisProcessor->calcLastChunk( );
-  
-  /* Publishing on the output port */
-  publishTDSPort( name, TDSPorts, thisProcessor->getLastChunkAccesor(), self );
-  // publishPreProcParamPort( name, self );
+  PC::releaseAnyProc( name, ids, self);
   
   SM::riseFlag ( name, newDataMapSt, self);
-  
-  thisProcessor.reset();
+
   return rosAFE_pause_waitExec;
 }
 
@@ -147,15 +137,13 @@ releasePreProc(const char *name,
  *
  * Triggered by rosAFE_delete.
  * Yields to rosAFE_ether.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 deletePreProc(const char *name, rosAFE_preProcessors **preProcessorsSt,
-              const rosAFE_TDSPorts *TDSPorts, genom_context self)
+              genom_context self)
 {
-  /* Delting the output port */
-  deleteTDSPort( name, TDSPorts, self );
-
   /* Delting the processor */
   ((*preProcessorsSt)->processorsAccessor).removeProcessor( name );
   return rosAFE_ether;
@@ -165,7 +153,8 @@ deletePreProc(const char *name, rosAFE_preProcessors **preProcessorsSt,
  *
  * Triggered by rosAFE_stop.
  * Yields to rosAFE_ether.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ *        rosAFE_e_noSuchProcessor.
  */
 genom_event
 stopPreProc(rosAFE_preProcessors **preProcessorsSt,

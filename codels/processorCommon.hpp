@@ -15,6 +15,9 @@ namespace PC {
 	
 	genom_event
 	execAnyProc( const char *nameProc, rosAFE_ids *ids, genom_context self );
+	
+	genom_event
+	releaseAnyProc( const char *nameProc, rosAFE_ids *ids, genom_context self );
 
 }; /* namespace PC */
 

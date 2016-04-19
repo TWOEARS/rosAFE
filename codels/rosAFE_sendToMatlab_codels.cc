@@ -1,4 +1,5 @@
 #include "processorCommon.hpp"
+#include "Ports.hpp"
 
 /* --- Task sendToMatlab ------------------------------------------------ */
 
@@ -32,13 +33,13 @@ initSendToMatlabTask(const rosAFE_dataObj *dataObj,
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noMemory.
  */
 genom_event
 initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
                  const rosAFE_runningProcessors *runningProcessors,
                  genom_context self)
 {
-	
   struct timeval tv;
   rosAFE_dataObjSt *data;
   data = dataObj->data( self );
@@ -46,23 +47,49 @@ initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
   rosAFE_RunningProcessorsSt *running;  
   running = runningProcessors->data( self );
 
+  uint32_t numTDS = running->paramsInputProc._length + running->paramsPreProc._length;
+  uint32_t numTFS = running->paramsGammatoneProc._length + running->paramsIhcProc._length + running->paramsIldProc._length;
+
+  data->allTDSPorts._length = numTDS;
+  if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
+	return rosAFE_e_noMemory( self );
+/*
+  data->allTFSPorts._length = numTFS;
+  if (genom_sequence_reserve(&(data->allTDSPorts), numTFS))
+	return rosAFE_e_noMemory( self );
+*/
+  for (uint32_t ii = 0 ; ii < running->paramsInputProc._length ; ii++) {
+	inputProcPtr thisProc = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	thisProc->calcOldData();
+	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), ii, self );
+	
+	thisProc.reset();
+  }
+
+  for (uint32_t ii = 0 ; ii < running->paramsPreProc._length ; ii++) {
+	preProcPtr thisProc = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	thisProc->calcOldData();
+	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), running->paramsInputProc._length + ii, self );
+	
+	thisProc.reset();
+  }
+/*  for (uint32_t ii = 0 ; ii < running->paramsPreProc._length ; ii++) {
+	preProcPtr thisProc = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	thisProc->calcOldData();
+	thisProc->getOldDataAccesor();
+	
+	thisProc.reset();
+  }*/
+
   gettimeofday(&tv, NULL);
 	 
   data->header.seq += 1;
   data->header.stamp.sec = tv.tv_sec;
   data->header.stamp.usec = tv.tv_usec;
-	
-  uint32_t numTDS = running->paramsInputProc._length + running->paramsPreProc._length;
-
-  data->allTDSPorts._length = numTDS;
-  if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
-	return rosAFE_e_noMemory( self );
   
-  for (uint32_t ii = 0 ; ii < data->allTDSPorts._length ; ii++) {
-	std::cout << "Fresh data size is : " << ids->inputProcessorsSt->processorsAccessor.getProcessor ( 0 )->getFreshDataSize() << std::endl;
-	ids->inputProcessorsSt->processorsAccessor.getProcessor ( 0 )->calcOldData();
-  }
-
   dataObj->write( self );
   return rosAFE_ether;
 }
@@ -71,6 +98,7 @@ initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
  *
  * Triggered by rosAFE_stop.
  * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noMemory.
  */
 genom_event
 stopSendToMatlab(genom_context self)

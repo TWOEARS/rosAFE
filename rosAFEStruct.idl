@@ -1,6 +1,8 @@
 #ifndef ROSAFESTRUCT_IDL
 #define ROSAFESTRUCT_IDL
 
+#define MAX_STRING_LENGTH 500
+
 module rosAFE {	
 
     struct timestamp
@@ -15,28 +17,31 @@ module rosAFE {
         timestamp stamp;
     };
 
-    struct signal
+    struct signalOneD
     {
-        sequence<float>       oneDsignal;
+        sequence<float>       	    data;
+    };
+
+    struct signalND
+    {
+        sequence<signalOneD >       dataN;
     };
 
     struct TimeDomainSignalPortStruct {
-        unsigned long         sampleRate;
-        unsigned long long    lastFrameIndex;
-        unsigned long long    framesOnPort;
-        short    	      bytesPerFrame;
-        sequence<float>       left;
-        sequence<float>       right;
+        string<MAX_STRING_LENGTH> 	name;
+        unsigned long long    		lastFrameIndex;
+        unsigned long long    		framesOnPort;
+        signalOneD	      		left;
+        signalOneD	      		right;
     };
 
     struct TimeFrequencySignalPortStruct {
-        unsigned long         sampleRate;
-        unsigned long long    lastFrameIndex;
-        unsigned long long    framesOnPort;
-        short    	      bytesPerFrame;
-        unsigned long         numberOfSignas;
-        sequence<signal>      left;
-        sequence<signal>      right;
+        string<MAX_STRING_LENGTH> 	name;
+        unsigned long long    		lastFrameIndex;
+        unsigned long long    		framesOnPort;
+        unsigned long         		numberOfChannels;
+        signalND      	      		left;
+        signalND              		right;
     };
 
     struct infos {
@@ -107,7 +112,8 @@ module rosAFE {
     };
 
     struct dataObjSt {
-      std_msgs__Header header;
+      std_msgs__Header 				header;
+      unsigned long         			sampleRate;
       sequence<TimeDomainSignalPortStruct>	allTDSPorts;
       sequence<TimeFrequencySignalPortStruct>	allTFSPorts;
     };

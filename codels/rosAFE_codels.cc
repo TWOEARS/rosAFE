@@ -16,7 +16,8 @@ bool checkExists ( const char *name, const rosAFE_ids *ids ) {
 /** Validation codel existsAlready of activity PreProc.
  *
  * Returns genom_ok.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ * rosAFE_e_noSuchProcessor.
  */
 genom_event
 existsAlready(const char *name, const char *upperDepName,
@@ -35,7 +36,8 @@ existsAlready(const char *name, const char *upperDepName,
 /** Validation codel existsAlready of activity GammatoneProc.
  *
  * Returns genom_ok.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ * rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc validation */
 
@@ -46,7 +48,8 @@ existsAlready(const char *name, const char *upperDepName,
 /** Validation codel existsAlready of activity IhcProc.
  *
  * Returns genom_ok.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ * rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc validation */
 
@@ -57,7 +60,8 @@ existsAlready(const char *name, const char *upperDepName,
 /** Validation codel existsAlready of activity IldProc.
  *
  * Returns genom_ok.
- * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ * rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc validation */
 

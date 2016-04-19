@@ -26,9 +26,9 @@ mObj.RosAFE.SendToMatlab();
 dObj_RosAFE = mObj.RosAFE.dataObj();
 
 mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
-tic
+
 mObj.processChunk( );
-toc
+
 %% ILD Params
 % Parameters of crosscorrelation processor
 fb_lowFreqHz  = 80;
@@ -41,12 +41,7 @@ par = genParStruct('ild_wSizeSec',ild_wSizeSec,...
                    'ild_hSizeSec',ild_hSizeSec,...
                    'fb_lowFreqHz',fb_lowFreqHz,...
                    'fb_nChannels',fb_nChannels); 
-               
-
-
-
-
-
+ 
 mObj.addProcessor('ild', par); % With given parameters
 pause(p);
 

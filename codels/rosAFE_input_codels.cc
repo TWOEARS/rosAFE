@@ -1,5 +1,4 @@
 #include "stateMachine.hpp"
-#include "Ports.hpp"
 
 #include <cmath>
 
@@ -74,8 +73,7 @@ genom_event
 startInputProc(const char *name, uint32_t nFramesPerBlock,
                uint32_t bufferSize_s,
                rosAFE_inputProcessors **inputProcessorsSt,
-               const rosAFE_Audio *Audio,
-               const rosAFE_TDSPorts *TDSPorts, rosAFE_infos *infos,
+               const rosAFE_Audio *Audio, rosAFE_infos *infos,
                genom_context self)
 {	
   /* Check if the client can get data from the server */
@@ -101,9 +99,6 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   r.resize(N); // current block of data
 
   li = l.data(); ri = r.data(); // li and ri point to the current position in the block
-
-  /* Initialization of the output port */
-  initTDSPort( name, TDSPorts, infos->sampleRate, infos->bufferSize_s, sizeof(inputT), self );
  
   globalLoss = 0;
   
@@ -202,16 +197,12 @@ waitRelease(const char *name, rosAFE_flagMap **flagMapSt,
 genom_event
 releaseInputProc(const char *name,
                  rosAFE_inputProcessors **inputProcessorsSt,
-                 rosAFE_flagMap **newDataMapSt,
-                 const rosAFE_TDSPorts *TDSPorts, genom_context self)
+                 rosAFE_flagMap **newDataMapSt, genom_context self)
 {
   inputProcPtr thisProcessor = ((*inputProcessorsSt)->processorsAccessor).getProcessor( name );
   /* Relasing the data */
   thisProcessor->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
   thisProcessor->calcLastChunk( );
-  
-  /* Publishing on the output port */
-  publishTDSPort( name, TDSPorts, thisProcessor->getLastChunkAccesor(), self );
   
   /* Informing all the potential childs to say that this is a new chunk. */
   SM::riseFlag ( name, newDataMapSt, self );
@@ -227,12 +218,11 @@ releaseInputProc(const char *name,
  * Throws rosAFE_e_noData, rosAFE_e_noMemory, rosAFE_e_existsAlready.
  */
 genom_event
-stopInputProc(const char *name, const rosAFE_TDSPorts *TDSPorts,
+stopInputProc(const char *name,
               rosAFE_inputProcessors **inputProcessorsSt,
               rosAFE_flagMap **flagMapSt,
               rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-    deleteTDSPort( name, TDSPorts, self );
 
 	l.clear(); r.clear();
 		

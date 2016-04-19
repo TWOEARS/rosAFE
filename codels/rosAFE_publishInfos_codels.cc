@@ -25,7 +25,9 @@ initPublish(const rosAFE_runningProcessors *runningProcessors,
 }
 
 
-/** Codel publish of task publishInfos.
+/* --- Activity updateParameters ---------------------------------------- */
+
+/** Codel publish of activity updateParameters.
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_ether.
