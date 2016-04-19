@@ -6,8 +6,7 @@
 /** Codel initPublish of task publishInfos.
  *
  * Triggered by rosAFE_start.
- * Yields to rosAFE_exec.
- * Throws rosAFE_e_noMemory.
+ * Yields to rosAFE_ether.
  */
 genom_event
 initPublish(const rosAFE_runningProcessors *runningProcessors,
@@ -22,14 +21,14 @@ initPublish(const rosAFE_runningProcessors *runningProcessors,
 	    
   runningProcessors->write( self );
   	
-  return rosAFE_exec;
+  return rosAFE_ether;
 }
 
 
 /** Codel publish of task publishInfos.
  *
- * Triggered by rosAFE_exec.
- * Yields to rosAFE_pause_exec, rosAFE_ether.
+ * Triggered by rosAFE_start.
+ * Yields to rosAFE_ether.
  * Throws rosAFE_e_noMemory.
  */
 genom_event
@@ -202,11 +201,10 @@ publish(const rosAFE_ids *ids,
   
   runningProcessors->write( self );
 
-  return rosAFE_pause_exec;
+  return rosAFE_ether;
 }
 
-
-/** Codel stopPublish of task publishInfos.
+/** Codel stopPublish of activity updateParameters.
  *
  * Triggered by rosAFE_stop.
  * Yields to rosAFE_ether.

@@ -3,9 +3,7 @@
 /* --- Task sendToMatlab ------------------------------------------------ */
 
 
-/* --- Activity SendToMatlab -------------------------------------------- */
-
-/** Codel initSendToMatlab of activity SendToMatlab.
+/** Codel initSendToMatlabTask of task sendToMatlab.
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_ether.
@@ -27,7 +25,10 @@ initSendToMatlabTask(const rosAFE_dataObj *dataObj,
   return rosAFE_ether;
 }
 
-/** Codel send of activity SendToMatlab.
+
+/* --- Activity SendToMatlab -------------------------------------------- */
+
+/** Codel initSendToMatlab of activity SendToMatlab.
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_ether.
@@ -51,22 +52,17 @@ initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
   data->header.stamp.sec = tv.tv_sec;
   data->header.stamp.usec = tv.tv_usec;
 	
-  uint32_t numTDS = running->paramsInputProc._length + running->paramsPreProc._length; 
+  uint32_t numTDS = running->paramsInputProc._length + running->paramsPreProc._length;
 
-  if ( data->allTDSPorts._length > numTDS )
-	data->allTDSPorts._length = 0;
-  
-  if ( data->allTDSPorts._length != numTDS ) {
-	data->allTDSPorts._length = numTDS;
-	if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
-		return rosAFE_e_noMemory( self );
-  }
+  data->allTDSPorts._length = numTDS;
+  if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
+	return rosAFE_e_noMemory( self );
   
   for (uint32_t ii = 0 ; ii < data->allTDSPorts._length ; ii++) {
-	 
-	// ids->
-  }  
- 
+	std::cout << "Fresh data size is : " << ids->inputProcessorsSt->processorsAccessor.getProcessor ( 0 )->getFreshDataSize() << std::endl;
+	ids->inputProcessorsSt->processorsAccessor.getProcessor ( 0 )->calcOldData();
+  }
+
   dataObj->write( self );
   return rosAFE_ether;
 }

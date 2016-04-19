@@ -38,7 +38,7 @@ component rosAFE {
     };
 
     task input {
-	period      250ms;
+	period      150ms;
     };
 
     task preProc {
@@ -58,13 +58,8 @@ component rosAFE {
     };
 
     task publishInfos {
-        period      50ms;
 
-	codel<start> initPublish( inout runningProcessors ) yield exec;
-	codel<exec>  publish( in ::ids, inout runningProcessors ) yield pause::exec, ether;
-	codel<stop>  stopPublish( inout runningProcessors ) yield ether;
-
-	throw   e_noMemory;
+	codel<start> initPublish( inout runningProcessors ) yield ether;
     };
 
     task sendToMatlab {
@@ -227,6 +222,18 @@ component rosAFE {
 
 	// throw   e_noMemory;
    };
+
+
+   activity updateParameters () {
+	doc         "Updates all published parameters information according to the ids.";
+        task        publishInfos;
+
+	codel<start>  publish( in ::ids, inout runningProcessors ) yield ether;
+	codel<stop>   stopPublish( inout runningProcessors ) yield ether;
+
+	throw   e_noMemory;
+    };
+
 
     function ModifyParameter (
 	in string nameProc = "nameProc" : "The name of the processor to change the parameter",
