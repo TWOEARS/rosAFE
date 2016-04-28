@@ -108,6 +108,10 @@ namespace openAFE {
 				return this->dimOfSignal;
 			}
 
+			uint32_t getLengthOfSignal() {
+				return this->getTwoCTypeBlockAccessor( 0 )->getSize();
+			}
+			
 			void setData(uint32_t dimOfSignal, twoCTypeBlockPtr toCopy) {
 				this->assertAccessor ( dimOfSignal );
 				this->audioVector[dimOfSignal]->first->firstValue = toCopy->first->firstValue;

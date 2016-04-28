@@ -93,7 +93,7 @@ namespace openAFE {
 				/* Setting those signals as the output signals of this processor */
 				this->outputSignals.push_back( std::move( leftOutput ) );
 				this->outputSignals.push_back( std::move( rightOutput ) );
-				
+								
 				/* Linking the output accesors of each signal */
 				this->linkAccesors ();
 				

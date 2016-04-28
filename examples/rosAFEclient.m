@@ -15,26 +15,24 @@ rosAFE = client.load('rosAFE');
 
 %% Data Object
 sampleRate = 44100;
-dObj = dataObject_RosAFE( bass, rosAFE, 'hw:2,0', sampleRate );
+bufferSize_s = 10;
+
+dObj = dataObject_RosAFE( bass, rosAFE, 'hw:2,0', sampleRate, bufferSize_s );
 
 %% Manager
 mObj = manager_RosAFE(dObj);
 mObj.addProcessor('ild'); % With default parameters
 pause(p);
-
-mObj.RosAFE.SendToMatlab();
-dObj_RosAFE = mObj.RosAFE.dataObj();
-
 mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
 
 mObj.processChunk( );
 
 %% ILD Params
 % Parameters of crosscorrelation processor
-fb_lowFreqHz  = 80;
-fb_nChannels  = 3;
-ild_wSizeSec  = 2;
-ild_hSizeSec  = 10;
+fb_lowFreqHz  = 800;
+fb_nChannels  = 30;
+ild_wSizeSec  = 20;
+ild_hSizeSec  = 100;
 
 % Summary of parameters 
 par = genParStruct('ild_wSizeSec',ild_wSizeSec,...
@@ -46,4 +44,4 @@ mObj.addProcessor('ild', par); % With given parameters
 pause(p);
 
 mObj.deleteProcessor('filterbank_time_input_0_0_0');
-mObj.cleanup();
+% mObj.cleanup(); %TODO : FIX This

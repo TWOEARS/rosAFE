@@ -30,7 +30,7 @@ startIldProc(const char *name, const char *upperDepName,
   params.set("ild_wSizeSec", ild_wSizeSec);
   params.set("ild_hSizeSec", ild_hSizeSec);
       
-  ildProcPtr ildProcessor (new ILDProc<ildT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
+  ildProcPtr ildProcessor (new ILDProc<ildT>( name, upperDepProc->getFsOut(), fsOut, infos->bufferSize_s, params) );
   ildProcessor->addInputProcessor ( upperDepProc );
   
   /* Adding this procesor to the ids */

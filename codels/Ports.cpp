@@ -36,7 +36,7 @@ initTDSPort(const char *name, const rosAFE_TDSPorts *TDSPorts, uint32_t sampleRa
 /* publishPort ------------------------------------------------------------- */
 
 genom_event
-PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, inputProcAccessorVector inChunk, uint32_t iii, genom_context self)
+PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, inputProcAccessorVector inChunk, uint64_t frameIndex, uint32_t iii, genom_context self)
 {
 	assert ( inChunk.size() == 2 );
 	    
@@ -51,7 +51,6 @@ PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, inputProcA
 		return rosAFE_e_noMemory( self );
 
 	uint32_t pos;
-	
 	for (pos = 0 ; pos < dim1 ; pos++) {
 		dataObj->data( self )->allTDSPorts._buffer[iii].left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + pos);
 		dataObj->data( self )->allTDSPorts._buffer[iii].right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + pos);
@@ -61,9 +60,10 @@ PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, inputProcA
 		dataObj->data( self )->allTDSPorts._buffer[iii].left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + pos);
 		dataObj->data( self )->allTDSPorts._buffer[iii].right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + pos);
 	}
-			
-    dataObj->data( self )->allTDSPorts._buffer[iii].lastFrameIndex += fpc;
-    dataObj->data( self )->allTDSPorts._buffer[iii].framesOnPort = fpc;    
+	
+	dataObj->data( self )->allTDSPorts._buffer[iii].lostData = frameIndex - ( dataObj->data( self )->allTDSPorts._buffer[iii].lastFrameIndex + fpc );	
+    dataObj->data( self )->allTDSPorts._buffer[iii].lastFrameIndex = frameIndex;
+    dataObj->data( self )->allTDSPorts._buffer[iii].framesOnPort = fpc;
 
     strcpy(dataObj->data( self )->allTDSPorts._buffer[iii].name, name);
     dataObj->write( self );

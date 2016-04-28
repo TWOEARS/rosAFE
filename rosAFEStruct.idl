@@ -30,6 +30,7 @@ module rosAFE {
     struct TimeDomainSignalPortStruct {
         string<MAX_STRING_LENGTH> 	name;
         unsigned long long    		lastFrameIndex;
+        unsigned long long    		lostData;
         unsigned long long    		framesOnPort;
         signalOneD	      		left;
         signalOneD	      		right;
@@ -38,6 +39,7 @@ module rosAFE {
     struct TimeFrequencySignalPortStruct {
         string<MAX_STRING_LENGTH> 	name;
         unsigned long long    		lastFrameIndex;
+        unsigned long long    		lostData;
         unsigned long long    		framesOnPort;
         unsigned long         		numberOfChannels;
         signalND      	      		left;

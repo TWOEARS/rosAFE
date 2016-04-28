@@ -217,7 +217,7 @@ component rosAFE {
 	doc         "Published only the new (unseen) processed chunks on a port.";
         task        sendToMatlab;
 
-	codel<start> initSendToMatlab( inout dataObj, in ::ids, in runningProcessors ) yield ether;
+	codel<start> initSendToMatlab( inout dataObj, in ::ids, in runningProcessors, inout flagMapSt ) yield ether;
 	codel<stop>  stopSendToMatlab( ) yield ether;
 
 	throw   e_noMemory;
@@ -235,24 +235,31 @@ component rosAFE {
     };
 
 
-    function ModifyParameter (
+    activity ModifyParameter (
 	in string nameProc = "nameProc" : "The name of the processor to change the parameter",
 	in string nameParam = "nameParam" : "The name of the parameter to be changed",
 	in string newValue = "newValue" : "The new value of the parameter to be changed"
 	) {
 	doc         "Modifies the parameter of a processor";
+        task        publishInfos;
 
-	codel modifyParameter( local in nameProc, local in nameParam, local in newValue, in ::ids );
+	codel<start> 	modifyParameter( local in nameProc, local in nameParam, local in newValue, in ::ids ) yield publish;
+	codel<publish>  publish( in ::ids, inout runningProcessors ) yield ether;
+	codel<stop>   	stopPublish( inout runningProcessors ) yield ether;
 
-	throw e_noSuchProcessor, e_noSuchParameter;
+	throw e_noMemory, e_noSuchProcessor, e_noSuchParameter;
     };
 
-    function RemoveProcessor (
+    activity RemoveProcessor (
 	in string name = "name" : "The name of the processor to delete"
 	) {
 	doc         "Removes the flags of this processor";
+        task        publishInfos;
 
-	codel removeProcessor( local in name, inout flagMapSt, inout newDataMapSt );
+	codel<start> 	removeProcessor( local in name, inout flagMapSt, inout newDataMapSt ) yield wait;
+	codel<wait> 	wait( ) yield publish;
+	codel<publish>  publish( in ::ids, inout runningProcessors ) yield ether;
+	codel<stop>   	stopPublish( inout runningProcessors ) yield ether;
 
 	throw e_noSuchProcessor;
     };

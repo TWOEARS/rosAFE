@@ -65,7 +65,7 @@ namespace openAFE {
 				/* Creating the output signals */
 				outT_SignalSharedPtr leftOutput( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _left) );
 				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
-				
+							
 				/* Setting those signals as the output signals of this processor */
 				this->outputSignals.push_back( std::move( leftOutput ) );
 				this->outputSignals.push_back( std::move( rightOutput ) );

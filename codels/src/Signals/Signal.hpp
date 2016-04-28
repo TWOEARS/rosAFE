@@ -32,6 +32,12 @@ namespace openAFE {
 	    typedef typename std::vector<containerPtr >::iterator bufferIter;
 	    typedef typename std::vector<containerPtr >::const_iterator bufferConstIter;
 
+		uint64_t frameIndex;
+		
+		void addFrameIndex ( uint64_t frameToAdd ) {
+			this->frameIndex += frameToAdd;
+		}
+		
 	protected:
 
 		std::string Label;           			// Used to label the signal
@@ -57,8 +63,7 @@ namespace openAFE {
 			for(bufferIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
 				(*it)->clear();
 		}
-				
-
+		
 	public:
 
 		/*	
@@ -125,7 +130,9 @@ namespace openAFE {
 			/* This struct is to acces to the oldest data of asked sample numbers of each buffer */	
 			this->allOldDataInfo.reset ( new nTwoCTypeBlockAccessor<T>( bufferNumber ) ) ;
 	
-			this->allWholeBufferInfo.reset ( new nTwoCTypeBlockAccessor<T>( bufferNumber ) ) ;		
+			this->allWholeBufferInfo.reset ( new nTwoCTypeBlockAccessor<T>( bufferNumber ) ) ;
+			
+			this->frameIndex = 0;	
 		}
 
 		uint32_t getBufferNumber() {
@@ -159,6 +166,8 @@ namespace openAFE {
 			assert( inChunk->getDimOfSignal() == bufferVector.size() );
 			uint32_t i = 0;
 			
+			this->addFrameIndex( inChunk->getLengthOfSignal() );
+
 			for(bufferConstIter it = bufferVector.begin(); it != bufferVector.end(); ++it)
 				(*it)->push_chunk( inChunk->getTwoCTypeBlockAccessor( i++ ) ) ;
 		}
@@ -171,6 +180,7 @@ namespace openAFE {
 			/* The first array */
 			( *(it + bufferNumber) )->push_chunk( inChunk, dim );
 
+			this->addFrameIndex( dim );
 		}
 				
 		std::string getName() {
@@ -245,7 +255,10 @@ namespace openAFE {
 			}
 		}
 		
-	    
+		uint64_t getFrameIndex () {
+			return this->frameIndex;
+		}
+			    
 	}; /* class Signal */
 }; /* namespace openAFE */
 

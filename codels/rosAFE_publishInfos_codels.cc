@@ -1,4 +1,6 @@
 #include "processorCommon.hpp"
+#include "stateMachine.hpp"
+#include <pthread.h>
 
 /* --- Task publishInfos ------------------------------------------------ */
 
@@ -227,3 +229,122 @@ stopPublish(const rosAFE_runningProcessors *runningProcessors,
 
   return rosAFE_ether;
 }
+
+
+/* --- Activity ModifyParameter ----------------------------------------- */
+
+/** Codel modifyParameter of activity ModifyParameter.
+ *
+ * Triggered by rosAFE_start.
+ * Yields to rosAFE_publish.
+ * Throws rosAFE_e_noMemory, rosAFE_e_noSuchProcessor,
+ *        rosAFE_e_noSuchParameter.
+ */
+genom_event
+modifyParameter(const char *nameProc, const char *nameParam,
+                const char *newValue, const rosAFE_ids *ids,
+                genom_context self)
+{
+  if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue) )
+		return rosAFE_publish;
+	else
+		return rosAFE_e_noSuchParameter(self);
+  }
+  else if ( ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	if (ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return rosAFE_publish;
+	else
+		return rosAFE_e_noSuchParameter(self);
+  }
+  else if ( ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	if (ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return rosAFE_publish;
+	else
+		return rosAFE_e_noSuchParameter(self);
+  }
+  else if ( ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	if (ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return rosAFE_publish;
+	else
+		return rosAFE_e_noSuchParameter(self);
+  }
+  else if ( ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	if (ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
+		return rosAFE_publish;
+	else
+		return rosAFE_e_noSuchParameter(self);
+  }
+  else return rosAFE_e_noSuchProcessor( self );
+}
+
+/** Codel publish of activity ModifyParameter.
+ *
+ * Triggered by rosAFE_publish.
+ * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noMemory, rosAFE_e_noSuchProcessor,
+ *        rosAFE_e_noSuchParameter.
+ */
+/* already defined in service updateParameters */
+
+
+/** Codel stopPublish of activity ModifyParameter.
+ *
+ * Triggered by rosAFE_stop.
+ * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noMemory, rosAFE_e_noSuchProcessor,
+ *        rosAFE_e_noSuchParameter.
+ */
+/* already defined in service updateParameters */
+
+
+
+/* --- Activity RemoveProcessor ----------------------------------------- */
+
+/** Codel removeProcessor of activity RemoveProcessor.
+ *
+ * Triggered by rosAFE_start.
+ * Yields to rosAFE_wait.
+ * Throws rosAFE_e_noSuchProcessor.
+ */
+genom_event
+removeProcessor(const char *name, rosAFE_flagMap **flagMapSt,
+                rosAFE_flagMap **newDataMapSt, genom_context self)
+{
+  SM::removeFlag( name, newDataMapSt, self );
+  if ( SM::removeFlag( name, flagMapSt, self ) )
+		return rosAFE_wait;
+  else
+	return rosAFE_e_noSuchProcessor( self );
+}
+
+/** Codel wait of activity RemoveProcessor.
+ *
+ * Triggered by rosAFE_wait.
+ * Yields to rosAFE_publish.
+ * Throws rosAFE_e_noSuchProcessor.
+ */
+genom_event
+wait(genom_context self)
+{
+  sleep(1);
+  return rosAFE_publish;
+}
+
+/** Codel publish of activity RemoveProcessor.
+ *
+ * Triggered by rosAFE_publish.
+ * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noSuchProcessor.
+ */
+/* already defined in service updateParameters */
+
+
+/** Codel stopPublish of activity RemoveProcessor.
+ *
+ * Triggered by rosAFE_stop.
+ * Yields to rosAFE_ether.
+ * Throws rosAFE_e_noSuchProcessor.
+ */
+/* already defined in service updateParameters */
+

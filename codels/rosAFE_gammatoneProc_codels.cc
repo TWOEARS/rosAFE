@@ -39,7 +39,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
   params.set("fb_nGamma", fb_nGamma);
   params.set("fb_bwERBs", fb_bwERBs);
 	  
-  gammatoneProcPtr gammatoneProcessor (new GamamtoneProc<gammatoneT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
+  gammatoneProcPtr gammatoneProcessor (new GamamtoneProc<gammatoneT>( name, upperDepProc->getFsOut(), fsOut, infos->bufferSize_s, params) );
   gammatoneProcessor->addInputProcessor ( upperDepProc );
   
   /* Adding this procesor to the ids */

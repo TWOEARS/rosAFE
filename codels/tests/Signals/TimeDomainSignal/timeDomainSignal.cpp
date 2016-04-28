@@ -6,7 +6,7 @@
  			
  	uint32_t cmp = 0;		
  			
-     unsigned int chunkSize = 4;		
+     unsigned int chunkSize = 1;		
  	std::vector< T> inChunk1(chunkSize);		
  		
  	twoCTypeBlockPtr inChunk1P (new twoCTypeBlock<T>() );		
@@ -27,11 +27,13 @@
  		/* Append a new chunk and show the whole buffer */		
  		if ( key == 'w' ) {		
  					
- 			test::updateChunk(inChunk1.data(), inChunk1.size(), cmp);		
- 					
+ 			test::updateChunk(inChunk1.data(), inChunk1.size(), cmp);
+
  			leftSig->appendChunk(inChunk);		
  			leftSig->calcWholeBuffer();				
- 			test::printNTwoCTypeBlock( leftSig->getWholeBufferAccesor() , "The whole buffer : ");		
+ 			test::printNTwoCTypeBlock( leftSig->getWholeBufferAccesor() , "The whole buffer : ");
+ 			
+ 			std::cout << leftSig->getFrameIndex() << std::endl;
  		}		
  				
  		/* Show the last chunk */							

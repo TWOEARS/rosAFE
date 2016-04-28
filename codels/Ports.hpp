@@ -16,7 +16,7 @@ namespace PORT {
 								  uint32_t bufferSize_s, uint32_t bytesPerFrame, genom_context self);
 								  */
 	genom_event
-	publishTDSPort (const char *name, const rosAFE_dataObj *dataObj, inputProcAccessorVector data, uint32_t iii, genom_context self);
+	publishTDSPort (const char *name, const rosAFE_dataObj *dataObj, inputProcAccessorVector data, uint64_t frameIndex, uint32_t iii, genom_context self);
 
 	/*
 	genom_event

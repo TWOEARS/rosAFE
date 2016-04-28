@@ -69,7 +69,7 @@ classdef dataObject_RosAFE < dynamicprops
             dObj.sampleRate = sampleRate;
             
             nFramesPerChunk = 2205;
-            nChunksOnPort = 20;
+            nChunksOnPort = bufferSize_s * nFramesPerChunk / sampleRate;
 
             acquire = dObj.bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
             pause(0.25);

@@ -1,5 +1,6 @@
 #include "processorCommon.hpp"
 #include "Ports.hpp"
+#include "stateMachine.hpp"
 
 /* --- Task sendToMatlab ------------------------------------------------ */
 
@@ -38,51 +39,54 @@ initSendToMatlabTask(const rosAFE_dataObj *dataObj,
 genom_event
 initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
                  const rosAFE_runningProcessors *runningProcessors,
-                 genom_context self)
+                 rosAFE_flagMap **flagMapSt, genom_context self)
 {
   struct timeval tv;
   rosAFE_dataObjSt *data;
   data = dataObj->data( self );
 
-  rosAFE_RunningProcessorsSt *running;  
+  rosAFE_RunningProcessorsSt *running;
   running = runningProcessors->data( self );
 
   uint32_t numTDS = running->paramsInputProc._length + running->paramsPreProc._length;
-  uint32_t numTFS = running->paramsGammatoneProc._length + running->paramsIhcProc._length + running->paramsIldProc._length;
 
   data->allTDSPorts._length = numTDS;
   if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
 	return rosAFE_e_noMemory( self );
-/*
-  data->allTFSPorts._length = numTFS;
-  if (genom_sequence_reserve(&(data->allTDSPorts), numTFS))
-	return rosAFE_e_noMemory( self );
-*/
-  for (uint32_t ii = 0 ; ii < running->paramsInputProc._length ; ii++) {
+
+  for (uint32_t ii = 0 ; ii < running->paramsInputProc._length ; ii++) {   
 	inputProcPtr thisProc = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
 	
+	SM::addFlag( "SendInput", thisProc->getProcessorInfo().name.c_str(), flagMapSt, self );
+	SM::riseFlag ( "SendInput", flagMapSt, self);
+	    
 	thisProc->calcOldData();
-	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), ii, self );
+	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), thisProc->getFrameIndex(), ii, self );
 	
+	SM::removeFlag ( "SendInput", flagMapSt, self );
 	thisProc.reset();
   }
 
   for (uint32_t ii = 0 ; ii < running->paramsPreProc._length ; ii++) {
 	preProcPtr thisProc = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
+
+	SM::addFlag( "SendPreProc", thisProc->getProcessorInfo().name.c_str(), flagMapSt, self );
 	
 	thisProc->calcOldData();
-	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), running->paramsInputProc._length + ii, self );
+	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), thisProc->getFrameIndex(), running->paramsInputProc._length + ii, self );
+
+	SM::removeFlag ( "SendPreProc", flagMapSt, self );
 	
 	thisProc.reset();
   }
-/*  for (uint32_t ii = 0 ; ii < running->paramsPreProc._length ; ii++) {
-	preProcPtr thisProc = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
+
+/*	
+  uint32_t numTFS = running->paramsGammatoneProc._length + running->paramsIhcProc._length + running->paramsIldProc._length;
 	
-	thisProc->calcOldData();
-	thisProc->getOldDataAccesor();
-	
-	thisProc.reset();
-  }*/
+  data->allTFSPorts._length = numTFS;
+  if (genom_sequence_reserve(&(data->allTDSPorts), numTFS))
+	return rosAFE_e_noMemory( self );
+*/
 
   gettimeofday(&tv, NULL);
 	 

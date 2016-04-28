@@ -63,7 +63,7 @@ namespace openAFE {
 						  const std::string& requestNameArg,
 						  const std::string& requestLabelArg,
 						  const std::string& outputTypeArg,
-						  unsigned int isBinauralArg ) = 0;
+						  unsigned int isBinauralArg ) = 0;		  
 									
 		protected:
 
@@ -153,7 +153,7 @@ namespace openAFE {
 					outT_wholeBufferInfo.push_back ( (*it)->getWholeBufferAccesor() );
 				}
 			}
-
+					
 		public:
 					
 			/* PROCESSOR Super-constructor of the processor class
@@ -330,9 +330,13 @@ namespace openAFE {
 					(*itOut)->appendChunk( (*itPMZ)->getOldDataAccesor() );
 					itOut++;
 				}
-			}									
+			}
+
+			uint64_t getFrameIndex () {
+				return this->outputSignals[0]->getFrameIndex();
+			}
 	};
-	
+
 };
 
 

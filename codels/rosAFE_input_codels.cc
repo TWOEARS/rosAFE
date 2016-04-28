@@ -85,9 +85,8 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   
   infos->sampleRate = Audio->data(self)->sampleRate;
   infos->bufferSize_s = bufferSize_s;
-  infos->innerBufferSize_s = ceil( 4 * nFramesPerBlock / infos->sampleRate ) ;
   
-  inputProcPtr inputP ( new InputProc<inputT>( name, infos->sampleRate, infos->sampleRate, infos->innerBufferSize_s ) );
+  inputProcPtr inputP ( new InputProc<inputT>( name, infos->sampleRate, infos->sampleRate, infos->bufferSize_s ) );
   
   /* Adding this procesor to the ids */
   ((*inputProcessorsSt)->processorsAccessor).addProcessor( inputP );

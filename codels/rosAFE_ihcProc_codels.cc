@@ -27,7 +27,7 @@ startIhcProc(const char *name, const char *upperDepName,
   apf::parameter_map params;
   params.set("ihc_method", ihc_method);
   
-  ihcProcPtr ihcProcessor (new IHCProc<ihcT>( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, params) );
+  ihcProcPtr ihcProcessor (new IHCProc<ihcT>( name, upperDepProc->getFsOut(), fsOut, infos->bufferSize_s, params) );
   ihcProcessor->addInputProcessor ( upperDepProc );
   
   /* Adding this procesor to the ids */
