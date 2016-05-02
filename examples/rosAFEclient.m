@@ -25,7 +25,9 @@ mObj.addProcessor('ild'); % With default parameters
 pause(p);
 mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
 
-mObj.processChunk( );
+while ( 1 )
+    mObj.processChunk( );
+end
 
 %% ILD Params
 % Parameters of crosscorrelation processor
@@ -45,3 +47,10 @@ pause(p);
 
 mObj.deleteProcessor('filterbank_time_input_0_0_0');
 % mObj.cleanup(); %TODO : FIX This
+
+audiowrite('input.wav',[dObj.input_0{1}.Data(:) dObj.input_0{2}.Data(:)],44100)
+audiowrite('preProc.wav',[dObj.time_input_0_0{1}.Data(:) dObj.time_input_0_0{2}.Data(:)],44100)
+
+plot(dObj.time_input_0_0{1}.Data(:));
+hold on;
+plot(dObj.input_0{1}.Data(:),'y');

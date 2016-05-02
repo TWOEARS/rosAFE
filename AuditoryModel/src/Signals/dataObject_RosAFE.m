@@ -69,9 +69,10 @@ classdef dataObject_RosAFE < dynamicprops
             dObj.sampleRate = sampleRate;
             
             nFramesPerChunk = 2205;
-            nChunksOnPort = bufferSize_s * nFramesPerChunk / sampleRate;
+            nChunksOnPort =  bufferSize_s * sampleRate / nFramesPerChunk ;
 
             acquire = dObj.bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
+            %menu('Launch rosbag now','Done');
             pause(0.25);
             if ( strcmp(acquire.status,'error') )
                  error(strcat('Error',acquire.exception.ex));
