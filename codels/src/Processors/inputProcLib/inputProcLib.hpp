@@ -7,7 +7,7 @@ namespace openAFE {
 	
 	namespace inputProcLib {
 
-		/* This divades all the datas of the incoming chunk
+		/* This function divades all the datas of the incoming chunk
 		 * with the MAXCODABLEVALUE.
 		 * */
 		template<typename T>

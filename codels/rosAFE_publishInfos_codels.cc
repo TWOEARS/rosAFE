@@ -90,11 +90,14 @@ publish(const rosAFE_ids *ids,
  for (uint32_t ii = 0 ; ii < data->paramsPreProc._length ; ii++) {
 	 
 	preProcPtr thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
-	apfMap thisParams = thisProcessor->getCurrentParameters();
+	const apfMap thisParams = thisProcessor->getCurrentParameters();
 		  
     data->paramsPreProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );  
     data->paramsPreProc._buffer[ii].upperDepName = strdup( thisProcessor->getInProcessorInfo(0).name.c_str() );	
     data->paramsPreProc._buffer[ii].fsOut = thisProcessor->getFsOut();
+    
+    std::cout << thisParams.get<unsigned long>("pp_bRemoveDC") << std::endl;
+    
     data->paramsPreProc._buffer[ii].pp_bRemoveDC = thisParams.get<unsigned long>("pp_bRemoveDC");
     data->paramsPreProc._buffer[ii].pp_cutoffHzDC = thisParams.get<float>("pp_cutoffHzDC");
     data->paramsPreProc._buffer[ii].pp_bPreEmphasis = thisParams.get<unsigned long>("pp_bPreEmphasis");

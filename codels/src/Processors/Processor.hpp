@@ -191,7 +191,7 @@ namespace openAFE {
 
 			/* GETCURRENTPARAMETERS  This methods returns a list of parameter
 			 * values used by a given processor. */
-			apfMap& getCurrentParameters() {
+			const apfMap& getCurrentParameters() {
 				return this->processorParams;
 			}
 			

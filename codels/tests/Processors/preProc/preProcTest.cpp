@@ -14,7 +14,8 @@ int main() {
 	const uint32_t fsOut = 40;
 	const uint32_t bufferSize_s = 3;
 	apf::parameter_map params;
-	params.set("bRemoveDC",1);
+	params.set("pp_bRemoveDC",1);
+	params.set("pp_cutoffHzDC",20);
 
 	int chunkSize = 5;
 	uint32_t cmpL = 0, cmpR = 0;

@@ -273,8 +273,6 @@ namespace openAFE {
 			if ( this->freshData < 0 )
 				this->freshData = 0;
 
-			std::cout << "Dim total : " << this->oldDataInfo->first->dim + this->oldDataInfo->second->dim << std::endl;				
-
 		}
 
 		/* calcWholeBuffer : updates the wholeBufferInfo */

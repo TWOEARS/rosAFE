@@ -1,11 +1,21 @@
 CPP = g++
 C = gcc 
-CFLAGS = -Wall -g -O -std=c++11 -pthread -DHAVE_INLINE
+CFLAGS = -Wall -O -std=c++11 -D_REENTRANT -pthread -DHAVE_INLINE
+LDFLAGS= -g
+PATHS = 
 
-all:
-	$(CPP) $(CFLAGS) preProcTest.cpp -o run
+all: main
 	
-rebuild: uninstall clean all	
+main: main.cpp bwCoef.o bwIIR.o
+	g++ $(CFLAGS)  $(LDFLAGS) -o run main.cpp bwCoef.o bwIIR.o bwFilter.hpp
+
+bwCoef.o: bwCoef.hpp bwCoef.cpp
+	$(CPP) $(CFLAGS) -c bwCoef.cpp
+
+bwIIR.o: bwIIR.hpp bwIIR.cpp
+	$(CPP) $(CFLAGS) -c bwIIR.cpp
+	
+rebuild: uninstall clean all
 
 uninstall:
 	rm -rf run

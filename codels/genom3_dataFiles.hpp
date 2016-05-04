@@ -6,7 +6,7 @@
 using namespace openAFE;
 
 /* Start : The Input processor template definitions */
-using inputT = float_t;
+using inputT = float;
 using inputProcessor = InputProc<inputT>;
 using inputProcessorVector = ProcessorVector<inputProcessor>;
 

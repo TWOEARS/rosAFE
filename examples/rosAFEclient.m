@@ -21,36 +21,29 @@ dObj = dataObject_RosAFE( bass, rosAFE, 'hw:2,0', sampleRate, bufferSize_s );
 
 %% Manager
 mObj = manager_RosAFE(dObj);
+
+%% Parameter settings
+pp_bRemoveDC  = 1;
+pp_cutoffHzDC  = 5000;
+ 
+% Summary of parameters 
+par = genParStruct('pp_bRemoveDC',pp_bRemoveDC,...
+                    'pp_cutoffHzDC',pp_cutoffHzDC); 
+
+mObj.addProcessor('time', par); % With given parameters
+pause(p);
+
 mObj.addProcessor('ild'); % With default parameters
 pause(p);
-mObj.ModifyParameter('time_input_0_0', 'pp_bRemoveDC', '3');
 
-while ( 1 )
-    mObj.processChunk( );
-end
-
-%% ILD Params
-% Parameters of crosscorrelation processor
-fb_lowFreqHz  = 800;
-fb_nChannels  = 30;
-ild_wSizeSec  = 20;
-ild_hSizeSec  = 100;
-
-% Summary of parameters 
-par = genParStruct('ild_wSizeSec',ild_wSizeSec,...
-                   'ild_hSizeSec',ild_hSizeSec,...
-                   'fb_lowFreqHz',fb_lowFreqHz,...
-                   'fb_nChannels',fb_nChannels); 
- 
-mObj.addProcessor('ild', par); % With given parameters
-pause(p);
+mObj.processChunk( );
 
 mObj.deleteProcessor('filterbank_time_input_0_0_0');
 % mObj.cleanup(); %TODO : FIX This
 
-audiowrite('input.wav',[dObj.input_0{1}.Data(:) dObj.input_0{2}.Data(:)],44100)
-audiowrite('preProc.wav',[dObj.time_input_0_0{1}.Data(:) dObj.time_input_0_0{2}.Data(:)],44100)
+audiowrite('input.wav',[dObj.input_0{1}.Data(:) dObj.input_0{2}.Data(:)], sampleRate);
+audiowrite('preProc.wav',[dObj.time_input_0_0{1}.Data(:) dObj.time_input_0_0{2}.Data(:)], sampleRate);
 
-plot(dObj.time_input_0_0{1}.Data(:));
+plot(dObj.input_0{1}.Data(:),'b');
 hold on;
-plot(dObj.input_0{1}.Data(:),'y');
+plot(dObj.time_input_0_0{1}.Data(:),'y');
