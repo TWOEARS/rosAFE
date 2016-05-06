@@ -94,8 +94,8 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   /* Initialization */
   N = nFramesPerBlock; //N is the amount of frames the client requests
   nfr = Audio->data(self)->lastFrameIndex + 1;
-  l.resize(N); // l and r are arrays containing the
-  r.resize(N); // current block of data
+  l.resize(N, 0); // l and r are arrays containing the
+  r.resize(N, 0); // current block of data
 
   li = l.data(); ri = r.data(); // li and ri point to the current position in the block
  
@@ -117,7 +117,7 @@ waitExecInputProc(uint32_t nFramesPerBlock, const rosAFE_Audio *Audio,
 {
     binaudio_portStruct *data;
     int n, loss;
-
+    
     /* Read data from the input port */
     Audio->read(self);
     data = Audio->data(self);
@@ -162,7 +162,7 @@ execInputProc(const char *name,
   /* The client processes the current block l and r here */  
   (((*inputProcessorsSt)->processorsAccessor).getProcessor( name ))->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
   globalLoss = 0;
-  
+    
   return rosAFE_waitRelease;
 }
 
@@ -178,11 +178,11 @@ waitRelease(const char *name, rosAFE_flagMap **flagMapSt,
 {      
   /* Waiting for all childs */
   if ( ! SM::checkFlag( name, flagMapSt, self) )
-	return rosAFE_pause_waitRelease;  
-
+	  return rosAFE_pause_waitRelease;  
+  
   /* Rising the flag (if any) */
-  SM::riseFlag ( name, flagMapSt, self);
-  					
+  SM::riseFlag ( name, flagMapSt, self );
+  				
   // ALL childs are done
   return rosAFE_release;
 }

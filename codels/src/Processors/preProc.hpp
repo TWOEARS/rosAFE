@@ -100,8 +100,8 @@ namespace openAFE {
 				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
 				
 				/* Setting those signals as the output signals of this processor */
-				this->outputSignals.push_back( std::move( leftOutput ) );
-				this->outputSignals.push_back( std::move( rightOutput ) );
+				this->outputSignals.push_back( leftOutput );
+				this->outputSignals.push_back( rightOutput );
 								
 				/* Linking the output accesors of each signal */
 				this->linkAccesors ();
@@ -115,12 +115,10 @@ namespace openAFE {
 				outT_SignalSharedPtr outRightPMZ( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Right TDS PMZ", "Right TDS PMZ", _right) );
 				
 				/* Setting those signals as the PMZ signals of this processor */
-				this->outPrivateMemoryZone.push_back( std::move( outLeftPMZ ) );
-				this->outPrivateMemoryZone.push_back( std::move( outRightPMZ ) );
+				this->outPrivateMemoryZone.push_back( outLeftPMZ );
+				this->outPrivateMemoryZone.push_back( outRightPMZ );
 				
-				this->prepareForProcessing ();
-				
-				std::cout << " End of ctor " << std::endl;
+				this->prepareForProcessing ();	
 			}
 				
 			~PreProc () {
@@ -146,23 +144,33 @@ namespace openAFE {
 					// Getting acces to that chunk
 					(*itPMZ)->calcLastChunk();
 					(*(itPMZ+1))->calcLastChunk();
-											
-						// Actual Processing
-						if ( map.get<unsigned short>("pp_bRemoveDC") ) {
+					
+					unsigned long dim1_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim;
+					unsigned long dim2_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim;
+					unsigned long dim1_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim;
+					unsigned long dim2_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim;
 							
+					T* firstValue1_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue;
+					T* firstValue2_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
+					T* firstValue1_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue;
+					T* firstValue2_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
+													
+					// Actual Processing
+					if ( map.get<unsigned short>("pp_bRemoveDC") ) {
 							
-							if ( (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim > 0 )
-								this->dcFilter_l->filterChunk( (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue + (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim , (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue );
-							if ( (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim > 0 )
-								this->dcFilter_l->filterChunk( (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue, (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue + (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim , (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue );
+						std::thread leftThread1( &bwFilter<T>::filterChunk, this->dcFilter_l, firstValue1_l, firstValue1_l + dim1_l , firstValue1_l );
+						std::thread rightThread1( &bwFilter<T>::filterChunk, this->dcFilter_r, firstValue1_r, firstValue1_r + dim1_r , firstValue1_r );
+							
+						leftThread1.join();                // pauses until left finishes
+						rightThread1.join();               // pauses until right finishes
+													
+						std::thread leftThread2( &bwFilter<T>::filterChunk, this->dcFilter_l, firstValue2_l, firstValue2_l + dim2_l , firstValue2_l );
+						std::thread rightThread2( &bwFilter<T>::filterChunk, this->dcFilter_r, firstValue2_r, firstValue2_r + dim2_r , firstValue2_r );
 
-							if ( (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim > 0 )
-								this->dcFilter_r->filterChunk( (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue, (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue + (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim , (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue );
-							if ( (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim > 0 )
-								this->dcFilter_r->filterChunk( (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue, (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue + (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim , (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue );
-							
-						}
-						// Processed data is on PMZ				
+						leftThread2.join();                // pauses until left finishes
+						rightThread2.join();               // pauses until right finishes				
+					}
+					// Processed data is on PMZ				
 			}
 
 			void prepareForProcessing () {
@@ -170,9 +178,6 @@ namespace openAFE {
 				const apfMap map = this->getCurrentParameters();
 	
 				if ( map.get<unsigned short>("pp_bRemoveDC") ) {
-					
-					// preProcLib::createBWFilter ( this->dcFilter_l, this->getFsOut(), map.get<float>("pp_cutoffHzDC") );
-					// preProcLib::createBWFilter ( this->dcFilter_r, this->getFsOut(), map.get<float>("pp_cutoffHzDC") );
 					
 					this->dcFilter_l.reset ( new bwFilter<T> ( this->getFsOut(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
 					this->dcFilter_r.reset ( new bwFilter<T> ( this->getFsOut(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );

@@ -41,6 +41,7 @@ initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
                  const rosAFE_runningProcessors *runningProcessors,
                  rosAFE_flagMap **flagMapSt, genom_context self)
 {
+	
   struct timeval tv;
   rosAFE_dataObjSt *data;
   data = dataObj->data( self );
@@ -54,28 +55,29 @@ initSendToMatlab(const rosAFE_dataObj *dataObj, const rosAFE_ids *ids,
   if (genom_sequence_reserve(&(data->allTDSPorts), numTDS))
 	return rosAFE_e_noMemory( self );
 
-  for (uint32_t ii = 0 ; ii < running->paramsInputProc._length ; ii++) {   
+  for ( uint32_t ii = 0 ; ii < running->paramsInputProc._length ; ii++ ) {   
 	inputProcPtr thisProc = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
 	
-	SM::addFlag( "SendInput", thisProc->getProcessorInfo().name.c_str(), flagMapSt, self );
-	SM::riseFlag ( "SendInput", flagMapSt, self);
-	    
-	thisProc->calcOldData();
+	//SM::addFlag( "SendInput", thisProc->getProcessorInfo().name.c_str(), flagMapSt, self );
+	//SM::riseFlag ( "SendInput", flagMapSt, self);
+
+    thisProc->calcOldData();
 	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), thisProc->getFrameIndex(), ii, self );
-	
-	SM::removeFlag ( "SendInput", flagMapSt, self );
+
+	//SM::removeFlag ( "SendInput", flagMapSt, self );
 	thisProc.reset();
   }
 
-  for (uint32_t ii = 0 ; ii < running->paramsPreProc._length ; ii++) {
+  for ( uint32_t ii = 0 ; ii < running->paramsPreProc._length ; ii++ ) {
 	preProcPtr thisProc = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
 
-	SM::addFlag( "SendPreProc", thisProc->getProcessorInfo().name.c_str(), flagMapSt, self );
-	
+	//SM::addFlag( "SendInput", thisProc->getProcessorInfo().name.c_str(), flagMapSt, self );
+	//SM::riseFlag ( "SendInput", flagMapSt, self);
+		
 	thisProc->calcOldData();
 	PORT::publishTDSPort ( thisProc->getProcessorInfo().name.c_str(), dataObj, thisProc->getOldDataAccesor(), thisProc->getFrameIndex(), running->paramsInputProc._length + ii, self );
 
-	SM::removeFlag ( "SendPreProc", flagMapSt, self );
+	//SM::removeFlag ( "SendPreProc", flagMapSt, self );
 	
 	thisProc.reset();
   }

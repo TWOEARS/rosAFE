@@ -103,7 +103,7 @@ namespace openAFE {
 				rightAppendThread.join();               // pauses until right finishes
 			}
 			
-			/* TODO : Resets the internat states. */		
+			/* TODO : Resets the internal states. */		
 			void reset() {
 				PB::reset();
 			}		

@@ -71,12 +71,12 @@ classdef dataObject_RosAFE < dynamicprops
             nFramesPerChunk = 2205;
             nChunksOnPort =  bufferSize_s * sampleRate / nFramesPerChunk ;
 
-%             acquire = dObj.bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
-              menu('Launch rosbag now','Done');
-%             pause(0.25);
-%             if ( strcmp(acquire.status,'error') )
-%                  error(strcat('Error',acquire.exception.ex));
-%             end
+            acquire = dObj.bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
+%             menu('Launch rosbag now','Done');
+            pause(0.25);
+            if ( strcmp(acquire.status,'error') )
+                 error(strcat('Error',acquire.exception.ex));
+            end
 
             
             connection = dObj.RosAFE.connect_port('Audio', 'bass/Audio');

@@ -87,8 +87,6 @@ namespace openAFE {
 			
 			// This line creates the cascading
 			casFilt->set(allFilters.begin(), allFilters.end());
-			
-			std::cout << allFilters.size() << std::endl;
 		}
 		
 		~bwFilter() {

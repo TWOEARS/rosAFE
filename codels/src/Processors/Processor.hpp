@@ -326,8 +326,10 @@ namespace openAFE {
 				
 				outT_SignalIter itOut = this->outputSignals.begin();
 				for ( outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin() ; itPMZ != this->outPrivateMemoryZone.end() ; ++itPMZ ) {
-					(*itPMZ)->calcOldData();
-					(*itOut)->appendChunk( (*itPMZ)->getOldDataAccesor() );
+					// (*itPMZ)->calcOldData();
+					// (*itOut)->appendChunk( (*itPMZ)->getOldDataAccesor() );
+					(*itPMZ)->calcLastChunk();
+					(*itOut)->appendChunk( (*itPMZ)->getLastChunkAccesor() );					
 					itOut++;
 				}
 			}
