@@ -82,7 +82,7 @@ startIldProc(const char *name, const char *upperDepName,
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
  *        rosAFE_e_noSuchProcessor.
  */
-/* already defined in service PreProc */
+/* already defined in service GammatoneProc */
 
 
 /** Codel deleteIldProc of activity IldProc.

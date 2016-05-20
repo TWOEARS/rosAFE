@@ -51,6 +51,8 @@ namespace openAFE {
 			using inProcessorSharedPtr = typename ProcessorVector<inProcT>::processorSharedPtr;
 
 		private:
+			
+			uint64_t nfr;
 						
 			/* This function fills the defaultParams map with default
 			 * parameters for each processor
@@ -337,6 +339,14 @@ namespace openAFE {
 			uint64_t getFrameIndex () {
 				return this->outputSignals[0]->getFrameIndex();
 			}
+			
+			const uint64_t getNFR () {
+				return this->nfr;
+			}
+			
+			void setNFR ( const uint64_t nfrArg ) {
+				this->nfr = nfrArg;
+			}			
 	};
 
 };

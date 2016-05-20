@@ -6,7 +6,10 @@
 
 // #include "preProcLib/preProcLib.hpp"
 
-#include "../Filters/bwFilter/bwFilter.hpp" 
+#include "../Filters/bwFilter/bwFilter.hpp"
+#include "../Filters/preEmphasis.hpp"
+#include "../Filters/agcFilter.hpp"
+
 
 /* 
  * preProc :
@@ -73,15 +76,23 @@ namespace openAFE {
 			}
 
 			/* Pointers to Filter Objects */
-			// dcFilter_l | dcFilter_r | preEmphFilter_l | preEmphFilter_r | agcFilter_l | agcFilter_r | midEarFilter_l | midEarFilter_r | meFilterPeakdB
-				// The filter object
+			// midEarFilter_l | midEarFilter_r | 
 			
 			typedef std::shared_ptr< bwFilter<T> > bwFilterPtr;
-			// using bwFilterPtr = bwFilter<T>::bwFilterPtr;
+			typedef std::shared_ptr< PreEmphasis<T> > preEmphasisPtr;
+			typedef std::shared_ptr< AgcFilter<T> > agcFilterPtr;
+			
+			double meFilterPeakdB;
 				
 			bwFilterPtr dcFilter_l;
 			bwFilterPtr dcFilter_r;
-									
+			
+			preEmphasisPtr preEmphFilter_l;
+			preEmphasisPtr preEmphFilter_r;
+			
+			agcFilterPtr agcFilter_l;
+			agcFilterPtr agcFilter_r;
+												
 		public:
 		
 			using typename PB::outT_SignalSharedPtr;
@@ -135,6 +146,9 @@ namespace openAFE {
 				    const apfMap map = this->getCurrentParameters();
 				    
 					inputPtrIterator it = this->inputProcessors.processorVector.begin();
+					
+					this->setNFR ( (*it)->getNFR() ); /* for rosAFE */
+					
 					outT_SignalIter itPMZ = this->outPrivateMemoryZone.begin();
 						
 					// Appending the chunk to process (the processing must be done on the PMZ)
@@ -156,6 +170,8 @@ namespace openAFE {
 					T* firstValue2_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
 													
 					// Actual Processing
+           
+					// 1- DC-removal filter					
 					if ( map.get<unsigned short>("pp_bRemoveDC") ) {
 							
 						std::thread leftThread1( &bwFilter<T>::filterChunk, this->dcFilter_l, firstValue1_l, firstValue1_l + dim1_l , firstValue1_l );
@@ -170,13 +186,44 @@ namespace openAFE {
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes				
 					}
+
+					// 2- Pre-whitening
+					if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
+							
+						std::thread leftThread1( &PreEmphasis<T>::filterChunk, this->preEmphFilter_l, firstValue1_l, firstValue1_l + dim1_l , firstValue1_l );
+						std::thread rightThread1( &PreEmphasis<T>::filterChunk, this->preEmphFilter_r, firstValue1_r, firstValue1_r + dim1_r , firstValue1_r );
+							
+						leftThread1.join();                // pauses until left finishes
+						rightThread1.join();               // pauses until right finishes
+													
+						std::thread leftThread2( &PreEmphasis<T>::filterChunk, this->preEmphFilter_l, firstValue2_l, firstValue2_l + dim2_l , firstValue2_l );
+						std::thread rightThread2( &PreEmphasis<T>::filterChunk, this->preEmphFilter_r, firstValue2_r, firstValue2_r + dim2_r , firstValue2_r );
+
+						leftThread2.join();                // pauses until left finishes
+						rightThread2.join();               // pauses until right finishes				
+					}					
+
+					// 3- Automatic gain control	
+					
+					// 4- Level Scaling
+
+					if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
+						
+						if ( map["pp_bPreEmphasis"] == "jespen" )
+							this->meFilterPeakdB = 55.9986;
+						else if ( map["pp_bPreEmphasis"] == "lopezpoveda" )
+							this->meFilterPeakdB = 66.2888;
+						
+					} else this->meFilterPeakdB = 0;
+														
 					// Processed data is on PMZ				
 			}
 
 			void prepareForProcessing () {
 						
 				const apfMap map = this->getCurrentParameters();
-	
+
+				// Filter instantiation (if needed)	
 				if ( map.get<unsigned short>("pp_bRemoveDC") ) {
 					
 					this->dcFilter_l.reset ( new bwFilter<T> ( this->getFsOut(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
@@ -188,7 +235,32 @@ namespace openAFE {
 					this->dcFilter_l.reset();
 					this->dcFilter_r.reset();
 				}
+
+				if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
+					
+					this->preEmphFilter_l.reset ( new PreEmphasis<T> ( this->getFsOut(), map.get<float>("pp_coefPreEmphasis") ) );
+					this->preEmphFilter_r.reset ( new PreEmphasis<T> ( this->getFsOut(), map.get<float>("pp_coefPreEmphasis") ) );
+					
+				} else {
+					
+					// Deleting the filter objects
+					this->preEmphFilter_l.reset();
+					this->preEmphFilter_r.reset();
+				}
 				
+				if ( map.get<unsigned short>("pp_bNormalizeRMS") ) {
+					
+					this->agcFilter_l.reset ( new AgcFilter<T> ( this->getFsOut(), map.get<float>("pp_intTimeSecRMS") ) );
+					this->agcFilter_r.reset ( new AgcFilter<T> ( this->getFsOut(), map.get<float>("pp_intTimeSecRMS") ) );
+					
+				} else {
+					
+					// Deleting the filter objects
+					this->agcFilter_l.reset();
+					this->agcFilter_r.reset();
+				}
+					
+								
 			}
 									
 			/* TODO : Resets the internat states. */		

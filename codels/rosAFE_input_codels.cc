@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "Ports.hpp"
+
 using namespace openAFE;
 
 /* --- getAudioData ----------------------------------------------------- */
@@ -74,6 +76,7 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
                uint32_t bufferSize_s,
                rosAFE_inputProcessors **inputProcessorsSt,
                const rosAFE_Audio *Audio, rosAFE_infos *infos,
+               const rosAFE_inputProcPort *inputProcPort,
                genom_context self)
 {	
   /* Check if the client can get data from the server */
@@ -98,7 +101,10 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   r.resize(N, 0); // current block of data
 
   li = l.data(); ri = r.data(); // li and ri point to the current position in the block
- 
+
+  /* Initialization of the output port */
+  PORT::initInputPort( inputProcPort, infos->sampleRate, infos->bufferSize_s, self );
+
   globalLoss = 0;
   
   inputP.reset();   
@@ -196,13 +202,18 @@ waitRelease(const char *name, rosAFE_flagMap **flagMapSt,
 genom_event
 releaseInputProc(const char *name,
                  rosAFE_inputProcessors **inputProcessorsSt,
-                 rosAFE_flagMap **newDataMapSt, genom_context self)
+                 rosAFE_flagMap **newDataMapSt,
+                 const rosAFE_inputProcPort *inputProcPort,
+                 genom_context self)
 {
   inputProcPtr thisProcessor = ((*inputProcessorsSt)->processorsAccessor).getProcessor( name );
   /* Relasing the data */
   thisProcessor->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
   thisProcessor->calcLastChunk( );
   
+  /* Publishing on the output port */
+  PORT::publishInputPort ( inputProcPort, thisProcessor->getLastChunkAccesor(), sizeof(inputT), nfr, self );
+  thisProcessor->setNFR ( nfr );
   /* Informing all the potential childs to say that this is a new chunk. */
   SM::riseFlag ( name, newDataMapSt, self );
     

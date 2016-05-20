@@ -1,5 +1,6 @@
 #include "processorCommon.hpp"
 #include "stateMachine.hpp"
+#include "Ports.hpp"
 
 /* --- Task preProc ----------------------------------------------------- */
 
@@ -18,13 +19,14 @@ startPreProc(const char *name, const char *upperDepName,
              uint32_t fsOut, rosAFE_preProcessors **preProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_inputProcessors **inputProcessorsSt,
-             const rosAFE_infos *infos, uint16_t pp_bRemoveDC,
-             float pp_cutoffHzDC, uint16_t pp_bPreEmphasis,
-             float pp_coefPreEmphasis, uint16_t pp_bNormalizeRMS,
-             uint16_t pp_bBinauralRMS, float pp_intTimeSecRMS,
-             uint16_t pp_bLevelScaling, float pp_refSPLdB,
-             uint16_t pp_bMiddleEarFiltering,
-             const char *pp_middleEarModel, float pp_bUnityComp,
+             const rosAFE_infos *infos,
+             const rosAFE_preProcPort *preProcPort,
+             uint16_t pp_bRemoveDC, float pp_cutoffHzDC,
+             uint16_t pp_bPreEmphasis, float pp_coefPreEmphasis,
+             uint16_t pp_bNormalizeRMS, uint16_t pp_bBinauralRMS,
+             float pp_intTimeSecRMS, uint16_t pp_bLevelScaling,
+             float pp_refSPLdB, uint16_t pp_bMiddleEarFiltering,
+             const char *pp_middleEarModel, uint16_t pp_bUnityComp,
              genom_context self)
 {
   inputProcPtr upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
@@ -52,6 +54,9 @@ startPreProc(const char *name, const char *upperDepName,
 
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );
+
+  /* Initialization of the output port */
+  PORT::initPreProcPort( name, preProcPort, infos->sampleRate, infos->bufferSize_s, self );
 
   upperDepProc.reset();
   preProcessor.reset();
@@ -115,7 +120,7 @@ exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
 /* already defined in service InputProc */
 
 
-/** Codel release of activity PreProc.
+/** Codel releasePreProc of activity PreProc.
  *
  * Triggered by rosAFE_release.
  * Yields to rosAFE_pause_waitExec, rosAFE_stop.
@@ -123,13 +128,21 @@ exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
  *        rosAFE_e_noSuchProcessor.
  */
 genom_event
-release(const char *name, rosAFE_ids *ids,
-        rosAFE_flagMap **newDataMapSt, genom_context self)
+releasePreProc(const char *name, rosAFE_ids *ids,
+               rosAFE_flagMap **newDataMapSt,
+               const rosAFE_preProcPort *preProcPort,
+               genom_context self)
 {
-  PC::releaseAnyProc( name, ids, self);
+  preProcPtr thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( name );
+  thisProcessor->appendChunk( );
+  thisProcessor->calcLastChunk( );
   
-  SM::riseFlag ( name, newDataMapSt, self);
+  PORT::publishPreProcPort ( name, preProcPort, thisProcessor->getLastChunkAccesor(), sizeof(preT), thisProcessor->getNFR(), self );
 
+  /* Informing all the potential childs to say that this is a new chunk. */
+  SM::riseFlag ( name, newDataMapSt, self );
+    
+  thisProcessor.reset();
   return rosAFE_pause_waitExec;
 }
 

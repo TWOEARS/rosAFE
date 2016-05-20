@@ -78,13 +78,13 @@ component rosAFE {
         interrupts  InputProc;  // Only one audio input can exist simultaneously
 
         codel <start>   	startInputProc( local in name, local in nFramesPerBlock, local in bufferSize_s, inout inputProcessorsSt,
-                            		port in Audio, out infos) yield waitExec;
+                            		port in Audio, out infos, port out inputProcPort ) yield waitExec;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExecInputProc( local in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
         codel <exec>    	execInputProc( local in name, inout inputProcessorsSt ) yield waitRelease, stop;
         codel <waitRelease>    	waitRelease( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releaseInputProc( local in name, inout inputProcessorsSt, out newDataMapSt ) yield pause::waitExec, stop;
+        codel <release>    	releaseInputProc( local in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
         codel <stop>    	stopInputProc( local in name, inout inputProcessorsSt, inout flagMapSt, inout newDataMapSt ) yield ether;
@@ -107,19 +107,19 @@ component rosAFE {
       in float pp_refSPLdB =  100 : "Reference dB SPL value to correspond to input signal RMS value of 1",
       in unsigned short pp_bMiddleEarFiltering =  0 : "Flag to apply middle ear filtering",
       in string pp_middleEarModel =  "jepsen" : "Middle ear filter model (jepsen or lopezpoveda)",
-      in float pp_bUnityComp =  1 : "Compensation to have maximum of unity gain for middle ear filter (automatically true for Gammatone and false for drnl filterbanks)"
+      in unsigned short pp_bUnityComp =  1 : "Compensation to have maximum of unity gain for middle ear filter (automatically true for Gammatone and false for drnl filterbanks)"
       ) {
         doc         "Prior to computing any of the supported auditory representations, the input signal can be pre-processed with one of the following elements: 1. Direct current (DC) bias removal 2. Pre-emphasis 3. Root mean square (RMS) normalization [1] 4. Level scaling to a pre-defiend sound pressure level (SPL) reference 5. Middle ear filtering [2]";
         task        		preProc;
 	validate    		existsAlready ( local in name, local in upperDepName, in ::ids );
 
-        codel <start>   	startPreProc( local in name, local in upperDepName, local in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, in infos, /* Arguments Of processor*/ local in pp_bRemoveDC, local in pp_cutoffHzDC, local in pp_bPreEmphasis, local in pp_coefPreEmphasis, local in pp_bNormalizeRMS, local in pp_bBinauralRMS, local in pp_intTimeSecRMS, local in pp_bLevelScaling, local in pp_refSPLdB, local in pp_bMiddleEarFiltering, local in pp_middleEarModel, local in pp_bUnityComp ) yield waitExec, stop;
+        codel <start>   	startPreProc( local in name, local in upperDepName, local in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, in infos, port out preProcPort, /* Arguments Of processor*/ local in pp_bRemoveDC, local in pp_cutoffHzDC, local in pp_bPreEmphasis, local in pp_coefPreEmphasis, local in pp_bNormalizeRMS, local in pp_bBinauralRMS, local in pp_intTimeSecRMS, local in pp_bLevelScaling, local in pp_refSPLdB, local in pp_bMiddleEarFiltering, local in pp_middleEarModel, local in pp_bUnityComp ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
         codel <exec>    	exec ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
         codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	release ( local in name, inout ::ids, out newDataMapSt ) yield pause::waitExec, stop;
+        codel <release>    	releasePreProc ( local in name, inout ::ids, out newDataMapSt, port out preProcPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
         codel <delete>    	deletePreProc( local in name, inout preProcessorsSt ) yield ether;

@@ -1,26 +1,20 @@
-#ifndef BWFILTER_HPP
-#define BWFILTER_HPP
+#ifndef GENERICFILTER_HPP
+#define GENERICFILTER_HPP
 
-#include "../biquadFilter.hpp"
+#include "../Filter.hpp"
 #include "bwCoef.hpp"
 
 
 namespace openAFE {
 
-	template<typename T>
-	class bwFilter : public biquadFilter < T, double, double > {
+	template< typename T, typename T_a, typename T_b >
+	class genericFilter : public biquadFilter < T, T_a, T_b > {
 		
 	public:
 	
 		// typedef std::shared_ptr<bwFilter<T> > bwFilterPtr;
 	
-		bwFilter(double fs, unsigned short argOrder = 2, float f1 = 1000, bwType type = _bwlp, float f2 = 0) : biquadFilter < T, double, double > ( fs, argOrder ) {
-			
-			std::vector<double> vectDcof(3, 0);
-			std::vector<double> vectCcof(3, 0);
-
-			// The coeffs of a second order filter
-			bwCoef(2, fs, f1, vectDcof, vectCcof, type, f2);
+		genericFilter( std::vector<T_a> vectDcof /* a */ , std::vector<T_b> vectCcof /* b */, double fs, unsigned short argOrder = 1 ) : biquadFilter < T, double, double > ( fs, argOrder ) {
 			
 			if ( this->numFilters > 1 ) {
 				// We create filters until numFilters-1
@@ -52,10 +46,10 @@ namespace openAFE {
 			this->casFilt->set(this->allFilters.begin(), this->allFilters.end());
 		}
 		
-		~bwFilter() {
+		~genericFilter() {
 		}
 		
 	};
 };
 
-#endif /* BWFILTER_HPP */
+#endif /* GENERICFILTER_HPP */

@@ -8,7 +8,7 @@ module rosAFE {
     struct timestamp
     {
         unsigned long sec;
-        unsigned long usec;
+        unsigned long usec; // should be nsec
     };
 
     struct std_msgs__Header
@@ -28,9 +28,8 @@ module rosAFE {
     };
 
     struct TimeDomainSignalPortStruct {
-        string<MAX_STRING_LENGTH> 	name;
+        unsigned long 			sampleRate;
         unsigned long long    		lastFrameIndex;
-        unsigned long long    		lostData;
         unsigned long long    		framesOnPort;
         signalOneD	      		left;
         signalOneD	      		right;
@@ -71,7 +70,7 @@ module rosAFE {
       float pp_refSPLdB;
       unsigned short pp_bMiddleEarFiltering;
       string pp_middleEarModel;
-      float pp_bUnityComp;
+      unsigned short pp_bUnityComp;
     };
 
     struct gammatoneProcsParametres {

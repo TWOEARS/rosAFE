@@ -91,8 +91,13 @@ startGammatoneProc(const char *name, const char *upperDepName,
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
  *        rosAFE_e_noSuchProcessor.
  */
-/* already defined in service PreProc */
-
+genom_event
+release(const char *name, rosAFE_ids *ids,
+        rosAFE_flagMap **newDataMapSt, genom_context self)
+{
+  /* skeleton sample: insert your code */
+  /* skeleton sample */ return rosAFE_pause_waitExec;
+}
 
 /** Codel deleteGammatoneProc of activity GammatoneProc.
  *
