@@ -2,8 +2,6 @@
 
 interface rosAFEInterface {
 
-    port out rosAFE::RunningProcessorsSt runningProcessors;
-
     port out rosAFE::dataObjSt dataObj;
 
     port out rosAFE::TimeDomainSignalPortStruct inputProcPort;

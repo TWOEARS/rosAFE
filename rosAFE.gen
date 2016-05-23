@@ -31,7 +31,7 @@ component rosAFE {
 	flagMap newDataMapSt;
     };
 
-    exception e_noData, e_noMemory, e_existsAlready, e_noSuchProcessor, e_noSuchParameter, e_noUpperDependencie;
+    exception e_noData, e_noMemory, e_existsAlready, e_noSuchProcessor, e_noSuchParameter, e_noUpperDependencie, e_badIndexParam;
 
     task init {
 	codel <start> initIDS( out ::ids ) yield ether;
@@ -55,17 +55,6 @@ component rosAFE {
 
     task ildProc {
         period      50ms;
-    };
-
-    task publishInfos {
-
-	codel<start> initPublish( inout runningProcessors ) yield ether;
-    };
-
-    task sendToMatlab {
-        // period      50ms;
-
-	codel<start> initSendToMatlabTask( inout dataObj, in runningProcessors ) yield ether;
     };
 
     activity InputProc(
@@ -212,54 +201,40 @@ component rosAFE {
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
     };
 
-   activity SendToMatlab () {
+   function getSignals ( inout unsigned long long startIndex  = 0 : "The first index of asked chunks",
+   			 in unsigned long long endIndex  = 1 : "The last index of asked chunks",
+			 out rosAFE::dataObjSt signals ) {
+	doc      "Returns only the new (unseen) processed chunks.";
 
-	doc         "Published only the new (unseen) processed chunks on a port.";
-        task        sendToMatlab;
+	codel	 getSignal( local inout startIndex, local in endIndex, out signals, in ::ids );
 
-	codel<start> initSendToMatlab( inout dataObj, in ::ids, in runningProcessors, inout flagMapSt ) yield ether;
-	codel<stop>  stopSendToMatlab( ) yield ether;
-
-	throw   e_noMemory;
+	throw    e_noMemory, e_badIndexParam;
    };
 
+   function getParameters ( out rosAFE::RunningProcessorsSt parameters ) {
+	doc      "Returns all parameter informations for each running processor.";
 
-   activity updateParameters () {
-	doc         "Updates all published parameters information according to the ids.";
-        task        publishInfos;
+	codel    getParameters( in ::ids, out parameters );
 
-	codel<start>  publish( in ::ids, inout runningProcessors ) yield ether;
-	codel<stop>   stopPublish( inout runningProcessors ) yield ether;
-
-	throw   e_noMemory;
+	throw    e_noMemory;
     };
 
-
-    activity ModifyParameter (
+    function modifyParameter (
 	in string nameProc = "nameProc" : "The name of the processor to change the parameter",
 	in string nameParam = "nameParam" : "The name of the parameter to be changed",
 	in string newValue = "newValue" : "The new value of the parameter to be changed"
 	) {
-	doc         "Modifies the parameter of a processor";
-        task        publishInfos;
+	doc     "Modifies the parameter of a processor";
 
-	codel<start> 	modifyParameter( local in nameProc, local in nameParam, local in newValue, in ::ids ) yield publish;
-	codel<publish>  publish( in ::ids, inout runningProcessors ) yield ether;
-	codel<stop>   	stopPublish( inout runningProcessors ) yield ether;
+	codel 	modifyParameter( local in nameProc, local in nameParam, local in newValue, in ::ids );
 
-	throw e_noMemory, e_noSuchProcessor, e_noSuchParameter;
+	throw   e_noMemory, e_noSuchProcessor, e_noSuchParameter;
     };
 
-    activity RemoveProcessor (
-	in string name = "name" : "The name of the processor to delete"
-	) {
-	doc         "Removes the flags of this processor";
-        task        publishInfos;
+    function removeProcessor ( in string name = "name" : "The name of the processor to delete" ) {
+	doc      "Removes the flags of this processor";
 
-	codel<start> 	removeProcessor( local in name, inout flagMapSt, inout newDataMapSt ) yield wait;
-	codel<wait> 	wait( ) yield publish;
-	codel<publish>  publish( in ::ids, inout runningProcessors ) yield ether;
-	codel<stop>   	stopPublish( inout runningProcessors ) yield ether;
+	codel 	removeProcessor( local in name, inout flagMapSt, inout newDataMapSt );
 
 	throw e_noSuchProcessor;
     };

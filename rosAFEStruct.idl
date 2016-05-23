@@ -104,7 +104,6 @@ module rosAFE {
     };
 
     struct RunningProcessorsSt {
-      std_msgs__Header header;
       sequence<inputProcsParametres> 		paramsInputProc;
       sequence<preProcsParametres>      	paramsPreProc;
       sequence<gammatoneProcsParametres>        paramsGammatoneProc;
@@ -113,7 +112,6 @@ module rosAFE {
     };
 
     struct dataObjSt {
-      std_msgs__Header 				header;
       unsigned long         			sampleRate;
       sequence<TimeDomainSignalPortStruct>	allTDSPorts;
       sequence<TimeFrequencySignalPortStruct>	allTFSPorts;

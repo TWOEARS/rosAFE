@@ -22,12 +22,12 @@ nFramesPerChunk = 2205;
 nChunksOnPort = sampleRate * bufferSize_s_bass / nFramesPerChunk;
 inputDevice = 'hw:2,0';
 
-% acquire = bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
-% pause(0.25);
-% if ( strcmp(acquire.status,'error') )
-%    error(strcat('Error',acquire.exception.ex));
-% end
-menu('Launch rosbag now','Done');
+acquire = bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
+pause(0.25);
+if ( strcmp(acquire.status,'error') )
+   error(strcat('Error',acquire.exception.ex));
+end
+% menu('Launch rosbag now','Done');
 
 %% Connecting rosAFE to BASS
 connection = rosAFE.connect_port('Audio', 'bass/Audio');
@@ -41,9 +41,9 @@ inputName = 'input';
 thisProc = rosAFE.InputProc('-a', inputName, 12000, bufferSize_s_rosAFE );
 pause(p);
 
-preProcName = 'preProc2';
-preProcProc = rosAFE.PreProc('-a', preProcName, inputName, sampleRate, 0, ... % 'pp_bRemoveDC'
-                                                                       20, ... % 'pp_cutoffHzDC'
+preProcName = 'preProc';
+preProcProc = rosAFE.PreProc('-a', preProcName, inputName, sampleRate, 1, ... % 'pp_bRemoveDC'
+                                                                       5000, ... % 'pp_cutoffHzDC'
                                                                        1, ... % 'pp_bPreEmphasis'
                                                                        0.97, ... % 'pp_coefPreEmphasis'
                                                                        0, ... % 'pp_bNormalizeRMS'
@@ -54,6 +54,23 @@ preProcProc = rosAFE.PreProc('-a', preProcName, inputName, sampleRate, 0, ... % 
                                                                        0, ... % 'pp_bMiddleEarFiltering'
                                                                        'jespen', ... % 'pp_middleEarModel'
                                                                        1 ); % 'pp_bUnityComp'
+
+%% Services
+
+params = rosAFE.getParameters();
+if ( strcmp(params.status,'error') )
+   error(strcat('Error',params.exception.ex));
+end
+
+modif = rosAFE.modifyParameter(preProcName, 'pp_bPreEmphasis', '0');
+if ( strcmp(modif.status,'error') )
+   error(strcat('Error',modif.exception.ex));
+end
+
+kill = rosAFE.removeProcessor(preProcName);
+if ( strcmp(kill.status,'error') )
+   error(strcat('Error',kill.exception.ex));
+end
 
 %% Getting the output
 
