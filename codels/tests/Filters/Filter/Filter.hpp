@@ -18,14 +18,19 @@ namespace openAFE {
 		std::vector<T_ab > vectB;
 		std::vector<T_ab > vectA;
 		
-		std::vector<T_ab > states;
+		std::vector<T > states;
 		
 		uint32_t order;		
 
+		T exVar;
+		
+	public:
 		Filter ( T_ab* startB, uint32_t lenB, T_ab* startA, uint32_t lenA ) {
-			
-			this->vectB.resize( lenB );
-			this->vectA.resize( lenA );
+
+			this->order = std::max(lenA,lenB) - 1;
+						
+			this->vectB.resize( this->order, 0 );
+			this->vectA.resize( this->order, 0 );
 						
 			for ( uint32_t i = 0 ; i < lenB ; i++ )
 				this->vectB[i] = *( startB + i );
@@ -39,13 +44,11 @@ namespace openAFE {
 			if ( *(startA) == 1 )
 				for ( uint32_t i = 0 ; i < lenA ; i++ )
 					vectA[i] /= vectA[0];
-					
-			this->order = std::max(lenA,lenB) - 1;
 			
 			this->states.resize( this->order, 0 );
 		}
 		
-		bool setStates ( T_ab* stateStart, uint32_t lenStates ) {
+		bool setStates ( const T* stateStart, const uint32_t lenStates ) {
 			
 			if ( this->order == lenStates ) {
 				for ( uint32_t i = 0 ; i < lenStates ; i++ )
@@ -54,12 +57,20 @@ namespace openAFE {
 			} else return false;			
 		}
 
-		void exec ( T* srcStart, uint32_t lenSrc, T* destStart ) {
+		// a(1)*y(n) = b(1)*x(n) + b(2)*x(n-1) + ... + b(nb+1)*x(n-nb)
+        //             - a(2)*y(n-1) - ... - a(na+1)*y(n-na)
+		void exec ( const T* srcStart, const uint32_t lenSrc, T* destStart ) {
 			
-			for ( uint32_t ii = 0 ; ii < lenSrc ; ++ii )
-				*( destStart + ii ) = *( srcStart + ii ) * vectB[0] + 
-			// a(1)*y(n) = b(1)*x(n) + b(2)*x(n-1) + ... + b(nb+1)*x(n-nb)
-            //             - a(2)*y(n-1) - ... - a(na+1)*y(n-na)
+			for ( uint32_t ii = 0 ; ii < lenSrc ; ++ii ) {
+				
+				this->exVar = *( srcStart + ii );
+				*( destStart + ii ) = *( srcStart + ii ) * vectB[0] + states[0];
+				uint32_t jj;
+				for ( jj = 0 ; jj < states.size() - 1 ; ++jj ) {
+					states[ jj ] = states[ jj+1 ] + this->exVar * this->vectB[ jj+1 ] - *( destStart + ii ) * this->vectA[ jj+1 ];
+				}
+				states[ jj ] = this->exVar * this->vectB[ jj+1 ] - *( destStart + ii ) * this->vectA[ jj + 1 ];				
+			}
 		}
 
 		const uint32_t getOrder () {
