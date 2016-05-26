@@ -15,14 +15,11 @@ namespace openAFE {
      
 	private:
 
-		std::vector<T_ab > vectB;
-		std::vector<T_ab > vectA;
+		std::vector<T_ab > vectB, vectA;
 		
 		std::vector<T > states;
 		
-		uint32_t order;		
-
-		T exVar;
+		uint32_t order;
 		
 	public:
 		GenericFilter ( const T_ab* startB, const uint32_t lenB, const T_ab* startA, const uint32_t lenA ) {
@@ -47,9 +44,15 @@ namespace openAFE {
 			
 			this->states.resize( this->order, 0 );
 		}
+
+		~GenericFilter () {
+			vectB.clear();
+			vectA.clear();
+			states.clear();					
+		}
 		
-		bool setStates ( const T* stateStart, const uint32_t lenStates ) {
-			
+		bool reset ( const T* stateStart, const uint32_t lenStates ) {
+
 			if ( this->order == lenStates ) {
 				for ( uint32_t i = 0 ; i < lenStates ; i++ )
 					this->states[i] = *( stateStart + i );
@@ -57,31 +60,34 @@ namespace openAFE {
 			} else return false;			
 		}
 		
-		~GenericFilter () {
-			vectB.clear();
-			vectA.clear();
-			states.clear();					
-		}
+		const bool isInitialized () {
 
+			for ( unsigned int i = 0 ; i < this->states.size() ; ++i ) {
+				if ( this->states[ i ] != 0 )
+					return true;
+			} return false;
+		}
+		
 		// a(1)*y(n) = b(1)*x(n) + b(2)*x(n-1) + ... + b(nb+1)*x(n-nb)
         //             - a(2)*y(n-1) - ... - a(na+1)*y(n-na)
 		void exec ( const T* srcStart, const uint32_t lenSrc, T* destStart ) {
-			
+
+			T exVar;			
 			for ( uint32_t ii = 0 ; ii < lenSrc ; ++ii ) {
 				
-				this->exVar = *( srcStart + ii );
-				*( destStart + ii ) = *( srcStart + ii ) * vectB[0] + states[0];
+				exVar = *( srcStart + ii );    // Thanks to this line the srcStart and the destStart can be same
+				*( destStart + ii ) = exVar * vectB[0] + states[0];
 				uint32_t jj;
 				for ( jj = 0 ; jj < states.size() - 1 ; ++jj ) {
-					states[ jj ] = states[ jj+1 ] + this->exVar * this->vectB[ jj+1 ] - *( destStart + ii ) * this->vectA[ jj+1 ];
+					states[ jj ] = states[ jj+1 ] + exVar * this->vectB[ jj+1 ] - *( destStart + ii ) * this->vectA[ jj+1 ];
 				}
-				states[ jj ] = this->exVar * this->vectB[ jj+1 ] - *( destStart + ii ) * this->vectA[ jj + 1 ];				
+				states[ jj ] = exVar * this->vectB[ jj+1 ] - *( destStart + ii ) * this->vectA[ jj + 1 ];				
 			}
 		}
 
 		const uint32_t getOrder () {
 			return this->order;
 		}
-
+		
 	}; /* class GenericFilter */
 }; /* namespace openAFE */

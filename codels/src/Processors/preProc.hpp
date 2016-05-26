@@ -4,12 +4,13 @@
 #include "../Signals/TimeDomainSignal.hpp"
 #include "Processor.hpp"
 
-// #include "preProcLib/preProcLib.hpp"
-
 #include "../Filters/bwFilter/bwFilter.hpp"
-#include "../Filters/preEmphasis.hpp"
-#include "../Filters/agcFilter.hpp"
+#include "../Filters/GenericFilter.hpp"
 
+#include <stdlib.h>		/* abs */
+#include <math.h>       /* exp, pow*/
+
+#define EPSILON 0.00000001
 
 /* 
  * preProc :
@@ -79,20 +80,22 @@ namespace openAFE {
 			// midEarFilter_l | midEarFilter_r | 
 			
 			typedef std::shared_ptr< bwFilter<T> > bwFilterPtr;
-			typedef std::shared_ptr< PreEmphasis<T> > preEmphasisPtr;
-			typedef std::shared_ptr< AgcFilter<T> > agcFilterPtr;
+			typedef std::shared_ptr< GenericFilter<T, T> > genericFilterPtr;
 			
 			double meFilterPeakdB;
 				
 			bwFilterPtr dcFilter_l;
 			bwFilterPtr dcFilter_r;
 			
-			preEmphasisPtr preEmphFilter_l;
-			preEmphasisPtr preEmphFilter_r;
+			genericFilterPtr preEmphFilter_l;
+			genericFilterPtr preEmphFilter_r;
 			
-			agcFilterPtr agcFilter_l;
-			agcFilterPtr agcFilter_r;
-												
+			genericFilterPtr agcFilter_l;
+			genericFilterPtr agcFilter_r;
+
+			genericFilterPtr midEarFilter_l;
+			genericFilterPtr midEarFilter_r;
+															
 		public:
 		
 			using typename PB::outT_SignalSharedPtr;
@@ -159,6 +162,7 @@ namespace openAFE {
 					(*itPMZ)->calcLastChunk();
 					(*(itPMZ+1))->calcLastChunk();
 					
+					// 0- Initialization
 					unsigned long dim1_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim;
 					unsigned long dim2_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim;
 					unsigned long dim1_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim;
@@ -190,24 +194,133 @@ namespace openAFE {
 					// 2- Pre-whitening
 					if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
 							
-						std::thread leftThread1( &PreEmphasis<T>::filterChunk, this->preEmphFilter_l, firstValue1_l, firstValue1_l + dim1_l , firstValue1_l );
-						std::thread rightThread1( &PreEmphasis<T>::filterChunk, this->preEmphFilter_r, firstValue1_r, firstValue1_r + dim1_r , firstValue1_r );
+						std::thread leftThread1( &GenericFilter<T, T>::exec, this->preEmphFilter_l, firstValue1_l, dim1_l , firstValue1_l );
+						std::thread rightThread1( &GenericFilter<T, T>::exec, this->preEmphFilter_r, firstValue1_r, dim1_r , firstValue1_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
 													
-						std::thread leftThread2( &PreEmphasis<T>::filterChunk, this->preEmphFilter_l, firstValue2_l, firstValue2_l + dim2_l , firstValue2_l );
-						std::thread rightThread2( &PreEmphasis<T>::filterChunk, this->preEmphFilter_r, firstValue2_r, firstValue2_r + dim2_r , firstValue2_r );
+						std::thread leftThread2( &GenericFilter<T, T>::exec, this->preEmphFilter_l, firstValue2_l, dim2_l , firstValue2_l );
+						std::thread rightThread2( &GenericFilter<T, T>::exec, this->preEmphFilter_r, firstValue2_r, dim2_r , firstValue2_r );
 
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes				
 					}					
 
 					// 3- Automatic gain control	
+					if ( map.get<unsigned short>("pp_bNormalizeRMS") ) {
+						
+						// Initialize the filter states if empty
+						if ( !( agcFilter_l->isInitialized() ) ) {
+
+							T intArg = map.get<float>("pp_intTimeSecRMS") * this->getFsIn();
+							T sum_l = 0, sum_r = 0, s0_l, s0_r;
+							uint32_t minVal_l, minVal_r;
+							
+							if ( dim1_l > 0) {
+								minVal_l = fmin ( dim1_l, round( intArg ) );
+								minVal_r = fmin ( dim1_r, round( intArg ) );
+
+								// Mean square of input over the time constant
+								for ( unsigned int i = 0 ; i < minVal_l ; ++i ) {
+									sum_l =+ pow( *(firstValue1_l + i ) , 2);
+									sum_r =+ pow( *(firstValue1_r + i ) , 2);
+								}
+								
+								// Initial filter states
+								s0_l = exp ( -1 / intArg ) * ( sum_l / minVal_l );							
+								s0_r = exp ( -1 / intArg ) * ( sum_r / minVal_r );
+								
+								this->agcFilter_l->reset( &s0_l, 1 );
+								this->agcFilter_r->reset( &s0_r, 1 );
+							}
+							else if ( dim2_l > 0) {
+								minVal_l = fmin ( dim2_l, round( intArg ) );
+								minVal_r = fmin ( dim2_r, round( intArg ) );
+
+								// Mean square of input over the time constant
+								for ( unsigned int i = 0 ; i < minVal_l ; ++i ) {
+									sum_l =+ pow( *(firstValue2_l + i ) , 2);
+									sum_r =+ pow( *(firstValue2_r + i ) , 2);
+								}
+								
+								// Initial filter states
+								s0_l = exp ( -1 / intArg ) * ( sum_l / minVal_l );
+								s0_r = exp ( -1 / intArg ) * ( sum_r / minVal_r );
+								
+								this->agcFilter_l->reset( &s0_l, 1 );
+								this->agcFilter_r->reset( &s0_r, 1 );				
+							}
+						}
+						
+						// Estimate normalization constants
+						std::vector<T> tmp_l ( dim1_l );
+						for ( unsigned int i = 0 ; i < dim1_l ; ++i )
+							tmp_l[ i ] = pow(*( firstValue1_l + i ), 2);
+						std::vector<T> tmp_r ( dim1_r );
+						for ( unsigned int i = 0 ; i < dim1_r ; ++i )
+							tmp_r[ i ] = pow(*( firstValue1_r + i ), 2);
+							
+						T normFactor;
+						
+						std::thread leftThread1( &GenericFilter<T, T>::exec, this->agcFilter_l, tmp_l.data(), dim1_l , tmp_l.data() );
+						std::thread rightThread1( &GenericFilter<T, T>::exec, this->agcFilter_r, tmp_r.data(), dim1_r , tmp_r.data() );
+							
+						leftThread1.join();                // pauses until left finishes
+						rightThread1.join();               // pauses until right finishes
+						
+						for ( unsigned int i = 0 ; i < dim1_l ; ++i ) {
+							tmp_l[ i ] = sqrt( tmp_l[ i ] ) + EPSILON;
+							tmp_r[ i ] = sqrt( tmp_r[ i ] ) + EPSILON;
+							normFactor = fmax ( tmp_l[ i ], tmp_r[ i ] );
+							
+							*(firstValue1_l + i ) /= normFactor;
+							*(firstValue1_r + i ) /= normFactor;
+						}
+						
+						tmp_l.resize( dim2_l );
+						for ( unsigned int i = 0 ; i < dim2_l ; ++i )
+							tmp_l[ i ] = pow(*( firstValue2_l + i ), 2);
+							
+						tmp_r.resize( dim2_r );
+						for ( unsigned int i = 0 ; i < dim2_r ; ++i )
+							tmp_r[ i ] = pow(*( firstValue2_r + i ), 2);						
+						
+						std::thread leftThread2( &GenericFilter<T, T>::exec, this->agcFilter_l, tmp_l.data(), dim2_l , tmp_l.data() );
+						std::thread rightThread2( &GenericFilter<T, T>::exec, this->agcFilter_r, tmp_r.data(), dim2_r , tmp_r.data() );
+							
+						leftThread2.join();                // pauses until left finishes
+						rightThread2.join();               // pauses until right finishes
+						
+						for ( unsigned int i = 0 ; i < dim2_l ; ++i ) {
+							tmp_l[ i ] = sqrt( tmp_l[ i ] ) + EPSILON;
+							tmp_r[ i ] = sqrt( tmp_r[ i ] ) + EPSILON;
+							normFactor = fmax ( tmp_l[ i ], tmp_r[ i ] );
+							
+							*(firstValue2_l + i ) /= normFactor;
+							*(firstValue2_r + i ) /= normFactor;
+						}
+					}
 					
 					// 4- Level Scaling
+					if ( map.get<unsigned short>("pp_bUnityComp") ) {
+						
+						double current_dboffset = 100; //dbspl(1);
+						double dbVar = pow( 10 , ( current_dboffset - map.get<float>("pp_refSPLdB") ) / 20 );
 
-					if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
+						for ( unsigned int i = 0 ; i < dim1_l ; ++i ) {
+							*(firstValue1_l + i ) *= dbVar;
+							*(firstValue1_r + i ) *= dbVar;
+						}
+						
+						for ( unsigned int i = 0 ; i < dim2_l ; ++i ) {
+							*(firstValue2_l + i ) *= dbVar;
+							*(firstValue2_r + i ) *= dbVar;
+						}
+					}
+					
+					// 5- Middle Ear Filtering
+					if ( map.get<unsigned short>("pp_bUnityComp") ) {
 						
 						if ( map["pp_bPreEmphasis"] == "jespen" )
 							this->meFilterPeakdB = 55.9986;
@@ -215,6 +328,23 @@ namespace openAFE {
 							this->meFilterPeakdB = 66.2888;
 						
 					} else this->meFilterPeakdB = 0;
+					
+					if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
+					/*	
+						std::thread leftThread1( &GenericFilter<T, T>::exec, this->midEarFilter_l, firstValue1_l, dim1_l , firstValue1_l );
+						std::thread rightThread1( &GenericFilter<T, T>::exec, this->midEarFilter_r, firstValue1_r, dim1_r , firstValue1_r );
+							
+						leftThread1.join();                // pauses until left finishes
+						rightThread1.join();               // pauses until right finishes
+													
+						std::thread leftThread2( &GenericFilter<T, T>::exec, this->midEarFilter_l, firstValue2_l, dim2_l , firstValue2_l );
+						std::thread rightThread2( &GenericFilter<T, T>::exec, this->midEarFilter_r, firstValue2_r, dim2_r , firstValue2_r );
+
+						leftThread2.join();                // pauses until left finishes
+						rightThread2.join();               // pauses until right finishes	
+						
+						pow ( 10, this->meFilterPeakdB / 20 );*/
+					}
 														
 					// Processed data is on PMZ				
 			}
@@ -226,8 +356,8 @@ namespace openAFE {
 				// Filter instantiation (if needed)	
 				if ( map.get<unsigned short>("pp_bRemoveDC") ) {
 					
-					this->dcFilter_l.reset ( new bwFilter<T> ( this->getFsOut(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
-					this->dcFilter_r.reset ( new bwFilter<T> ( this->getFsOut(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
+					this->dcFilter_l.reset ( new bwFilter<T> ( this->getFsIn(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
+					this->dcFilter_r.reset ( new bwFilter<T> ( this->getFsIn(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
 					
 				} else {
 					
@@ -238,8 +368,12 @@ namespace openAFE {
 
 				if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
 					
-					this->preEmphFilter_l.reset ( new PreEmphasis<T> ( this->getFsOut(), map.get<float>("pp_coefPreEmphasis") ) );
-					this->preEmphFilter_r.reset ( new PreEmphasis<T> ( this->getFsOut(), map.get<float>("pp_coefPreEmphasis") ) );
+					std::vector<T> vectB (2,1);
+					vectB[1] = -1 * abs( map.get<float>("pp_coefPreEmphasis") );
+					std::vector<T> vectA (1,1);
+					
+					this->preEmphFilter_l.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_r.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -249,9 +383,15 @@ namespace openAFE {
 				}
 				
 				if ( map.get<unsigned short>("pp_bNormalizeRMS") ) {
+
+					std::vector<T> vectB (1,1);
+					std::vector<T> vectA (2,1);
 					
-					this->agcFilter_l.reset ( new AgcFilter<T> ( this->getFsOut(), map.get<float>("pp_intTimeSecRMS") ) );
-					this->agcFilter_r.reset ( new AgcFilter<T> ( this->getFsOut(), map.get<float>("pp_intTimeSecRMS") ) );
+					vectA[1] = -1 * exp( -1 / ( map.get<float>("pp_intTimeSecRMS") * this->getFsIn() ) );
+					vectB[0] = vectA[0] + vectA[1];
+
+					this->agcFilter_l.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_r.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -259,13 +399,59 @@ namespace openAFE {
 					this->agcFilter_l.reset();
 					this->agcFilter_r.reset();
 				}
+
+				if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
+
+					// this->midEarFilter_l.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					// this->midEarFilter_r.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					
+				} else {
+					
+					// Deleting the filter objects
+					this->midEarFilter_l.reset();
+					this->midEarFilter_r.reset();
+				}
+
 					
 								
 			}
 									
 			/* TODO : Resets the internat states. */		
 			void reset() {
-				PB::reset();
+
+				const apfMap map = this->getCurrentParameters();
+				    				
+				if ( map.get<unsigned short>("pp_bRemoveDC") ) {
+					
+					// Deleting the filter objects
+					this->dcFilter_l.reset();
+					this->dcFilter_r.reset();
+				}
+
+				if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
+					
+					// Deleting the filter objects
+					this->preEmphFilter_l.reset();
+					this->preEmphFilter_r.reset();
+				}
+				
+				if ( map.get<unsigned short>("pp_bNormalizeRMS") ) {
+					
+					// Deleting the filter objects
+					this->agcFilter_l.reset();
+					this->agcFilter_r.reset();
+				}
+
+				if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
+					
+					// Deleting the filter objects
+					this->midEarFilter_l.reset();
+					this->midEarFilter_r.reset();
+				}				
+				
+				this->prepareForProcessing();
+				
+				// PB::reset();
 			}							
 
 	}; /* class PreProc */

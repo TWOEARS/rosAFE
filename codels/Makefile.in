@@ -383,9 +383,7 @@ librosAFE_codels_la_SOURCES = rosAFE_c_types.h rosAFE_codels.cc \
 	src/Filters/bwFilter/bwFilter.hpp \
 	src/Filters/bwFilter/bwCoef.hpp \
 	src/Filters/bwFilter/bwCoef.cpp src/Filters/bwFilter/bwIIR.hpp \
-	src/Filters/bwFilter/bwIIR.cpp \
-	src/Filters/bwFilter/preEmphasis.hpp \
-	src/Filters/bwFilter/agcFilter.hpp
+	src/Filters/bwFilter/bwIIR.cpp src/Filters/GenericFilter.hpp
 librosAFE_codels_la_CPPFLAGS = $(requires_CFLAGS) -Wall -g -O \
 	-std=c++11 -DHAVE_INLINE -lpthread -D_REENTRANT -ljack \
 	-lsndfile -lfftw3f -Wunused-but-set-variable

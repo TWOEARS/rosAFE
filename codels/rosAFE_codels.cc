@@ -82,7 +82,7 @@ getSignal(uint64_t *startIndex, uint64_t endIndex,
           genom_context self)
 {
   if (endIndex < *startIndex)
-	return rosAFE_e_badIndexParam;
+	return rosAFE_e_badIndexParam( self );
   
   return genom_ok;
 }
