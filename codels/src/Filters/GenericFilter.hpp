@@ -1,3 +1,6 @@
+#ifndef GENERICFILTER_HPP
+#define GENERICFILTER_HPP
+
 #include <vector>
 #include <algorithm> /* std::max */
 #include <exception>
@@ -114,3 +117,5 @@ namespace openAFE {
 		
 	}; /* class GenericFilter */
 }; /* namespace openAFE */
+
+#endif /* GENERICFILTER_HPP */
