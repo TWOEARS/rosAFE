@@ -13,8 +13,17 @@
  * 
  * */
  
-#include "gammatoneProcLib/gammatoneProcLib.hpp"
+#include "../Filters/GammatoneFilter.hpp"
+/*
 
+		std::vector<float> cfHz            // Filters center frequencies
+        std::vector<float> nERBs           // Distance between neighboring filters in ERBs
+        float nGamma          				// Gammatone order of the filters
+        float bwERBs          				// Bandwidth of the filters in ERBs
+        float lowFreqHz       				// Lowest center frequency used at instantiation
+        float highFreqHz      				// Highest center frequency used at instantiation
+        
+        */
 namespace openAFE {
 
 	template<typename T>
@@ -56,6 +65,11 @@ namespace openAFE {
             void verifyParameters() {
 				
 			}
+			
+			void populateFilters() {
+				
+				
+			}
 
 									
 		public:
@@ -72,12 +86,15 @@ namespace openAFE {
 				this->setPInfo(nameArg);
 			}
 				
-			~GamamtoneProc () {
-				std::cout << "Destructor of a Gammatone processor" << std::endl;
-			}
+			~GamamtoneProc () {}
 			
 			void processChunk ( ) {
 				
+			}
+			
+			void prepareForProcessing () {
+				
+				this->populateFilters();
 			}			
 
 	}; /* class GamamtoneProc */

@@ -42,6 +42,7 @@ librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwCoef.cpp
 librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwIIR.hpp
 librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwIIR.cpp
 librosAFE_codels_la_SOURCES+=	src/Filters/GenericFilter.hpp
+librosAFE_codels_la_SOURCES+=	src/Filters/GammatoneFilter.hpp
 
 librosAFE_codels_la_CPPFLAGS=	$(requires_CFLAGS)
 librosAFE_codels_la_CPPFLAGS+=	-Wall -g -O -std=c++11 -DHAVE_INLINE -lpthread -D_REENTRANT -ljack -lsndfile -lfftw3f -Wunused-but-set-variable

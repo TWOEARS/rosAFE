@@ -75,15 +75,13 @@ namespace openAFE {
 				 */
 				
 			}
-
-			/* Pointers to Filter Objects */
-			// midEarFilter_l | midEarFilter_r | 
 			
 			typedef std::shared_ptr< bwFilter<T> > bwFilterPtr;
-			typedef std::shared_ptr< GenericFilter<T, T> > genericFilterPtr;
+			typedef std::shared_ptr< GenericFilter<T, T, T, T> > genericFilterPtr;
 			
 			double meFilterPeakdB;
-				
+
+			/* Pointers to Filter Objects */				
 			bwFilterPtr dcFilter_l;
 			bwFilterPtr dcFilter_r;
 			
@@ -132,11 +130,10 @@ namespace openAFE {
 				this->outPrivateMemoryZone.push_back( outLeftPMZ );
 				this->outPrivateMemoryZone.push_back( outRightPMZ );
 				
-				this->prepareForProcessing ();	
+				this->prepareForProcessing ();
 			}
 				
 			~PreProc () {
-				std::cout << "Destructor of a pre processor" << std::endl;
 			}
 			
 			/* This function does the asked calculations. 
@@ -194,14 +191,14 @@ namespace openAFE {
 					// 2- Pre-whitening
 					if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
 							
-						std::thread leftThread1( &GenericFilter<T, T>::exec, this->preEmphFilter_l, firstValue1_l, dim1_l , firstValue1_l );
-						std::thread rightThread1( &GenericFilter<T, T>::exec, this->preEmphFilter_r, firstValue1_r, dim1_r , firstValue1_r );
+						std::thread leftThread1( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_l, firstValue1_l, dim1_l , firstValue1_l );
+						std::thread rightThread1( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_r, firstValue1_r, dim1_r , firstValue1_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
 													
-						std::thread leftThread2( &GenericFilter<T, T>::exec, this->preEmphFilter_l, firstValue2_l, dim2_l , firstValue2_l );
-						std::thread rightThread2( &GenericFilter<T, T>::exec, this->preEmphFilter_r, firstValue2_r, dim2_r , firstValue2_r );
+						std::thread leftThread2( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_l, firstValue2_l, dim2_l , firstValue2_l );
+						std::thread rightThread2( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_r, firstValue2_r, dim2_r , firstValue2_r );
 
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes				
@@ -263,8 +260,8 @@ namespace openAFE {
 							
 						T normFactor;
 						
-						std::thread leftThread1( &GenericFilter<T, T>::exec, this->agcFilter_l, tmp_l.data(), dim1_l , tmp_l.data() );
-						std::thread rightThread1( &GenericFilter<T, T>::exec, this->agcFilter_r, tmp_r.data(), dim1_r , tmp_r.data() );
+						std::thread leftThread1( &GenericFilter<T, T, T, T>::exec, this->agcFilter_l, tmp_l.data(), dim1_l , tmp_l.data() );
+						std::thread rightThread1( &GenericFilter<T, T, T, T>::exec, this->agcFilter_r, tmp_r.data(), dim1_r , tmp_r.data() );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
@@ -286,8 +283,8 @@ namespace openAFE {
 						for ( unsigned int i = 0 ; i < dim2_r ; ++i )
 							tmp_r[ i ] = pow(*( firstValue2_r + i ), 2);						
 						
-						std::thread leftThread2( &GenericFilter<T, T>::exec, this->agcFilter_l, tmp_l.data(), dim2_l , tmp_l.data() );
-						std::thread rightThread2( &GenericFilter<T, T>::exec, this->agcFilter_r, tmp_r.data(), dim2_r , tmp_r.data() );
+						std::thread leftThread2( &GenericFilter<T, T, T, T>::exec, this->agcFilter_l, tmp_l.data(), dim2_l , tmp_l.data() );
+						std::thread rightThread2( &GenericFilter<T, T, T, T>::exec, this->agcFilter_r, tmp_r.data(), dim2_r , tmp_r.data() );
 							
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes
@@ -331,14 +328,14 @@ namespace openAFE {
 					
 					if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
 					/*	
-						std::thread leftThread1( &GenericFilter<T, T>::exec, this->midEarFilter_l, firstValue1_l, dim1_l , firstValue1_l );
-						std::thread rightThread1( &GenericFilter<T, T>::exec, this->midEarFilter_r, firstValue1_r, dim1_r , firstValue1_r );
+						std::thread leftThread1( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_l, firstValue1_l, dim1_l , firstValue1_l );
+						std::thread rightThread1( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_r, firstValue1_r, dim1_r , firstValue1_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
 													
-						std::thread leftThread2( &GenericFilter<T, T>::exec, this->midEarFilter_l, firstValue2_l, dim2_l , firstValue2_l );
-						std::thread rightThread2( &GenericFilter<T, T>::exec, this->midEarFilter_r, firstValue2_r, dim2_r , firstValue2_r );
+						std::thread leftThread2( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_l, firstValue2_l, dim2_l , firstValue2_l );
+						std::thread rightThread2( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_r, firstValue2_r, dim2_r , firstValue2_r );
 
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes	
@@ -372,8 +369,8 @@ namespace openAFE {
 					vectB[1] = -1 * abs( map.get<float>("pp_coefPreEmphasis") );
 					std::vector<T> vectA (1,1);
 					
-					this->preEmphFilter_l.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					this->preEmphFilter_r.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_l.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_r.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -390,8 +387,8 @@ namespace openAFE {
 					vectA[1] = -1 * exp( -1 / ( map.get<float>("pp_intTimeSecRMS") * this->getFsIn() ) );
 					vectB[0] = vectA[0] + vectA[1];
 
-					this->agcFilter_l.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					this->agcFilter_r.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_l.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_r.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -402,8 +399,8 @@ namespace openAFE {
 
 				if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
 
-					// this->midEarFilter_l.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					// this->midEarFilter_r.reset ( new GenericFilter<T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					// this->midEarFilter_l.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					// this->midEarFilter_r.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
