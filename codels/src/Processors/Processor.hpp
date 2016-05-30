@@ -269,11 +269,11 @@ namespace openAFE {
 				return (*it)->getFreshDataSize();
 			}
 
-			uint32_t getFsOut() {
+			const uint32_t getFsOut() {
 				return this->fsOut;
 			}
 
-			uint32_t getFsIn() {
+			const uint32_t getFsIn() {
 				return this->fsIn;
 			}
 						

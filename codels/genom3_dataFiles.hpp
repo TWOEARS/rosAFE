@@ -7,7 +7,7 @@ using namespace openAFE;
 
 /* Start : The Input processor template definitions */
 using inputT = float;
-using inputProcessor = InputProc<inputT>;
+using inputProcessor = InputProc;
 using inputProcessorVector = ProcessorVector<inputProcessor>;
 
 using inputProcAccessorVector = typename inputProcessor::outT_nTwoCTypeBlockAccessorPtrVector;
@@ -23,7 +23,7 @@ struct rosAFE_inputProcessors {
 
 /* Start : The pre processor template definitions */
 using preT = inputT;
-using preProcessor = PreProc<preT>;
+using preProcessor = PreProc;
 using preProcessorVector = ProcessorVector<preProcessor>;
 
 using preProcPtr = typename preProcessorVector::processorSharedPtr;

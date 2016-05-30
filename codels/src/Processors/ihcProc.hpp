@@ -12,8 +12,6 @@
  * 
  * */
  
-#include "ihcProcLib/ihcProcLib.hpp"
-
 namespace openAFE {
 
 	template<typename T>

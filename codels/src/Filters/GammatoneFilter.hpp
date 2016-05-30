@@ -1,12 +1,11 @@
 #ifndef GAMMATONEFILTER_HPP
 #define GAMMATONEFILTER_HPP
 
-#include <math.h> /* M_PI */
 #include <complex>
 
 #include "GenericFilter.hpp"
-#include "../tools/mathTools.hpp"
 
+#include "../tools/mathTools.hpp"
 
 namespace openAFE {
 

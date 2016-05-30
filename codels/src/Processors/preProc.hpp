@@ -10,6 +10,8 @@
 #include <stdlib.h>		/* abs */
 #include <math.h>       /* exp, pow*/
 
+#include "../tools/mathTools.hpp"
+
 #define EPSILON 0.00000001
 
 /* 
@@ -21,12 +23,11 @@
 
 namespace openAFE {
 
-	template<typename T>
-	class PreProc : public Processor < InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> > {
+	class PreProc : public Processor < InputProc, TimeDomainSignal<float>, TimeDomainSignal<float> > {
 
 		private:
 
-			using PB = Processor< InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> >;
+			using PB = Processor< InputProc, TimeDomainSignal<float>, TimeDomainSignal<float> >;
 
 			using inT_nTwoCTypeBlockAccessorPtr = typename PB::inT_nTwoCTypeBlockAccessorPtr;					
 			using outT_nTwoCTypeBlockAccessorPtr = typename PB::outT_nTwoCTypeBlockAccessorPtr;	
@@ -34,7 +35,7 @@ namespace openAFE {
 			using inputPtrIterator = typename PB::inputPtrIterator;
 			using outT_SignalIter = typename PB::outT_SignalIter;
 			
-			typedef std::shared_ptr< PreProc<T> > processorSharedPtr;
+			typedef std::shared_ptr< PreProc > processorSharedPtr;
 			
 			void setToDefaultParams () {
 						
@@ -76,8 +77,8 @@ namespace openAFE {
 				
 			}
 			
-			typedef std::shared_ptr< bwFilter<T> > bwFilterPtr;
-			typedef std::shared_ptr< GenericFilter<T, T, T, T> > genericFilterPtr;
+			typedef std::shared_ptr< bwFilter<float> > bwFilterPtr;
+			typedef std::shared_ptr< GenericFilter<float, float, float, float> > genericFilterPtr;
 			
 			double meFilterPeakdB;
 
@@ -108,8 +109,8 @@ namespace openAFE {
 				this->setPInfo(nameArg);
 				
 				/* Creating the output signals */
-				outT_SignalSharedPtr leftOutput( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _left) );
-				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
+				outT_SignalSharedPtr leftOutput( new TimeDomainSignal<float>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _left) );
+				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<float>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
 				
 				/* Setting those signals as the output signals of this processor */
 				this->outputSignals.push_back( leftOutput );
@@ -123,8 +124,8 @@ namespace openAFE {
 				this->hasTwoOutputs = true;
 	
 				/* Creating the PMZ signals */
-				outT_SignalSharedPtr outLeftPMZ( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Left TDS PMZ", "Left TDS PMZ", _left) );
-				outT_SignalSharedPtr outRightPMZ( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Right TDS PMZ", "Right TDS PMZ", _right) );
+				outT_SignalSharedPtr outLeftPMZ( new TimeDomainSignal<float>(fsOut, bufferSize_s, "Left TDS PMZ", "Left TDS PMZ", _left) );
+				outT_SignalSharedPtr outRightPMZ( new TimeDomainSignal<float>(fsOut, bufferSize_s, "Right TDS PMZ", "Right TDS PMZ", _right) );
 				
 				/* Setting those signals as the PMZ signals of this processor */
 				this->outPrivateMemoryZone.push_back( outLeftPMZ );
@@ -165,24 +166,24 @@ namespace openAFE {
 					unsigned long dim1_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->dim;
 					unsigned long dim2_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->dim;
 							
-					T* firstValue1_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue;
-					T* firstValue2_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
-					T* firstValue1_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue;
-					T* firstValue2_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
+					float* firstValue1_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue;
+					float* firstValue2_l = (*itPMZ)->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
+					float* firstValue1_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->first->firstValue;
+					float* firstValue2_r = (*(itPMZ+1))->getLastChunkAccesor()->getTwoCTypeBlockAccessor(0)->second->firstValue;
 													
 					// Actual Processing
            
 					// 1- DC-removal filter					
 					if ( map.get<unsigned short>("pp_bRemoveDC") ) {
 							
-						std::thread leftThread1( &bwFilter<T>::filterChunk, this->dcFilter_l, firstValue1_l, firstValue1_l + dim1_l , firstValue1_l );
-						std::thread rightThread1( &bwFilter<T>::filterChunk, this->dcFilter_r, firstValue1_r, firstValue1_r + dim1_r , firstValue1_r );
+						std::thread leftThread1( &bwFilter<float>::filterChunk, this->dcFilter_l, firstValue1_l, firstValue1_l + dim1_l , firstValue1_l );
+						std::thread rightThread1( &bwFilter<float>::filterChunk, this->dcFilter_r, firstValue1_r, firstValue1_r + dim1_r , firstValue1_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
 													
-						std::thread leftThread2( &bwFilter<T>::filterChunk, this->dcFilter_l, firstValue2_l, firstValue2_l + dim2_l , firstValue2_l );
-						std::thread rightThread2( &bwFilter<T>::filterChunk, this->dcFilter_r, firstValue2_r, firstValue2_r + dim2_r , firstValue2_r );
+						std::thread leftThread2( &bwFilter<float>::filterChunk, this->dcFilter_l, firstValue2_l, firstValue2_l + dim2_l , firstValue2_l );
+						std::thread rightThread2( &bwFilter<float>::filterChunk, this->dcFilter_r, firstValue2_r, firstValue2_r + dim2_r , firstValue2_r );
 
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes				
@@ -191,14 +192,14 @@ namespace openAFE {
 					// 2- Pre-whitening
 					if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
 							
-						std::thread leftThread1( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_l, firstValue1_l, dim1_l , firstValue1_l );
-						std::thread rightThread1( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_r, firstValue1_r, dim1_r , firstValue1_r );
+						std::thread leftThread1( &GenericFilter<float,float, float, float>::exec, this->preEmphFilter_l, firstValue1_l, dim1_l , firstValue1_l );
+						std::thread rightThread1( &GenericFilter<float,float, float, float>::exec, this->preEmphFilter_r, firstValue1_r, dim1_r , firstValue1_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
 													
-						std::thread leftThread2( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_l, firstValue2_l, dim2_l , firstValue2_l );
-						std::thread rightThread2( &GenericFilter<T, T, T, T>::exec, this->preEmphFilter_r, firstValue2_r, dim2_r , firstValue2_r );
+						std::thread leftThread2( &GenericFilter<float,float, float, float>::exec, this->preEmphFilter_l, firstValue2_l, dim2_l , firstValue2_l );
+						std::thread rightThread2( &GenericFilter<float,float, float, float>::exec, this->preEmphFilter_r, firstValue2_r, dim2_r , firstValue2_r );
 
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes				
@@ -210,8 +211,8 @@ namespace openAFE {
 						// Initialize the filter states if empty
 						if ( !( agcFilter_l->isInitialized() ) ) {
 
-							T intArg = map.get<float>("pp_intTimeSecRMS") * this->getFsIn();
-							T sum_l = 0, sum_r = 0, s0_l, s0_r;
+							float intArg = map.get<float>("pp_intTimeSecRMS") * this->getFsIn();
+							float sum_l = 0, sum_r = 0, s0_l, s0_r;
 							uint32_t minVal_l, minVal_r;
 							
 							if ( dim1_l > 0) {
@@ -251,17 +252,17 @@ namespace openAFE {
 						}
 						
 						// Estimate normalization constants
-						std::vector<T> tmp_l ( dim1_l );
+						std::vector<float> tmp_l ( dim1_l );
 						for ( unsigned int i = 0 ; i < dim1_l ; ++i )
 							tmp_l[ i ] = pow(*( firstValue1_l + i ), 2);
-						std::vector<T> tmp_r ( dim1_r );
+						std::vector<float> tmp_r ( dim1_r );
 						for ( unsigned int i = 0 ; i < dim1_r ; ++i )
 							tmp_r[ i ] = pow(*( firstValue1_r + i ), 2);
-							
-						T normFactor;
+
+						float normFactor;
 						
-						std::thread leftThread1( &GenericFilter<T, T, T, T>::exec, this->agcFilter_l, tmp_l.data(), dim1_l , tmp_l.data() );
-						std::thread rightThread1( &GenericFilter<T, T, T, T>::exec, this->agcFilter_r, tmp_r.data(), dim1_r , tmp_r.data() );
+						std::thread leftThread1( &GenericFilter<float,float, float, float>::exec, this->agcFilter_l, tmp_l.data(), dim1_l , tmp_l.data() );
+						std::thread rightThread1( &GenericFilter<float,float, float, float>::exec, this->agcFilter_r, tmp_r.data(), dim1_r , tmp_r.data() );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
@@ -283,8 +284,8 @@ namespace openAFE {
 						for ( unsigned int i = 0 ; i < dim2_r ; ++i )
 							tmp_r[ i ] = pow(*( firstValue2_r + i ), 2);						
 						
-						std::thread leftThread2( &GenericFilter<T, T, T, T>::exec, this->agcFilter_l, tmp_l.data(), dim2_l , tmp_l.data() );
-						std::thread rightThread2( &GenericFilter<T, T, T, T>::exec, this->agcFilter_r, tmp_r.data(), dim2_r , tmp_r.data() );
+						std::thread leftThread2( &GenericFilter<float,float, float, float>::exec, this->agcFilter_l, tmp_l.data(), dim2_l , tmp_l.data() );
+						std::thread rightThread2( &GenericFilter<float,float, float, float>::exec, this->agcFilter_r, tmp_r.data(), dim2_r , tmp_r.data() );
 							
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes
@@ -328,14 +329,14 @@ namespace openAFE {
 					
 					if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
 					/*	
-						std::thread leftThread1( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_l, firstValue1_l, dim1_l , firstValue1_l );
-						std::thread rightThread1( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_r, firstValue1_r, dim1_r , firstValue1_r );
+						std::thread leftThread1( &GenericFilter<float,float, float, float>::exec, this->midEarFilter_l, firstValue1_l, dim1_l , firstValue1_l );
+						std::thread rightThread1( &GenericFilter<float,float, float, float>::exec, this->midEarFilter_r, firstValue1_r, dim1_r , firstValue1_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
 													
-						std::thread leftThread2( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_l, firstValue2_l, dim2_l , firstValue2_l );
-						std::thread rightThread2( &GenericFilter<T, T, T, T>::exec, this->midEarFilter_r, firstValue2_r, dim2_r , firstValue2_r );
+						std::thread leftThread2( &GenericFilter<float,float, float, float>::exec, this->midEarFilter_l, firstValue2_l, dim2_l , firstValue2_l );
+						std::thread rightThread2( &GenericFilter<float,float, float, float>::exec, this->midEarFilter_r, firstValue2_r, dim2_r , firstValue2_r );
 
 						leftThread2.join();                // pauses until left finishes
 						rightThread2.join();               // pauses until right finishes	
@@ -353,8 +354,8 @@ namespace openAFE {
 				// Filter instantiation (if needed)	
 				if ( map.get<unsigned short>("pp_bRemoveDC") ) {
 					
-					this->dcFilter_l.reset ( new bwFilter<T> ( this->getFsIn(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
-					this->dcFilter_r.reset ( new bwFilter<T> ( this->getFsIn(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
+					this->dcFilter_l.reset ( new bwFilter<float> ( this->getFsIn(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
+					this->dcFilter_r.reset ( new bwFilter<float> ( this->getFsIn(), 4 /* order */, map.get<float>("pp_cutoffHzDC"), (bwType)1 /* High */ ) );
 					
 				} else {
 					
@@ -365,12 +366,12 @@ namespace openAFE {
 
 				if ( map.get<unsigned short>("pp_bPreEmphasis") ) {
 					
-					std::vector<T> vectB (2,1);
+					std::vector<float> vectB (2,1);
 					vectB[1] = -1 * abs( map.get<float>("pp_coefPreEmphasis") );
-					std::vector<T> vectA (1,1);
+					std::vector<float> vectA (1,1);
 					
-					this->preEmphFilter_l.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					this->preEmphFilter_r.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_r.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -381,14 +382,14 @@ namespace openAFE {
 				
 				if ( map.get<unsigned short>("pp_bNormalizeRMS") ) {
 
-					std::vector<T> vectB (1,1);
-					std::vector<T> vectA (2,1);
+					std::vector<float> vectB (1,1);
+					std::vector<float> vectA (2,1);
 					
 					vectA[1] = -1 * exp( -1 / ( map.get<float>("pp_intTimeSecRMS") * this->getFsIn() ) );
 					vectB[0] = vectA[0] + vectA[1];
 
-					this->agcFilter_l.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					this->agcFilter_r.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_r.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -399,8 +400,8 @@ namespace openAFE {
 
 				if ( map.get<unsigned short>("pp_bMiddleEarFiltering") ) {
 
-					// this->midEarFilter_l.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					// this->midEarFilter_r.reset ( new GenericFilter<T, T, T, T> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					// this->midEarFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					// this->midEarFilter_r.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -413,7 +414,7 @@ namespace openAFE {
 								
 			}
 									
-			/* TODO : Resets the internat states. */		
+			/* TODO : Resets the internat states. */
 			void reset() {
 
 				const apfMap map = this->getCurrentParameters();

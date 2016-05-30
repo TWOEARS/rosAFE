@@ -1,11 +1,25 @@
 #ifndef MATHTOOLS_HPP
 #define MATHTOOLS_HPP
 
+#define MAXCODABLEVALUE 2147483647;
+#define ERB_L 24.7
+#define ERB_Q 9.265
+
 #include <stdint.h>
 #include <vector>
+#include <math.h> /* M_PI, exp, log */
 
 namespace openAFE {
 
+		/* This function divades all the datas of the incoming chunk
+		 * with the MAXCODABLEVALUE.
+		 * */
+		template<typename T = float>
+		void normaliseData(T* firstValue, size_t dim) {			// call this normaliseToFloat
+			for ( unsigned int i = 0 ; i < dim ; ++i )
+				*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
+		}
+		
 		/* freq2erb - converts to frequencyscale erbscale.
 		 * Uses a scaling based on the equivalent rectangular bandwidth
 		 * (ERB) of an auditory filter at centre frequency fc:
@@ -15,24 +29,33 @@ namespace openAFE {
 		 *   erb  = erbscaled output vector
 		 * 
 		 */
-		template<typename T>
-		void freq2erb(T* firstValue_freq, uint32_t dim, T* firstValue_erb)  {
+		template<typename T = float>
+		T freq2erb( T freq )  {
+			return ERB_Q * log ( 1 + freq / ( ERB_L * ERB_Q ));
+		}		 
+		 
+		template<typename T = float>
+		void freq2erb(T* firstValue_freq, size_t dim, T* firstValue_erb)  {
 			for ( unsigned int i = 0 ; i < dim ; ++i )
-				*( firstValue_erb + i ) = 24.7 + *( firstValue_freq + i ) / 9.265;
+				*( firstValue_erb + i ) = freq2erb ( *( firstValue_freq + i ) );
 		}
-
+		
 		/* erb2freq - converts erbscale to frequencyscale
 		 * 
 		 * Look : freq2erb
 		 * 
-		 * */	
-		template<typename T>
-		void erb2freq(T* firstValue_erb, uint32_t dim, T* firstValue_freq) {
-			for ( unsigned int i = 0 ; i < dim ; ++i )
-				*( firstValue_freq + i ) = *( firstValue_erb + i ) * 9.265 - 24.7;
+		 * */
+		template<typename T = float>
+		T erb2freq( T erb )  {
+			return ERB_L * ERB_Q * ( exp( erb / ERB_Q ) - 1 );
 		}
-		
-		
+				 
+		template<typename T = float>
+		void erb2freq( T* firstValue_erb, size_t dim, T* firstValue_freq ) {
+			for ( unsigned int i = 0 ; i < dim ; ++i )
+				*( firstValue_freq + i ) = erb2freq ( *( firstValue_erb + i ) );
+		}
+			
 		/* conv - Convolution and polynomial multiplication.
 		 * C = conv(A, B) convolves vectors A and B.  The resulting vector is
 		 * length MAX([LENGTH(A)+LENGTH(B)-1,LENGTH(A),LENGTH(B)]).
@@ -40,8 +63,8 @@ namespace openAFE {
 		 * Based On : http://toto-share.com/2011/11/cc-convolution-source-code/
 		 * 
 		 */		
-		template<typename T>
-		std::vector<T> conv( T* A, uint32_t lenA, T* B, uint32_t lenB ) {
+		template<typename T = float>
+		std::vector<T> conv( T* A, size_t lenA, T* B, size_t lenB ) {
 			int32_t nconv;
 			int32_t j, i1;
 			T tmp;
@@ -68,6 +91,24 @@ namespace openAFE {
 			return( C );
 		}	
 	
+		/* linspace - Linearly spaced vector.
+		 * linspace(X1, X2, N) generates a std::vector of N linearly
+		 * equally spaced points between X1 and X2.
+		 * 
+		 * Source : https://gist.github.com/jmbr/2375233
+		 * 
+         */
+		template <typename T = float>
+		std::vector<T> linspace(T a, T b, size_t N) {
+		  T h = (b - a) / static_cast<T>(N-1);
+		  std::vector<T> xs(N);
+		  typename std::vector<T>::iterator x;
+		  T val;
+		  for (x = xs.begin(), val = a; x != xs.end(); ++x, val += h)
+			*x = val;
+		  return xs;
+		}
+		
 }; /* namespace openAFE */
 
 

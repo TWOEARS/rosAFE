@@ -22,12 +22,12 @@ nFramesPerChunk = 2205;
 nChunksOnPort = sampleRate * bufferSize_s_bass / nFramesPerChunk;
 inputDevice = 'hw:2,0';
 
-% acquire = bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
-% pause(0.25);
-% if ( strcmp(acquire.status,'error') )
-%    error(strcat('Error',acquire.exception.ex));
-% end
-menu('Launch rosbag now','Done');
+acquire = bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
+pause(0.25);
+if ( strcmp(acquire.status,'error') )
+   error(strcat('Error',acquire.exception.ex));
+end
+% menu('Launch rosbag now','Done');
 
 %% Connecting rosAFE to BASS
 connection = rosAFE.connect_port('Audio', 'bass/Audio');
@@ -36,7 +36,7 @@ if ( strcmp(connection.status,'error') )
     error(strcat('Error',connection.exception.ex));
 end    
             
-%% Ading a request
+%% Ading processors
 inputName = 'input';
 thisProc = rosAFE.InputProc('-a', inputName, 12000, bufferSize_s_rosAFE );
 pause(p);
@@ -54,14 +54,28 @@ preProcProc = rosAFE.PreProc('-a', preProcName, inputName, sampleRate, 0, ... % 
                                                                        0, ... % 'pp_bMiddleEarFiltering'
                                                                        'jespen', ... % 'pp_middleEarModel'
                                                                        1 ); % 'pp_bUnityComp'
+pause(p);
+
+gammatoneProcName = 'gammatoneProc';
+gammatoneProc = rosAFE.GammatoneProc('-a', gammatoneProcName, preProcName, sampleRate, 'gammatone', ... % 'fb_type'
+                                                                       80, ... % 'fb_lowFreqHz'
+                                                                       8000, ... % 'fb_highFreqHz'
+                                                                       1, ... % 'fb_nERBs'
+                                                                       23, ... % 'fb_nChannels'
+                                                                       0, ... % 'fb_cfHz'
+                                                                       4, ... % 'fb_nGamma'
+                                                                       1.0180 );  % 'fb_bwERBs'
+pause(p);
 
 %% Services
-
+% Running Parameters
 params = rosAFE.getParameters();
 if ( strcmp(params.status,'error') )
    error(strcat('Error',params.exception.ex));
 end
+disp(params.result.parameters);
 
+%
 modif = rosAFE.modifyParameter(preProcName, 'pp_bLevelScaling', '0');
 if ( strcmp(modif.status,'error') )
    error(strcat('Error',modif.exception.ex));

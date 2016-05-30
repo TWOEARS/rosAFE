@@ -46,7 +46,7 @@ startPreProc(const char *name, const char *upperDepName,
   params.set("pp_middleEarModel", pp_middleEarModel);
   params.set("pp_bUnityComp", pp_bUnityComp);
 	  
-  preProcPtr preProcessor (new PreProc<preT>( name, upperDepProc->getFsOut(), fsOut, infos->bufferSize_s, params) );
+  preProcPtr preProcessor (new PreProc( name, upperDepProc->getFsOut(), fsOut, infos->bufferSize_s, params) );
   preProcessor->addInputProcessor ( upperDepProc );
   
   /* Adding this procesor to the ids */

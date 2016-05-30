@@ -1,8 +1,11 @@
 #ifndef INPUTPROC_HPP
 #define INPUTPROC_HPP
 
-#include "../Signals/TimeDomainSignal.hpp"
 #include "Processor.hpp"
+
+#include "../Signals/TimeDomainSignal.hpp"
+
+#include "../tools/mathTools.hpp"
 
 /* 
  * inputProc is the first processor to receve the audio.
@@ -13,20 +16,17 @@
  * It has no parameters. As processing, it normalises the input signal.
  * */
  
-#include "inputProcLib/inputProcLib.hpp"
-
 namespace openAFE {
 
-	template<typename T>
-	class InputProc : public Processor < InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> > {
+	class InputProc : public Processor < InputProc, TimeDomainSignal<float>, TimeDomainSignal<float> > {
 		public:
 
-			using PB = Processor<InputProc<T>, TimeDomainSignal<T>, TimeDomainSignal<T> >;
+			using PB = Processor<InputProc, TimeDomainSignal<float>, TimeDomainSignal<float> >;
 			
 			using inT_nTwoCTypeBlockAccessorPtr = typename PB::inT_nTwoCTypeBlockAccessorPtr;					
 			using outT_nTwoCTypeBlockAccessorPtr = typename PB::outT_nTwoCTypeBlockAccessorPtr;
 			
-			typedef std::shared_ptr< InputProc<T> > processorSharedPtr;
+			typedef std::shared_ptr< InputProc > processorSharedPtr;
 					
 		private:
 			
@@ -63,8 +63,8 @@ namespace openAFE {
 				this->setPInfo(nameArg);
 				
 				/* Creating the output signals */
-				outT_SignalSharedPtr leftOutput( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _left) );
-				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<T>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
+				outT_SignalSharedPtr leftOutput( new TimeDomainSignal<float>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _left) );
+				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<float>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
 							
 				/* Setting those signals as the output signals of this processor */
 				this->outputSignals.push_back( std::move( leftOutput ) );
@@ -83,21 +83,21 @@ namespace openAFE {
 			 * done here and the results are stocked in that private memory zone.
 			 * However, the results are not publiched yet on the output vectors.
 			 */
-			void processChunk (T* inChunkLeft, uint32_t leftDim, T* inChunkRight, uint32_t rightDim) {
+			void processChunk (float* inChunkLeft, uint32_t leftDim, float* inChunkRight, uint32_t rightDim) {
 				
 				/* There is just one dimention */
-				std::thread leftThread(inputProcLib::normaliseData<T>, inChunkLeft, leftDim);
-				std::thread rightThread(inputProcLib::normaliseData<T>, inChunkRight, rightDim);
+				std::thread leftThread( normaliseData<float>, inChunkLeft, leftDim);
+				std::thread rightThread( normaliseData<float>, inChunkRight, rightDim);
 				
 				leftThread.join();                // pauses until left finishes
 				rightThread.join();               // pauses until right finishes
 			}
 						
 			/* This funcion publishes (appends) the signals to the outputs of the processor */			
-			void appendChunk (T* inChunkLeft, uint32_t leftDim, T* inChunkRight, uint32_t rightDim) {
+			void appendChunk (float* inChunkLeft, uint32_t leftDim, float* inChunkRight, uint32_t rightDim) {
 								
-				std::thread leftAppendThread( &TimeDomainSignal<T>::appendTChunk, this->outputSignals[0], inChunkLeft, leftDim);
-				std::thread rightAppendThread( &TimeDomainSignal<T>::appendTChunk, this->outputSignals[1], inChunkRight, rightDim);
+				std::thread leftAppendThread( &TimeDomainSignal<float>::appendTChunk, this->outputSignals[0], inChunkLeft, leftDim);
+				std::thread rightAppendThread( &TimeDomainSignal<float>::appendTChunk, this->outputSignals[1], inChunkRight, rightDim);
 				
 				leftAppendThread.join();                // pauses until left finishes
 				rightAppendThread.join();               // pauses until right finishes

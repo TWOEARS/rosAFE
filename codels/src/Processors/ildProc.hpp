@@ -12,8 +12,6 @@
  * 
  * */
  
-#include "ildProcLib/ildProcLib.hpp"
-
 namespace openAFE {
 
 	template<typename T>
