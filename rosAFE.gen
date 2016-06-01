@@ -12,9 +12,6 @@ component rosAFE {
 
     native inputProcessors;
     native preProcessors;
-    native gammatoneProcessors;
-    native ihcProcessors;
-    native ildProcessors;
 
     native flagMap;
 
@@ -23,9 +20,6 @@ component rosAFE {
 
 	inputProcessors inputProcessorsSt;
 	preProcessors preProcessorsSt;
-	gammatoneProcessors gammatoneProcessorsSt;
-	ihcProcessors ihcProcessorsSt;
-	ildProcessors ildProcessorsSt;
 
 	flagMap flagMapSt;
 	flagMap newDataMapSt;
@@ -45,18 +39,6 @@ component rosAFE {
         period      50ms;
     };
 
-    task gammatoneProc {
-        period      50ms;
-    };
-
-    task ihcProc {
-        period      50ms;
-    };
-
-    task ildProc {
-        period      50ms;
-    };
-
     activity InputProc(
       in string name = "input" : "The name of this activity",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
@@ -72,7 +54,7 @@ component rosAFE {
 	// The state Machine, start
         codel <waitExec>    	waitExecInputProc( local in nFramesPerBlock, port in Audio ) yield pause::waitExec, exec, stop;
         codel <exec>    	execInputProc( local in name, inout inputProcessorsSt ) yield waitRelease, stop;
-        codel <waitRelease>    	waitRelease( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <waitRelease>    	waitReleaseInputProc( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releaseInputProc( local in name, inout inputProcessorsSt, out newDataMapSt, port out inputProcPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
@@ -90,8 +72,7 @@ component rosAFE {
       in unsigned short pp_bPreEmphasis =  0 : "Flag to activate the pre-emphasis high-pass filter",
       in float pp_coefPreEmphasis =  0.97 : "Coefficient for pre-emphasis compensation (usually between 0.9 and 1)",
       in unsigned short pp_bNormalizeRMS =  0 : "Flag for activating automatic gain control",
-      in unsigned short pp_bBinauralRMS =  1 : "Flag indicating the use of unified automatic gain control over left and right channel, for preserving channel relative differences.",
-      in float pp_intTimeSecRMS =  500E-3 : "Time constant (s) for automatic gain control",
+      in float pp_intTimeSecRMS =  0.5 : "Time constant (s) for automatic gain control",
       in unsigned short pp_bLevelScaling =  0 : "Flag to apply level scaling to the given reference",
       in float pp_refSPLdB =  100 : "Reference dB SPL value to correspond to input signal RMS value of 1",
       in unsigned short pp_bMiddleEarFiltering =  0 : "Flag to apply middle ear filtering",
@@ -102,12 +83,12 @@ component rosAFE {
         task        		preProc;
 	validate    		existsAlready ( local in name, local in upperDepName, in ::ids );
 
-        codel <start>   	startPreProc( local in name, local in upperDepName, local in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, in infos, port out preProcPort, /* Arguments Of processor*/ local in pp_bRemoveDC, local in pp_cutoffHzDC, local in pp_bPreEmphasis, local in pp_coefPreEmphasis, local in pp_bNormalizeRMS, local in pp_bBinauralRMS, local in pp_intTimeSecRMS, local in pp_bLevelScaling, local in pp_refSPLdB, local in pp_bMiddleEarFiltering, local in pp_middleEarModel, local in pp_bUnityComp ) yield waitExec, stop;
+        codel <start>   	startPreProc( local in name, local in upperDepName, local in fsOut, inout preProcessorsSt, inout flagMapSt, inout newDataMapSt, inout inputProcessorsSt, in infos, port out preProcPort, /* Arguments Of processor*/ local in pp_bRemoveDC, local in pp_cutoffHzDC, local in pp_bPreEmphasis, local in pp_coefPreEmphasis, local in pp_bNormalizeRMS, local in pp_intTimeSecRMS, local in pp_bLevelScaling, local in pp_refSPLdB, local in pp_bMiddleEarFiltering, local in pp_middleEarModel, local in pp_bUnityComp ) yield waitExec, stop;
 	
 	// The state Machine, start
-        codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
-        codel <exec>    	exec ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
-        codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <waitExec>    	waitExecPreProc ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <exec>    	execPreProc ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
+        codel <waitRelease>    	waitReleasePreProc ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
         codel <release>    	releasePreProc ( local in name, inout ::ids, out newDataMapSt, port out preProcPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
@@ -116,100 +97,6 @@ component rosAFE {
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
     };
-
-    activity GammatoneProc (
-      in string name = "gammatone" : "The name of this gammatone processor",
-      in string upperDepName = "preProc" : "The name of the upper dependencie",
-      in unsigned long fsOut = 44100 : "fsOut",
-      in string fb_type =  "gammatone" : "Filterbank type (''gammatone'' or ''drnl'')",
-      in float fb_lowFreqHz =  80 : "Lowest center frequency (Hz)",
-      in float fb_highFreqHz =  8000 : "Highest center frequency (Hz)",
-      in float fb_nERBs =  1 : "Distance between neighbor filters in ERBs",
-      in unsigned long fb_nChannels =  0 : "Number of channels",
-      in unsigned long fb_cfHz =  0 : "Channels center frequencies (Hz)",
-      in unsigned long fb_nGamma =  4 : "Gammatone rising slope order",
-      in float fb_bwERBs =  1.0180 : "Bandwidth of the filters (ERBs)"
-      ) {
-        doc         "Gammatone auditory filterbank processor. The Gammatone filterbank models the frequency selectivity of the peripheral auditory system according following [1]. It operates on a time-domain signal and returns a time-frequency representation of the signal.";
-        task        gammatoneProc;
-	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
-
-        codel <start>   	startGammatoneProc ( local in name, local in upperDepName, local in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, inout preProcessorsSt, in infos, /* Arguments Of processor*/ local in fb_type, local in fb_lowFreqHz, local in fb_highFreqHz, local in fb_nERBs, local in fb_nChannels, local in fb_cfHz, local in fb_nGamma, local in fb_bwERBs ) yield waitExec, stop;
-	
-	// The state Machine, start
-        codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
-        codel <exec>    	exec ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
-        codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	release ( local in name, inout ::ids, out newDataMapSt ) yield pause::waitExec, stop;
-	// The state Machine, end
-
-        codel <delete>    	deleteGammatoneProc( local in name, inout gammatoneProcessorsSt ) yield ether;
-        codel <stop>    	stopGammatoneProc( inout gammatoneProcessorsSt ) yield ether;
-
-        throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
-    };
-
-   activity IhcProc (
-      in string name = "ihc" : "The name of this ihc processor",
-      in string upperDepName = "gammatone" : "The name of the upper dependencie",
-      in unsigned long fsOut = 44100 : "fsOut",
-      in string ihc_method = "dau" : "Inner hair-cell envelope extraction method"
-      ) {
-        doc         "An inner hair-cell envelope extractor processor.";
-        task        ihcProc;
-	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
-
-        codel <start>   	startIhcProc ( local in name, local in upperDepName, local in fsOut, inout ihcProcessorsSt, inout flagMapSt, inout newDataMapSt, inout gammatoneProcessorsSt, in infos, /* Arguments Of processor */ local in ihc_method ) yield waitExec, stop;
-	
-	// The state Machine, start
-        codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
-        codel <exec>    	exec ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
-        codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	release ( local in name, inout ::ids, out newDataMapSt ) yield pause::waitExec, stop;
-	// The state Machine, end
-
-        codel <delete>    	deleteIhcProc ( local in name, inout ihcProcessorsSt ) yield ether;
-        codel <stop>    	stopIhcProc ( inout ihcProcessorsSt ) yield ether;
-
-        throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
-    };
-
-   activity IldProc (
-      in string name = "ild" : "The name of this ild processor",
-      in string upperDepName = "ihc" : "The name of the upper dependencie",
-      in unsigned long fsOut = 44100 : "fsOut",
-      in string ild_wname =  "hann" : "Window name",
-      in float ild_wSizeSec =  20E-3 : "Window duration (s)",
-      in float ild_hSizeSec =  10E-3 : "Window step size (s)"
-      ) {
-        doc         "Interaural Level Difference processor. This processor estimates the level difference between the left and the right ear signals for individual frequency channels and time frames by comparing the frame-based energy of the left and the right-ear inner hair cell representations. The value is expressed in dB, and negative values indicate sources on the left-hand side.";
-        task        ildProc;
-	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
-
-        codel <start>   	startIldProc ( local in name, local in upperDepName, local in fsOut, inout ildProcessorsSt, inout flagMapSt, inout newDataMapSt, inout ihcProcessorsSt, in infos, /* Arguments Of processor */ local in ild_wname, local in ild_wSizeSec, local in ild_hSizeSec ) yield waitExec, stop;
-	
-	// The state Machine, start
-        codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
-        codel <exec>    	exec ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
-        codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	release ( local in name, inout ::ids, out newDataMapSt ) yield pause::waitExec, stop;
-	// The state Machine, end
-
-        codel <delete>    	deleteIldProc ( local in name, inout ildProcessorsSt ) yield ether;
-        codel <stop>    	stopIldProc ( inout ildProcessorsSt ) yield ether;
-
-        throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
-    };
-
-   function getSignals ( inout unsigned long long startIndex  = 0 : "The first index of asked chunks",
-   			 in unsigned long long endIndex  = 1 : "The last index of asked chunks",
-			 out rosAFE::dataObjSt signals ) {
-	doc      "Returns only the new (unseen) processed chunks.";
-
-	codel	 getSignal( local inout startIndex, local in endIndex, out signals, in ::ids );
-
-	throw    e_noMemory, e_badIndexParam;
-   };
 
    function getParameters ( out rosAFE::RunningProcessorsSt parameters ) {
 	doc      "Returns all parameter informations for each running processor.";
@@ -241,6 +128,6 @@ component rosAFE {
 
     function Stop() {
         doc         "Stop all";
-        interrupts  InputProc, PreProc, GammatoneProc, IhcProc, IldProc;
+        interrupts  InputProc, PreProc/*, GammatoneProc, IhcProc, IldProc*/;
     };
 };

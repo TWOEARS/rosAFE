@@ -1,45 +1,67 @@
-#ifndef TimeDomainSignal_H
-#define TimeDomainSignal_H
+#ifndef TIMEDOMAINSIGNAL_H
+#define TIMEDOMAINSIGNAL_H
 
 #include <string>
-#include <stdexcept>
 #include <stdint.h>
+#include <memory>
 
 #include "Signal.hpp"
+#include "circularContainer.hpp"
+#include "dataType.hpp"
 
 namespace openAFE {
 	
-	template<typename T>	
-	class TimeDomainSignal : public Signal<T> {
+	template<typename T>
+	class TimeDomainSignal : public Signal {
 	
 	private:
-
+	
+	    std::shared_ptr<CircularContainer<T> > buffer;
+	    std::shared_ptr<twoCTypeBlock<T> > lastChunkInfo, wholeBufferInfo;
+			    
 	public:
-	
-		using nTwoCTypeBlockAccessorPtr = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtr;
-		typedef typename std::shared_ptr<TimeDomainSignal<T> > signalSharedPtr;
-		
+			
 		/* Create a TimeDomainSignal without initialising a first chunk */
-		TimeDomainSignal( const uint32_t fs, const uint32_t bufferSize_s, const std::string argName = "Time", const std::string argLabel = "Waveform", channel cha = _mono) : Signal<T>(fs, bufferSize_s) {
+		TimeDomainSignal( const uint32_t fs, const uint32_t bufferSize_s, const std::string argName = "Time", channel cha = _mono) : Signal(fs, argName, bufferSize_s, cha) {
 	
-			this->populateProperties(argName, argLabel, "nSamples x 1");
-			this->Channel = cha;
+			this->buffer.reset( new CircularContainer<T>( this->bufferSizeSamples ) );
+			this->lastChunkInfo.reset( new twoCTypeBlock<float> );
+			this->wholeBufferInfo.reset( new twoCTypeBlock<float> );
 		}
 		
 		/* Calls automatically Signal's destructor */
-		~TimeDomainSignal() {}
-		
-		void appendTChunk( T* inChunk, uint32_t dim ) {
-			
-			Signal<T>::appendChunk( inChunk, dim );
+		~TimeDomainSignal() {
+			this->buffer.reset();
+			this->lastChunkInfo.reset();
+			this->wholeBufferInfo.reset();
 		}
 		
-		void appendChunk( nTwoCTypeBlockAccessorPtr inChunk ) {
-			
-			Signal<T>::appendChunk( inChunk );
+		void appendTChunk( T* inChunk, size_t dim ) {							
+			this->buffer->push_chunk( inChunk, dim );
+		}
+		
+		void appendChunk( std::shared_ptr<twoCTypeBlock<T> > inChunk ) {
+			this->buffer->push_chunk( inChunk );
+		}
+		
+		std::shared_ptr<twoCTypeBlock<T> > getLastChunkAccesor() {
+			this->buffer->calcLastChunk();
+			this->lastChunkInfo->setData( this->buffer->getLastChunkAccesor() );
+			return this->lastChunkInfo;
 		}
 
+		std::shared_ptr<twoCTypeBlock<T> > getWholeBufferAccesor() {
+			this->buffer->calcWholeBuffer();
+			this->wholeBufferInfo->setData( this->buffer->getWholeBufferAccesor() );
+			return this->wholeBufferInfo;
+		}
+		
+		/* Puts zero to all over the buffer */
+		void reset () {
+			this->buffer->reset();
+		}
+		
 	};
 };
 
-#endif /* TimeDomainSignal_H */
+#endif /* TIMEDOMAINSIGNAL_H */

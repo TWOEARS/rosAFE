@@ -90,7 +90,7 @@ namespace openAFE {
 		/* This is the main initialisation, for each constructor */
 		void init ( unsigned int argDims = 0 ) {
 			
-			// We set the capacity
+			// Set the buffer capacity
 			this->buffer.set_capacity( argDims );
 			
 			this->lastChunkInfo.reset ( new twoCTypeBlock<T>() );
@@ -136,12 +136,13 @@ namespace openAFE {
 
 		void push_chunk(twoCTypeBlockPtr inChunk) {		
 			/* The first array */
-			this->push_chunk( inChunk->first->firstValue, inChunk->first->dim, false );
+			if ( inChunk->array1.second > 0 )
+				this->push_chunk( inChunk->array1.first, inChunk->array1.second, false );
 			/* If there is any data, the second array */
-			if ( inChunk->second->dim > 0 )
-				this->push_chunk( inChunk->second->firstValue, inChunk->second->dim, false );
+			if ( inChunk->array2.second > 0 )
+				this->push_chunk( inChunk->array2.first, inChunk->array2.second, false );
 			/* The total size of the last chunk */
-			this->setLastChunkSize( inChunk->first->dim + inChunk->second->dim );
+			this->setLastChunkSize( inChunk->getSize() );
 		}
 		
 		twoCTypeBlockPtr getLastChunkAccesor() {
@@ -165,24 +166,26 @@ namespace openAFE {
 			
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();
-			
-			if ( ar2.second == 0 ) {
-				this->lastChunkInfo->first->firstValue = ar1.first + ar1.second - this->getLastChunkSize();
-				this->lastChunkInfo->first->dim = this->getLastChunkSize();
-				this->lastChunkInfo->second->firstValue = NULL;
-				this->lastChunkInfo->second->dim = 0;
-			} else if ( this->getLastChunkSize() >= ar2.second ) {
-				this->lastChunkInfo->first->dim = lastChunkSize - ar2.second;
-				this->lastChunkInfo->first->firstValue = ar1.first + ar1.second - this->lastChunkInfo->first->dim;
-				this->lastChunkInfo->second->dim  = ar2.second;
-				this->lastChunkInfo->second->firstValue = ar2.first;
-			} else /* if ( lastChunkSize <= ar2.second ) */ {
-				this->lastChunkInfo->first->firstValue = ar2.first + ar2.second - this->getLastChunkSize();
-				this->lastChunkInfo->first->dim = this->getLastChunkSize();
+			 
+			if ( ar2.second == 0 ) {	
+				this->lastChunkInfo->array1.first = ar1.first + ar1.second - this->getLastChunkSize();
+				this->lastChunkInfo->array1.second = this->getLastChunkSize();
+				this->lastChunkInfo->array2.first = NULL;
+				this->lastChunkInfo->array2.second = 0;
+			} else {
+				if ( this->getLastChunkSize() >= ar2.second ) {	
+					this->lastChunkInfo->array1.second = lastChunkSize - ar2.second;
+					this->lastChunkInfo->array1.first = ar1.first + ar1.second - this->lastChunkInfo->array1.second;
+					this->lastChunkInfo->array2.second  = ar2.second;
+					this->lastChunkInfo->array2.first = ar2.first;
+				} else /* if ( lastChunkSize <= ar2.second ) */ {
+					this->lastChunkInfo->array1.first = ar2.first + ar2.second - this->getLastChunkSize();
+					this->lastChunkInfo->array1.second = this->getLastChunkSize();
 
-				this->lastChunkInfo->second->firstValue = NULL;
-				this->lastChunkInfo->second->dim  = 0;
-				}
+					this->lastChunkInfo->array2.first = NULL;
+					this->lastChunkInfo->array2.second  = 0;
+					}
+				}		
 		}
 		
 		/* calcLatestData : updates the lastDataInfo 
@@ -201,21 +204,21 @@ namespace openAFE {
 			}
 				
 			if ( ar2.second == 0 ) {
-				this->lastDataInfo->first->firstValue = ar1.first + ar1.second - samplesArg;
-				this->lastDataInfo->first->dim = samplesArg;
-				this->lastDataInfo->second->firstValue = NULL;
-				this->lastDataInfo->second->dim = 0;
+				this->lastDataInfo->array1.first = ar1.first + ar1.second - samplesArg;
+				this->lastDataInfo->array1.second = samplesArg;
+				this->lastDataInfo->array1.first = NULL;
+				this->lastDataInfo->array2.second = 0;
 			} else if ( samplesArg >= ar2.second ) {
-				this->lastDataInfo->first->dim = samplesArg - ar2.second;
-				this->lastDataInfo->first->firstValue = ar1.first + ar1.second - this->lastDataInfo->first->dim;
-				this->lastDataInfo->second->dim  = ar2.second;
-				this->lastDataInfo->second->firstValue = ar2.first;
+				this->lastDataInfo->array1.second = samplesArg - ar2.second;
+				this->lastDataInfo->array1.first = ar1.first + ar1.second - this->lastDataInfo->array1.second;
+				this->lastDataInfo->array2.second  = ar2.second;
+				this->lastDataInfo->array1.first = ar2.first;
 			} else /* if ( samplesArg <= ar2.second ) */ {
-				this->lastDataInfo->first->firstValue = ar2.first + ar2.second - samplesArg;
-				this->lastDataInfo->first->dim = samplesArg;
+				this->lastDataInfo->array1.first = ar2.first + ar2.second - samplesArg;
+				this->lastDataInfo->array1.second = samplesArg;
 
-				this->lastDataInfo->second->firstValue = NULL;
-				this->lastDataInfo->second->dim = 0;
+				this->lastDataInfo->array1.first = NULL;
+				this->lastDataInfo->array2.second = 0;
 				}
 		}
 
@@ -243,30 +246,30 @@ namespace openAFE {
 						
 			/* Eveything is in ar1 */
 			if ( ar2.second == 0 ) {
-				this->oldDataInfo->first->firstValue = ar1.first + ar1.second - freshData;
-				this->oldDataInfo->first->dim = samplesArg;
-				this->oldDataInfo->second->firstValue = NULL;
-				this->oldDataInfo->second->dim = 0;
+				this->oldDataInfo->array1.first = ar1.first + ar1.second - freshData;
+				this->oldDataInfo->array1.second = samplesArg;
+				this->oldDataInfo->array1.first = NULL;
+				this->oldDataInfo->array2.second = 0;
 			       /* It is in ar1 ( but ar2 exists ) */
 			} else if ( ar2.second < freshData ) {
 					if ( ( freshData - samplesArg ) > ar2.second) {
-						this->oldDataInfo->first->firstValue = ar1.first + ar1.second + ar2.second - freshData;
-						this->oldDataInfo->first->dim = samplesArg;
-						this->oldDataInfo->second->firstValue = NULL;
-						this->oldDataInfo->second->dim = 0;	
+						this->oldDataInfo->array1.first = ar1.first + ar1.second + ar2.second - freshData;
+						this->oldDataInfo->array1.second = samplesArg;
+						this->oldDataInfo->array1.first = NULL;
+						this->oldDataInfo->array2.second = 0;	
 					/* It is in ar1 and  ar2 */	
 					} else {
-						this->oldDataInfo->first->firstValue = ar1.first + ar1.second + ar2.second - freshData;
-						this->oldDataInfo->first->dim = freshData - ar2.second;
-						this->oldDataInfo->second->firstValue = ar2.first;
-						this->oldDataInfo->second->dim = samplesArg - freshData + ar2.second ;	
+						this->oldDataInfo->array1.first = ar1.first + ar1.second + ar2.second - freshData;
+						this->oldDataInfo->array1.second = freshData - ar2.second;
+						this->oldDataInfo->array1.first = ar2.first;
+						this->oldDataInfo->array2.second = samplesArg - freshData + ar2.second ;	
 					}
 			/* Eveything is in ar2 */
 			} else {
-				this->oldDataInfo->first->firstValue = ar2.first + ar2.second - freshData;
-				this->oldDataInfo->first->dim = samplesArg;
-				this->oldDataInfo->second->firstValue = NULL;
-				this->oldDataInfo->second->dim = 0;	
+				this->oldDataInfo->array1.first = ar2.first + ar2.second - freshData;
+				this->oldDataInfo->array1.second = samplesArg;
+				this->oldDataInfo->array1.first = NULL;
+				this->oldDataInfo->array2.second = 0;	
 			}		
 			
 			this->freshData -= samplesArg;
@@ -281,13 +284,13 @@ namespace openAFE {
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();
 
-			this->wholeBufferInfo->first->firstValue = ar1.first;
-			this->wholeBufferInfo->first->dim = ar1.second;
+			this->wholeBufferInfo->array1.first = ar1.first;
+			this->wholeBufferInfo->array1.second = ar1.second;
 			if ( ar2.second > 0 )
-				this->wholeBufferInfo->second->firstValue = ar2.first;
+				this->wholeBufferInfo->array2.first = ar2.first;
 			else 
-				this->wholeBufferInfo->second->firstValue = NULL;
-			this->wholeBufferInfo->second->dim = ar2.second;
+				this->wholeBufferInfo->array2.first = NULL;
+			this->wholeBufferInfo->array2.second = ar2.second;
 		}
 
 		/* getFreshDataSize : Returns the number of available non seen samples */

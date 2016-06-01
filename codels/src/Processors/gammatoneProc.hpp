@@ -1,10 +1,12 @@
 #ifndef GAMMATONEPROC_HPP
 #define GAMMATONEPROC_HPP
 	
-#include "../Signals/TimeDomainSignal.hpp"
-#include "../Signals/TimeFrequencySignal.hpp"
+#include "TFSProcessor.hpp"
+#include "preProc.hpp"	
 
-#include "Processor.hpp"
+#include "../Filters/GammatoneFilter.hpp"
+
+#include "../tools/mathTools.hpp"
 
 
 /* 
@@ -13,74 +15,34 @@
  * 
  * */
  
-#include "../Filters/GammatoneFilter.hpp"
-#include "../tools/mathTools.hpp"
-
 namespace openAFE {
 
-	template<typename T>
-	class GamamtoneProc : public Processor < PreProc, TimeDomainSignal<T>, TimeFrequencySignal<T> > {
+	class GamamtoneProc : public TFSProcessor<float> {
 
 		private:
 
-			using PB = Processor< PreProc, TimeDomainSignal<T>, TimeFrequencySignal<T> >;
-
-			using inT_nTwoCTypeBlockAccessorPtr = typename PB::inT_nTwoCTypeBlockAccessorPtr;
-			using outT_nTwoCTypeBlockAccessorPtr = typename PB::outT_nTwoCTypeBlockAccessorPtr;
-
-			using inputPtrIterator = typename PB::inputPtrIterator;
-			using outT_SignalIter = typename PB::outT_SignalIter;
-			
-			typedef std::shared_ptr< GamamtoneProc<T> > processorSharedPtr;
-			
 			std::vector<float> cfHz;            								// Filters center frequencies
 			std::vector<float> nERBs;           								// Distance between neighboring filters in ERBs
 			float nGamma;          							    				// Gammatone order of the filters
 			float bwERBs;          							    				// Bandwidth of the filters in ERBs
 			float lowFreqHz;       							   	 				// Lowest center frequency used at instantiation
 			float highFreqHz;      							    				// Highest center frequency used at instantiation
-        
-            typedef std::shared_ptr < GammatoneFilter > gammatoneFilterPtr;
-            typedef std::vector <gammatoneFilterPtr > filterPtrVector;
-			filterPtrVector leftFilters, rightFilters;		    				// Array of filter pointer objects
-						
+			
 			void setToDefaultParams () {
 						
-				this->processorParams.set("toFill", 0);
-			}
-			
-			void setPInfo(const std::string& nameArg,
-						  const std::string& labelArg = "to fill",
-						  const std::string& requestNameArg = "to fill",
-						  const std::string& requestLabelArg = "to fill",
-						  const std::string& outputTypeArg = "to fill",
-						  unsigned int isBinauralArg = 2 // % Indicates that the processor can behave as mono or binaural
-						) {
-
-				this->pInfo.name = nameArg;
-				this->pInfo.label = labelArg;
-				this->pInfo.requestName = requestNameArg;
-				this->pInfo.requestLabel = requestLabelArg;
-				this->pInfo.outputType = outputTypeArg;
-				this->pInfo.isBinaural = isBinauralArg;
 			}
 
-            void verifyParameters() {
-
-				const apfMap map = this->getCurrentParameters();				
+            size_t verifyParameters( apf::parameter_map& paramsArg ) {
+				
+				this->setToDefaultParams();
+				
+				// Setting the user's parameters
+				this->givenParameters ( paramsArg );
+				
+				const apfMap map = this->getCurrentParameters();	
 				/* Solve the conflicts between center frequencies, number of channels, and
 				 * distance between channels.
 				 */
-		 /*       if ~isempty(pObj.parameters.map('fb_cfHz'))
-					 Highest priority case: a vector of channels center 
-					%   frequencies is provided
-					centerFreq = pObj.parameters.map('fb_cfHz');
-					
-					pObj.parameters.map('fb_lowFreqHz') = centerFreq(1);
-					pObj.parameters.map('fb_highFreqHz') = centerFreq(end);
-					pObj.parameters.map('fb_nChannels') = numel(centerFreq);
-					pObj.parameters.map('fb_nERBs') = 'n/a'; */ 
-
 					if ( map.get<unsigned short>("fb_nChannels") != 0 ) {
 						/* Medium priority: frequency range and number of channels
 						 *  are provided.
@@ -110,6 +72,7 @@ namespace openAFE {
 						
 						this->processorParams.set("fb_nChannels", cfHz.size());														
 					}
+					return map.get<unsigned short>("fb_nChannels");
 			}
 			
 			void populateFilters( filterPtrVector& filters ) {
@@ -128,23 +91,29 @@ namespace openAFE {
 					filters[ ii ] = thisFilter;
 				}
 			}
-								
+
+			void process ( filterPtrVector& filters, T* firstValue, size_t dim, signalPtr pmz ) {
+
+/*				std::vector<std::thread> threads;
+				  for ( uint32_t ii = 0; ii < map.get<unsigned short>("fb_nChannels") ; ++ii )
+					threads.push_back(std::thread( &GammatoneFilter::exec, filters[ii], firstValue, dim,  ));
+
+				  // Waiting to join the threads
+				  for (auto& t : threads)
+					t.join();				*/
+
+			}
+
+            typedef std::shared_ptr < GammatoneFilter > gammatoneFilterPtr;
+            typedef std::vector <gammatoneFilterPtr > filterPtrVector;
+			filterPtrVector leftFilters, rightFilters;		    				// Array of filter pointer objects
+														
 		public:
 		
-			using typename PB::outT_SignalSharedPtr;
+			GamamtoneProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, std::shared_ptr<PreProc > upperProcPtr, apf::parameter_map& paramsArg) : TFSProcessor<float> (nameArg, fsIn, fsOut, bufferSize_s, verifyParameters( paramsArg ), "magnitude", _gammatone)
 
-			/* PreProc */
-			GamamtoneProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, apf::parameter_map& paramsArg) : PB (fsIn, fsOut, _gammatone) {
-
-				/* Setting the user's parameters */
-				this->processorParams = paramsArg;
-				
-				/* Setting the name of this processor and other informations */
-				this->setPInfo(nameArg);
-				
-				
-				this->verifyParameters();
-				this->prepareForProcessing();
+				this->upperProcPtr = upperProcPtr;				
+				this->prepareForProcessing ();
 			}
 				
 			~GamamtoneProc () {
@@ -154,13 +123,24 @@ namespace openAFE {
 			
 			void processChunk ( ) {
 				
+				this->setNFR ( this->upperProcPtr->getNFR() );
+				
+				// Appending the chunk to process (the processing must be done on the PMZ)
+				leftPMZ->appendChunk( this->upperProcPtr->getLeftLastChunkAccessor() );
+				rightPMZ->appendChunk( this->upperProcPtr->getRightLastChunkAccessor() );
+				
+				std::vector<std::shared_ptr<twoCTypeBlock<T> > > l_PMZ = leftPMZ->getLastChunkAccesor();
+				std::vector<std::shared_ptr<twoCTypeBlock<T> > > r_PMZ = rightPMZ->getLastChunkAccesor();
+				
+				/* Continue HERE - Append Chunk is not done yet !!! */
+											    
 			}
 			
 			void prepareForProcessing () {
 				
 				this->populateFilters( leftFilters );
 				this->populateFilters( rightFilters );
-			}			
+			}
 
 	}; /* class GamamtoneProc */
 }; /* namespace openAFE */

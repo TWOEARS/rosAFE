@@ -1,13 +1,15 @@
+#include <pthread.h>
+
 #include "stateMachine.hpp"
 #include "processorCommon.hpp"
-#include <pthread.h>
+#include "genom3_dataFiles.hpp"
 
 bool checkExists ( const char *name, const rosAFE_ids *ids ) {
 	if ( ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
+	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) )/* or
 	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
 	     ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )	     	     
+	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )	*/     	     
 	   )
 	     return true;
 	return false;
@@ -102,7 +104,7 @@ getParameters(const rosAFE_ids *ids,
 {
 	
 /* ****************************  Input START  ************************************ */
-
+/*
   uint32_t sizeInputProc = ids->inputProcessorsSt->processorsAccessor.getSize();
   if ( parameters->paramsInputProc._length > sizeInputProc )
 	parameters->paramsInputProc._length = 0;
@@ -121,11 +123,11 @@ getParameters(const rosAFE_ids *ids,
     
     thisProcessor.reset();
   }
-  
+  */
 /* *****************************  Input END  ************************************* */
 
 /* ****************************  PREPR START  ************************************ */
-  uint32_t sizePreProc = ids->preProcessorsSt->processorsAccessor.getSize();
+/*  uint32_t sizePreProc = ids->preProcessorsSt->processorsAccessor.getSize();
   if ( parameters->paramsPreProc._length > sizePreProc )
 	parameters->paramsPreProc._length = 0;
   
@@ -158,12 +160,12 @@ getParameters(const rosAFE_ids *ids,
     
     thisProcessor.reset();
   }
-
+*/
 /* *****************************  PREPR END  ************************************* */
 
 
 /* **************************  GAMMATONE START  ********************************** */
-  
+ /* 
   uint32_t sizeGammatoneProc = ids->gammatoneProcessorsSt->processorsAccessor.getSize();
   if ( parameters->paramsGammatoneProc._length > sizeGammatoneProc )
 	parameters->paramsGammatoneProc._length = 0;
@@ -192,12 +194,12 @@ getParameters(const rosAFE_ids *ids,
     parameters->paramsGammatoneProc._buffer[ii].fb_bwERBs = thisParams.get<float>("fb_bwERBs");
     
     thisProcessor.reset();
-  }
+  }*/
 /* ***************************  GAMMATONE END  *********************************** */
 
 
 /* *****************************  IHC START  ************************************* */
-
+/*
   uint32_t sizeIhcProc = ids->ihcProcessorsSt->processorsAccessor.getSize();
   if ( parameters->paramsIhcProc._length > sizeIhcProc )
 	parameters->paramsIhcProc._length = 0;
@@ -220,11 +222,11 @@ getParameters(const rosAFE_ids *ids,
     
     thisProcessor.reset();
   }
-  
+  */
 /* ******************************  IHC END  ************************************** */
 
 /* *****************************  ILD START  ************************************* */
-  
+  /*
   uint32_t sizeIldProc = ids->ildProcessorsSt->processorsAccessor.getSize();
   if ( parameters->paramsIldProc._length > sizeIldProc )
 	parameters->paramsIldProc._length = 0;
@@ -248,7 +250,7 @@ getParameters(const rosAFE_ids *ids,
     parameters->paramsIldProc._buffer[ii].ild_hSizeSec = thisParams.get<float>("ild_hSizeSec");
         
     thisProcessor.reset();
-  }
+  }*/
 /* ******************************  ILD END  ************************************** */
 	
 	
@@ -274,13 +276,17 @@ modifyParameter(const char *nameProc, const char *nameParam,
 		return genom_ok;
 	else
 		return rosAFE_e_noSuchParameter(self);
-  }
+  } 
   else if ( ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
 	if (ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
 		return genom_ok;
 	else
 		return rosAFE_e_noSuchParameter(self);
   }
+  
+  
+  else return rosAFE_e_noSuchProcessor( self );
+  /*
   else if ( ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
 	if (ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
 		return genom_ok;
@@ -299,7 +305,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 	else
 		return rosAFE_e_noSuchParameter(self);
   }
-  else return rosAFE_e_noSuchProcessor( self );
+  else return rosAFE_e_noSuchProcessor( self ); */
 }
 
 

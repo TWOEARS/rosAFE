@@ -26,13 +26,8 @@ librosAFE_codels_la_SOURCES+=	rosAFE_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_init_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_input_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_preProc_codels.cc
-librosAFE_codels_la_SOURCES+=	rosAFE_gammatoneProc_codels.cc
-librosAFE_codels_la_SOURCES+=	rosAFE_ihcProc_codels.cc
-librosAFE_codels_la_SOURCES+=	rosAFE_ildProc_codels.cc
 librosAFE_codels_la_SOURCES+=	stateMachine.hpp
 librosAFE_codels_la_SOURCES+=	stateMachine.cpp
-librosAFE_codels_la_SOURCES+=	processorCommon.hpp
-librosAFE_codels_la_SOURCES+=	processorCommon.cpp
 librosAFE_codels_la_SOURCES+=	Ports.hpp
 librosAFE_codels_la_SOURCES+=	Ports.cpp
 
@@ -41,8 +36,6 @@ librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwCoef.hpp
 librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwCoef.cpp
 librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwIIR.hpp
 librosAFE_codels_la_SOURCES+=	src/Filters/bwFilter/bwIIR.cpp
-librosAFE_codels_la_SOURCES+=	src/Filters/GenericFilter.hpp
-librosAFE_codels_la_SOURCES+=	src/Filters/GammatoneFilter.hpp
 
 librosAFE_codels_la_CPPFLAGS=	$(requires_CFLAGS)
 librosAFE_codels_la_CPPFLAGS+=	-Wall -g -O -std=c++11 -DHAVE_INLINE -lpthread -D_REENTRANT -ljack -lsndfile -lfftw3f -Wunused-but-set-variable

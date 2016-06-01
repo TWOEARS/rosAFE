@@ -8,15 +8,15 @@ PORT::initInputPort ( const rosAFE_inputProcPort *inputProcPort, uint32_t sample
                 uint32_t bufferSize_s, genom_context self ) {
 					
 	  uint32_t fop =  sampleRate * bufferSize_s; // total amount of Frames On the Port 
-		
+
+	  inputProcPort->data( self )->left.data._length = fop;
+	  inputProcPort->data( self )->right.data._length = fop;
+	  		
 	  if (genom_sequence_reserve(&(inputProcPort->data( self )->left.data), fop) ||
 		  genom_sequence_reserve(&(inputProcPort->data( self )->right.data), fop))
 	  return rosAFE_e_noMemory( self );
 
-	  inputProcPort->data( self )->left.data._length = fop;
-	  inputProcPort->data( self )->right.data._length = fop;
-
-	  for (uint32_t ii = 0; ii < fop; ii++) {
+	  for ( uint32_t ii = 0; ii < fop; ++ii ) {
 		inputProcPort->data( self )->left.data._buffer[ii] = 0;
 		inputProcPort->data( self )->right.data._buffer[ii] = 0;
 	  }
@@ -31,17 +31,15 @@ PORT::initInputPort ( const rosAFE_inputProcPort *inputProcPort, uint32_t sample
 	}
 
 genom_event
-PORT::publishInputPort ( const rosAFE_inputProcPort *inputProcPort, inputProcAccessorVector inChunk, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
-	
-		assert ( inChunk.size() == 2 );
+PORT::publishInputPort ( const rosAFE_inputProcPort *inputProcPort, twoCTypeBlockPtr left, twoCTypeBlockPtr right, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {	
 
 		rosAFE_TimeDomainSignalPortStruct *data;
 
 		data = inputProcPort->data( self );
     			
-		uint32_t dim1 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->dim;
-		uint32_t dim2 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->dim;
-			
+		uint32_t dim1 = left->array1.second;
+		uint32_t dim2 = left->array2.second;
+
 		uint32_t fpc = dim1 + dim2; 		// amount of Frames On this Chunk
 		uint32_t fop = data->framesOnPort; 	// total amount of Frames On the Port
 
@@ -51,29 +49,30 @@ PORT::publishInputPort ( const rosAFE_inputProcPort *inputProcPort, inputProcAcc
 		uint32_t pos, ii;
 		if (dim2 == 0) {	
 			for (ii = 0, pos = fop - fpc; pos < fop ; ii++, pos++) {
-				data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
-				data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
+				data->left.data._buffer[pos] = *(left->array1.first + ii);
+				data->right.data._buffer[pos] = *(right->array1.first + ii);
 			}
 		} else if (dim1 == 0) {
 				for (ii = 0, pos = fop - fpc; pos < fop ; ii++, pos++) {
-					data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
-					data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
+					data->left.data._buffer[pos] = *(left->array2.first + ii);
+					data->right.data._buffer[pos] = *(right->array2.first + ii);
 				}
 		} else {
 				for (ii = 0, pos = fop - fpc; pos < fop - dim2 ; ii++, pos++) {
-					data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
-					data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
+					data->left.data._buffer[pos] = *(left->array1.first + ii);
+					data->right.data._buffer[pos] = *(right->array1.first + ii);
 				}
 				
 				for (ii = 0, pos = fop - dim2; pos < fop ; ii++, pos++) {
-					data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
-					data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
+					data->left.data._buffer[pos] = *(left->array2.first + ii);
+					data->right.data._buffer[pos] = *(right->array2.first + ii);
 				}			
 			}
 			
 		data->lastFrameIndex = nfr;
 		inputProcPort->write( self );
-	
+		
+		return genom_ok;
 }
 
 
@@ -107,19 +106,17 @@ PORT::initPreProcPort ( const char *name, const rosAFE_preProcPort *preProcPort,
 }
 
 genom_event
-PORT::publishPreProcPort ( const char *name, const rosAFE_preProcPort *preProcPort, inputProcAccessorVector inChunk, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
-	
-	assert ( inChunk.size() == 2 );
-		
+PORT::publishPreProcPort ( const char *name, const rosAFE_preProcPort *preProcPort, twoCTypeBlockPtr left, twoCTypeBlockPtr right, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {		
+   
     rosAFE_TimeDomainSignalPortStruct *data;
 
     data = preProcPort->data( name, self );
     
-    uint32_t dim1 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->dim;
-    uint32_t dim2 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->dim;
+	uint32_t dim1 = left->array1.second;
+	uint32_t dim2 = left->array2.second;
         
- 	uint32_t fpc = dim1 + dim2; /* amount of Frames On this Chunk */
-	uint32_t fop = data->framesOnPort; /* total amount of Frames On the Port */
+ 	uint32_t fpc = dim1 + dim2; // amount of Frames On this Chunk
+	uint32_t fop = data->framesOnPort; // total amount of Frames On the Port
 	
     memmove(data->left.data._buffer, data->left.data._buffer + fpc, (fop - fpc)*bytesPerFrame);
     memmove(data->right.data._buffer, data->right.data._buffer + fpc, (fop - fpc)*bytesPerFrame);
@@ -127,23 +124,23 @@ PORT::publishPreProcPort ( const char *name, const rosAFE_preProcPort *preProcPo
 	uint32_t pos, ii;
 	if (dim2 == 0) {	
 		for (ii = 0, pos = fop - fpc; pos < fop ; ii++, pos++) {
-			data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
-			data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
+			data->left.data._buffer[pos] = *(left->array1.first + ii);
+			data->right.data._buffer[pos] = *(right->array1.first + ii);
 		}
 	} else if (dim1 == 0) {
 			for (ii = 0, pos = fop - fpc; pos < fop ; ii++, pos++) {
-				data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
-				data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
+				data->left.data._buffer[pos] = *(left->array2.first + ii);
+				data->right.data._buffer[pos] = *(right->array2.first + ii);
 			}
 	} else {
 			for (ii = 0, pos = fop - fpc; pos < fop - dim2 ; ii++, pos++) {
-				data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
-				data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + ii);
+				data->left.data._buffer[pos] = *(left->array1.first + ii);
+				data->right.data._buffer[pos] = *(right->array1.first + ii);
 			}
 			
 			for (ii = 0, pos = fop - dim2; pos < fop ; ii++, pos++) {
-				data->left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
-				data->right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + ii);
+				data->left.data._buffer[pos] = *(left->array2.first + ii);
+				data->right.data._buffer[pos] = *(right->array2.first + ii);
 			}			
 		}
  	 	
@@ -170,12 +167,12 @@ PORT::publishPreProcPort ( const char *name, const rosAFE_preProcPort *preProcPo
 /* publishPort ------------------------------------------------------------- */
 
 genom_event
-PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, inputProcAccessorVector inChunk, uint64_t frameIndex, uint32_t iii, genom_context self) {
+PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, twoCTypeBlockPtr left, twoCTypeBlockPtr right, uint64_t frameIndex, uint32_t iii, genom_context self) {
 /*	
 		assert ( inChunk.size() == 2 );
 			
-		uint32_t dim1 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->dim;
-		uint32_t dim2 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->dim;
+		uint32_t dim1 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->array1.second;
+		uint32_t dim2 = (inChunk[0])->getTwoCTypeBlockAccessor( 0 )->array2.second;
 			
 		uint32_t fpc = dim1 + dim2; // amount of Frames On this Chunk
 		
@@ -186,13 +183,13 @@ PORT::publishTDSPort(const char *name, const rosAFE_dataObj *dataObj, inputProcA
 
 		uint32_t pos;
 		for (pos = 0 ; pos < dim1 ; pos++) {
-			dataObj->data( self )->allTDSPorts._buffer[iii].left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + pos);
-			dataObj->data( self )->allTDSPorts._buffer[iii].right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->first->firstValue + pos);
+			dataObj->data( self )->allTDSPorts._buffer[iii].left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->array1.first + pos);
+			dataObj->data( self )->allTDSPorts._buffer[iii].right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->array1.first + pos);
 		}
 
 		for (pos = dim1 ; pos < fpc ; pos++) {
-			dataObj->data( self )->allTDSPorts._buffer[iii].left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + pos);
-			dataObj->data( self )->allTDSPorts._buffer[iii].right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->second->firstValue + pos);
+			dataObj->data( self )->allTDSPorts._buffer[iii].left.data._buffer[pos] = *((inChunk[0])->getTwoCTypeBlockAccessor( 0 )->array2.first + pos);
+			dataObj->data( self )->allTDSPorts._buffer[iii].right.data._buffer[pos] = *((inChunk[1])->getTwoCTypeBlockAccessor( 0 )->array2.first + pos);
 		}
 		
 		dataObj->data( self )->allTDSPorts._buffer[iii].lostData = frameIndex - ( dataObj->data( self )->allTDSPorts._buffer[iii].lastFrameIndex + fpc );	

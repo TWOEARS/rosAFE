@@ -36,9 +36,8 @@ module rosAFE {
     };
 
     struct TimeFrequencySignalPortStruct {
-        string<MAX_STRING_LENGTH> 	name;
+        unsigned long 			sampleRate;
         unsigned long long    		lastFrameIndex;
-        unsigned long long    		lostData;
         unsigned long long    		framesOnPort;
         unsigned long         		numberOfChannels;
         signalND      	      		left;
@@ -64,7 +63,6 @@ module rosAFE {
       unsigned short pp_bPreEmphasis;
       float pp_coefPreEmphasis;
       unsigned short pp_bNormalizeRMS;
-      unsigned short pp_bBinauralRMS;
       float pp_intTimeSecRMS;
       unsigned short pp_bLevelScaling;
       float pp_refSPLdB;

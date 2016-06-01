@@ -1,11 +1,11 @@
+#include "acrosAFE.h"
+#include "rosAFE_c_types.h"
+
+#include "genom3_dataFiles.hpp"
 #include "stateMachine.hpp"
-
-#include <cmath>
-
 #include "Ports.hpp"
 
-using namespace openAFE;
-
+#include <cmath>
 /* --- getAudioData ----------------------------------------------------- */
 
 /* This function takes samples from the structure pointed by src
@@ -22,7 +22,7 @@ using namespace openAFE;
  */
 
 int
-getAudioData(binaudio_portStruct *src, inputT *destL, inputT *destR,
+getAudioData(binaudio_portStruct *src, float *destL, float *destR,
                  int N, int64_t *nfr, int *loss)
 {
     int n;       /* amount of frames the function will be able to get */
@@ -62,8 +62,8 @@ getAudioData(binaudio_portStruct *src, inputT *destL, inputT *destR,
 static int N;
 static unsigned int globalLoss;
 static int64_t nfr;
-static inputT *li, *ri;
-std::vector<inputT> l, r;
+static float *li, *ri;
+std::vector<float> l, r;
 
 /** Codel startGetBlocks of activity GetBlocks.
  *
@@ -88,8 +88,10 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   
   infos->sampleRate = Audio->data(self)->sampleRate;
   infos->bufferSize_s = bufferSize_s;
-  
-  inputProcPtr inputP ( new InputProc( name, infos->sampleRate, infos->sampleRate, infos->bufferSize_s ) );
+  uint32_t tmp = ceil( ( nFramesPerBlock * 4 ) / infos->sampleRate );
+  infos->innerBufferSize_s = ( tmp < 1 ? 1 : tmp );
+    
+  std::shared_ptr< InputProc > inputP ( new InputProc( name, infos->sampleRate, infos->innerBufferSize_s ) );
   
   /* Adding this procesor to the ids */
   ((*inputProcessorsSt)->processorsAccessor).addProcessor( inputP );
@@ -165,23 +167,23 @@ execInputProc(const char *name,
               rosAFE_inputProcessors **inputProcessorsSt,
               genom_context self)
 {
-  /* The client processes the current block l and r here */  
+  // The client processes the current block l and r here
   (((*inputProcessorsSt)->processorsAccessor).getProcessor( name ))->processChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss);
   globalLoss = 0;
     
   return rosAFE_waitRelease;
 }
 
-/** Codel waitRelease of activity InputProc.
+/** Codel waitReleaseInputProc of activity InputProc.
  *
  * Triggered by rosAFE_waitRelease.
  * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
  * Throws rosAFE_e_noData, rosAFE_e_noMemory, rosAFE_e_existsAlready.
  */
 genom_event
-waitRelease(const char *name, rosAFE_flagMap **flagMapSt,
+waitReleaseInputProc(const char *name, rosAFE_flagMap **flagMapSt,
                      genom_context self)
-{      
+{
   /* Waiting for all childs */
   if ( ! SM::checkFlag( name, flagMapSt, self) )
 	  return rosAFE_pause_waitRelease;  
@@ -206,15 +208,17 @@ releaseInputProc(const char *name,
                  const rosAFE_inputProcPort *inputProcPort,
                  genom_context self)
 {
-  inputProcPtr thisProcessor = ((*inputProcessorsSt)->processorsAccessor).getProcessor( name );
-  /* Relasing the data */
-  thisProcessor->appendChunk( l.data(), l.size() - globalLoss, r.data(), r.size() - globalLoss );
-  thisProcessor->calcLastChunk( );
-  
-  /* Publishing on the output port */
-  PORT::publishInputPort ( inputProcPort, thisProcessor->getLastChunkAccesor(), sizeof(inputT), nfr, self );
+  std::shared_ptr< InputProc > thisProcessor = ((*inputProcessorsSt)->processorsAccessor).getProcessor( name );
+ 
+  // Relasing the data
+  thisProcessor->releaseChunk( );
   thisProcessor->setNFR ( nfr );
-  /* Informing all the potential childs to say that this is a new chunk. */
+  
+  // Publishing on the output port
+  PORT::publishInputPort ( inputProcPort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(float), nfr, self );
+  
+  
+  // Informing all the potential childs to say that this is a new chunk.
   SM::riseFlag ( name, newDataMapSt, self );
     
   thisProcessor.reset();
@@ -233,10 +237,9 @@ stopInputProc(const char *name,
               rosAFE_flagMap **flagMapSt,
               rosAFE_flagMap **newDataMapSt, genom_context self)
 {
-
 	l.clear(); r.clear();
 		
-	/* Deleting all flags */
+	// Deleting all flags
     (*flagMapSt)->allFlags.clear();
     (*newDataMapSt)->allFlags.clear();
 	

@@ -1,7 +1,6 @@
 #ifndef MATHTOOLS_HPP
 #define MATHTOOLS_HPP
 
-#define MAXCODABLEVALUE 2147483647;
 #define ERB_L 24.7
 #define ERB_Q 9.265
 
@@ -10,15 +9,6 @@
 #include <math.h> /* M_PI, exp, log */
 
 namespace openAFE {
-
-		/* This function divades all the datas of the incoming chunk
-		 * with the MAXCODABLEVALUE.
-		 * */
-		template<typename T = float>
-		void normaliseData(T* firstValue, size_t dim) {			// call this normaliseToFloat
-			for ( unsigned int i = 0 ; i < dim ; ++i )
-				*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
-		}
 		
 		/* freq2erb - converts to frequencyscale erbscale.
 		 * Uses a scaling based on the equivalent rectangular bandwidth

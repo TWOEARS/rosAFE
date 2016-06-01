@@ -22,16 +22,14 @@ namespace openAFE {
 	private:
 
 		/* cfHz : Center frequencies of the frequency channels */
-		doubleVector cfHz;
+		size_t nChannel;	
 		
-	protected:
-	
-		std::string scaling;	
+		std::vector<std::shared_ptr<CircularContainer<T> > > buffer;
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > > lastChunkInfo, wholeBufferInfo;
+		
+		std::string scaling;
 
 	public:
-	
-		using nTwoCTypeBlockAccessorPtr = typename nTwoCTypeBlockAccessor<T>::nTwoCTypeBlockAccessorPtr;
-		typedef typename std::shared_ptr<TimeFrequencySignal<T> > signalSharedPtr;
 
 		/*       fs : Sampling frequency (Hz)
          *     name : Name tag of the signal, should be compatible with
@@ -43,25 +41,63 @@ namespace openAFE {
          *               (default: channel = 'mono')
         */    
 
-		TimeFrequencySignal( const uint32_t fs, const uint32_t bufferSize_s, const doubleVector& argCfHz,
-							 const std::string argName = "tfRepresentation", 
-							 const std::string argLabel = "tfRepresentation",
-							 std::string argScaling = "magnitude", channel cha = _mono) : Signal<T>(fs, bufferSize_s, uint32Vector( 1, argCfHz.size() ) ) {
+		TimeFrequencySignal( const uint32_t fs, const uint32_t bufferSize_s, size_t nChannel,
+							 const std::string argName = "tfRepresentation",
+							 std::string argScaling = "magnitude", channel cha = _mono) : : Signal(fs, argName, bufferSize_s, cha) {
 													
-			this->populateProperties( argLabel, argName, "nSamples x nFilters" );
-			this->Channel = cha;
-			this->cfHz = argCfHz;
+			this->nChannel = nChannel;
 			this->scaling = argScaling;
+			
+			buffer.resize( cfHz.size() );
+			lastChunkInfo.resize( cfHz.size() );
+			wholeBufferInfo.resize( cfHz.size() );
+			
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
+				buffer[ii].reset( new CircularContainer<T>( this->bufferSizeSamples ) );
+				lastChunkInfo[ii].reset( new twoCTypeBlock<float> );
+				wholeBufferInfo[ii].reset( new twoCTypeBlock<float> );
+			}
 		}
-		
+
 		/* Calls automatically Signal's destructor */
 		~TimeFrequencySignal() {
-			cfHz.clear();		
+			this->cfHz.clear();
+			this->buffer.reset();
+			this->lastChunkInfo.reset();
+			this->wholeBufferInfo.reset();			
 		}
 		
-		void appendChunk( nTwoCTypeBlockAccessorPtr inChunk ) {	
-			Signal<T>::appendChunk( inChunk );
+		void appendChunk( T* inChunk, size_t dim ) {
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii )
+				buffer[ii]->push_chunk( inChunk, dim );
 		}
+		
+		void appendChunk( std::vector<std::shared_ptr<twoCTypeBlock<T> > >& inChunk ) {
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii )
+				buffer[ii]->push_chunk( inChunk[ii] );
+		}
+		
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getLastChunkAccesor() {
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
+				this->buffer[ii]->calcLastChunk();
+				this->lastChunkInfo[ii]->setData( this->buffer[ii]->getLastChunkAccesor() );
+			}
+			return this->lastChunkInfo;
+		}
+		
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getWholeBufferAccesor() {
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
+				this->buffer[ii]->calcWholeBuffer();
+				this->lastChunkInfo[ii]->setData( this->buffer[ii]->getWholeBufferAccesor() );
+			}
+			return this->wholeBufferInfo;
+		}
+		
+		/* Puts zero to all over the buffer */
+		void reset () {
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii )
+				this->buffer[ii]->reset();
+		}		
 
 	}; /* class TimeFrequencySignal */
 };	/* namespace openAFE */

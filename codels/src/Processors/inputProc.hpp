@@ -1,10 +1,11 @@
 #ifndef INPUTPROC_HPP
 #define INPUTPROC_HPP
 
-#include "Processor.hpp"
+#define MAXCODABLEVALUE 2147483647;
 
-#include "../Signals/TimeDomainSignal.hpp"
+#include <thread>
 
+#include "TDSProcessor.hpp"
 #include "../tools/mathTools.hpp"
 
 /* 
@@ -18,96 +19,72 @@
  
 namespace openAFE {
 
-	class InputProc : public Processor < InputProc, TimeDomainSignal<float>, TimeDomainSignal<float> > {
-		public:
-
-			using PB = Processor<InputProc, TimeDomainSignal<float>, TimeDomainSignal<float> >;
-			
-			using inT_nTwoCTypeBlockAccessorPtr = typename PB::inT_nTwoCTypeBlockAccessorPtr;					
-			using outT_nTwoCTypeBlockAccessorPtr = typename PB::outT_nTwoCTypeBlockAccessorPtr;
-			
-			typedef std::shared_ptr< InputProc > processorSharedPtr;
+	class InputProc : public TDSProcessor<float> {
 					
 		private:
+						
+			void setToDefaultParams () { }
+			void verifyParameters() { }
 			
-			using typename PB::outT_SignalSharedPtr;
-			
-			void setToDefaultParams () {
-				this->processorParams.set("Type", "Input Processor");
+			void process ( float* firstValue, size_t dim ) {
+				for ( unsigned int i = 0 ; i < dim ; ++i )
+					*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
 			}
-			
-			void setPInfo(const std::string& nameArg,
-						  const std::string& labelArg = "Input Processor",
-						  const std::string& requestNameArg = "input",
-						  const std::string& requestLabelArg = "TimeDomainSignal",
-						  const std::string& outputTypeArg = "TimeDomainSignal",
-						  unsigned int isBinauralArg = 1						 				 
-						) {
 
-				this->pInfo.name = nameArg;
-				this->pInfo.label = labelArg;
-				this->pInfo.requestName = requestNameArg;
-				this->pInfo.requestLabel = requestLabelArg;
-				this->pInfo.outputType = outputTypeArg;
-				this->pInfo.isBinaural = isBinauralArg;
-			}
-			
 		public:
 
-			/* inputProc */
-			InputProc (const std::string& nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s) : PB (fsIn, fsOut, _inputProc) {
+			InputProc (const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s) : TDSProcessor<float> (nameArg, fs, fs, bufferSize_s, _inputProc) {
 				
-				this->setToDefaultParams ();
-
-				/* Setting the name of this processor and other informations */
-				this->setPInfo(nameArg);
-				
-				/* Creating the output signals */
-				outT_SignalSharedPtr leftOutput( new TimeDomainSignal<float>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _left) );
-				outT_SignalSharedPtr rightOutput ( new TimeDomainSignal<float>(fsOut, bufferSize_s, this->pInfo.requestName, this->pInfo.name, _right) );
-							
-				/* Setting those signals as the output signals of this processor */
-				this->outputSignals.push_back( std::move( leftOutput ) );
-				this->outputSignals.push_back( std::move( rightOutput ) );
-				
-				/* Linking the output accesors of each signal */
-				this->linkAccesors ();
+				this->verifyParameters();
 			}
 				
-			~InputProc () {
-				std::cout << "Destructor of a input processor" << std::endl;
-			}
+			~InputProc () {	}
 			
 			/* This function does the asked calculations. 
 			 * The inputs are called "privte memory zone". The asked calculations are
 			 * done here and the results are stocked in that private memory zone.
 			 * However, the results are not publiched yet on the output vectors.
 			 */
-			void processChunk (float* inChunkLeft, uint32_t leftDim, float* inChunkRight, uint32_t rightDim) {
+			void processChunk (float* inChunkLeft, size_t leftDim, float* inChunkRight, size_t rightDim ) {
 				
-				/* There is just one dimention */
-				std::thread leftThread( normaliseData<float>, inChunkLeft, leftDim);
-				std::thread rightThread( normaliseData<float>, inChunkRight, rightDim);
+				// Appending the chunk to process (the processing must be done on the PMZ)
+				leftPMZ->appendTChunk( inChunkLeft, leftDim );
+				rightPMZ->appendTChunk( inChunkRight, rightDim );
 				
-				leftThread.join();                // pauses until left finishes
-				rightThread.join();               // pauses until right finishes
-			}
-						
-			/* This funcion publishes (appends) the signals to the outputs of the processor */			
-			void appendChunk (float* inChunkLeft, uint32_t leftDim, float* inChunkRight, uint32_t rightDim) {
-								
-				std::thread leftAppendThread( &TimeDomainSignal<float>::appendTChunk, this->outputSignals[0], inChunkLeft, leftDim);
-				std::thread rightAppendThread( &TimeDomainSignal<float>::appendTChunk, this->outputSignals[1], inChunkRight, rightDim);
-				
-				leftAppendThread.join();                // pauses until left finishes
-				rightAppendThread.join();               // pauses until right finishes
+				std::shared_ptr<twoCTypeBlock<float> > l_PMZ = leftPMZ->getLastChunkAccesor();
+				std::shared_ptr<twoCTypeBlock<float> > r_PMZ = rightPMZ->getLastChunkAccesor();
+					
+				// 0- Initialization
+				unsigned long dim1_l = l_PMZ->array1.second;
+				unsigned long dim2_l = l_PMZ->array2.second;
+				unsigned long dim1_r = r_PMZ->array1.second;
+				unsigned long dim2_r = r_PMZ->array2.second;
+							
+				float* firstValue1_l = l_PMZ->array1.first;
+				float* firstValue2_l = l_PMZ->array2.first;
+				float* firstValue1_r = r_PMZ->array1.first;
+				float* firstValue2_r = r_PMZ->array2.first;				
+					
+				if ( ( dim1_l > 0 ) && ( dim1_r > 0 ) ) {
+					std::thread leftThread( &InputProc::process, this, firstValue1_l, dim1_l );
+					std::thread rightThread( &InputProc::process, this, firstValue1_r, dim1_r );
+					
+					leftThread.join();                // pauses until left finishes
+					rightThread.join();               // pauses until right finishes
+				}
+				if ( ( dim2_l > 0 ) && ( dim2_r > 0 ) )	{
+					std::thread leftThread( &InputProc::process, this, firstValue2_l, dim2_l );
+					std::thread rightThread( &InputProc::process, this, firstValue2_r, dim2_r );
+					
+					leftThread.join();                // pauses until left finishes
+					rightThread.join();               // pauses until right finishes
+				}			
 			}
 			
-			/* TODO : Resets the internal states. */		
-			void reset() {
-				PB::reset();
-			}		
-
+			void processChunk () { }
+						
+			void prepareForProcessing () { }
+			 
 	}; /* class InputProc */
 }; /* namespace openAFE */
 
