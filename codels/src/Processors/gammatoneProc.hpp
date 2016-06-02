@@ -118,7 +118,6 @@ namespace openAFE {
 			}
 
 			void processChannel ( gammatoneFilterPtr oneFilter, std::shared_ptr<twoCTypeBlock<float> > oneChannel ) {
-
 				// 0- Initialization
 				size_t dim1 = oneChannel->array1.second;
 				size_t dim2 = oneChannel->array2.second;
@@ -126,30 +125,30 @@ namespace openAFE {
 				float* firstValue1 = oneChannel->array1.first;
 				float* firstValue2 = oneChannel->array2.first;
 				
-				std::vector< std::complex<float > > tmpComplex;	
+				std::vector< std::complex<float > > tmpComplex;
 				if ( dim1 > 0 ) {
-					tmpComplex.resize(dim1, 0);
+					tmpComplex.resize(dim1);
 					oneFilter->exec( firstValue1, dim1, tmpComplex.data() );
 					for ( size_t ii = 0 ; ii < dim1 ; ++ii )
 						*( firstValue1 + ii ) = tmpComplex[ii].real() * 2;
 				}
 				if ( dim2 > 0 )	{
-					tmpComplex.resize(dim2, 0);
+					tmpComplex.clear();
+					tmpComplex.resize(dim2);
 					oneFilter->exec( firstValue2, dim2, tmpComplex.data() );
 					for ( size_t ii = 0 ; ii < dim2 ; ++ii )
-						*( firstValue1 + ii ) = tmpComplex[ii].real() * 2;					
+						*( firstValue2 + ii ) = tmpComplex[ii].real() * 2;					
 				}
 			}
 
-			void processLR ( filterPtrVector& filters, std::shared_ptr <TimeFrequencySignal<float> > PMZ ) {
-
-	/*			std::vector<std::thread> threads;
-				  for ( uint32_t ii = 0; ii < this->cfHz.size() ; ++ii )
-					threads.push_back(std::thread( &GammatoneFilter::exec, filters[ii], firstValue, dim,  ));
+			void processLR ( filterPtrVector& filters, std::vector<std::shared_ptr<twoCTypeBlock<float> > > PMZ ) {
+				std::vector<std::thread> threads;
+				  for ( size_t ii = 0 ; ii < this->cfHz.size() ; ++ii )
+					threads.push_back(std::thread( &GammatoneProc::processChannel, this, filters[ii], PMZ[ii] ));
 
 				  // Waiting to join the threads
 				  for (auto& t : threads)
-					t.join();*/
+					t.join();
 			}
 														
 		public:
@@ -179,16 +178,23 @@ namespace openAFE {
 			}
 			
 			void processChunk ( ) {
+				std::cout << "Process chunk is called." << std::endl;
 				this->setNFR ( this->upperProcPtr->getNFR() );
 				
 				// Appending the chunk to process (the processing must be done on the PMZ)
 				leftPMZ->appendChunk( this->upperProcPtr->getLeftLastChunkAccessor() );
 				rightPMZ->appendChunk( this->upperProcPtr->getRightLastChunkAccessor() );
-				
 				std::vector<std::shared_ptr<twoCTypeBlock<float> > > l_PMZ = leftPMZ->getLastChunkAccesor();
 				std::vector<std::shared_ptr<twoCTypeBlock<float> > > r_PMZ = rightPMZ->getLastChunkAccesor();
 				
-				/* Continue HERE - Append Chunk is not done yet !!! */
+			/*	std::thread leftThread( &GammatoneProc::processLR, this->leftFilters, l_PMZ );
+				std::thread rightThread( &GammatoneProc::processLR, this->rightFilters, r_PMZ );
+							
+				leftThread.join();                // pauses until left finishes
+				rightThread.join();               // pauses until right finishes*/
+				this->processLR( this->leftFilters, l_PMZ );
+				this->processLR( this->rightFilters, r_PMZ );
+				std::cout << "Process chunk is ended." << std::endl;				
 			}
 			
 			void prepareForProcessing () {
