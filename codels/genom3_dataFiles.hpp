@@ -7,6 +7,7 @@
 
 #include "src/Processors/inputProc.hpp"
 #include "src/Processors/preProc.hpp"
+#include "src/Processors/gammatoneProc.hpp"
 #include "src/Processors/ProcessorVector.hpp"
 
 using namespace openAFE;
@@ -19,6 +20,10 @@ struct rosAFE_inputProcessors {
 
 struct rosAFE_preProcessors {
 	ProcessorVector< PreProc > processorsAccessor; 
+};
+
+struct rosAFE_gammatoneProcessors {
+	ProcessorVector< GammatoneProc > processorsAccessor; 
 };
 
 struct flagSt {

@@ -22,10 +22,7 @@ namespace openAFE {
 	class InputProc : public TDSProcessor<float> {
 					
 		private:
-						
-			void setToDefaultParams () { }
-			void verifyParameters() { }
-			
+									
 			void process ( float* firstValue, size_t dim ) {
 				for ( unsigned int i = 0 ; i < dim ; ++i )
 					*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
@@ -35,7 +32,6 @@ namespace openAFE {
 
 			InputProc (const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s) : TDSProcessor<float> (nameArg, fs, fs, bufferSize_s, _inputProc) {
 				
-				this->verifyParameters();
 			}
 				
 			~InputProc () {	}
@@ -84,6 +80,13 @@ namespace openAFE {
 			void processChunk () { }
 						
 			void prepareForProcessing () { }
+
+			/* Comapres informations and the current parameters of two processors */
+			bool operator==( InputProc& toCompare ) {
+				if ( this->compareBase( toCompare ) )
+					return true;
+				return false;
+			}
 			 
 	}; /* class InputProc */
 }; /* namespace openAFE */

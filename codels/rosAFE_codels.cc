@@ -6,8 +6,8 @@
 
 bool checkExists ( const char *name, const rosAFE_ids *ids ) {
 	if ( ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) )/* or
-	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
+	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
+	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) /*or
 	     ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
 	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )	*/     	     
 	   )
@@ -271,41 +271,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
                 const char *newValue, const rosAFE_ids *ids,
                 genom_context self)
 {
-  if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue) )
-		return genom_ok;
-	else
-		return rosAFE_e_noSuchParameter(self);
-  } 
-  else if ( ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	if (ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
-		return genom_ok;
-	else
-		return rosAFE_e_noSuchParameter(self);
-  }
-  
-  
-  else return rosAFE_e_noSuchProcessor( self );
-  /*
-  else if ( ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	if (ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
-		return genom_ok;
-	else
-		return rosAFE_e_noSuchParameter(self);
-  }
-  else if ( ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	if (ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
-		return genom_ok;
-	else
-		return rosAFE_e_noSuchParameter(self);
-  }
-  else if ( ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
-	if (ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->modifyParameter( nameParam, newValue ))
-		return genom_ok;
-	else
-		return rosAFE_e_noSuchParameter(self);
-  }
-  else return rosAFE_e_noSuchProcessor( self ); */
+  return rosAFE_e_noSuchProcessor( self );
 }
 
 

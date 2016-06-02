@@ -17,7 +17,7 @@
 namespace openAFE {
 	
 	template<typename T>	
-	class TimeFrequencySignal : public Signal<T> {
+	class TimeFrequencySignal : public Signal {
 	
 	private:
 
@@ -43,14 +43,14 @@ namespace openAFE {
 
 		TimeFrequencySignal( const uint32_t fs, const uint32_t bufferSize_s, size_t nChannel,
 							 const std::string argName = "tfRepresentation",
-							 std::string argScaling = "magnitude", channel cha = _mono) : : Signal(fs, argName, bufferSize_s, cha) {
+							 std::string argScaling = "magnitude", channel cha = _mono) : Signal(fs, argName, bufferSize_s, cha) {
 													
 			this->nChannel = nChannel;
 			this->scaling = argScaling;
 			
-			buffer.resize( cfHz.size() );
-			lastChunkInfo.resize( cfHz.size() );
-			wholeBufferInfo.resize( cfHz.size() );
+			buffer.resize( this->nChannel );
+			lastChunkInfo.resize( this->nChannel );
+			wholeBufferInfo.resize( this->nChannel );
 			
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				buffer[ii].reset( new CircularContainer<T>( this->bufferSizeSamples ) );
@@ -61,23 +61,22 @@ namespace openAFE {
 
 		/* Calls automatically Signal's destructor */
 		~TimeFrequencySignal() {
-			this->cfHz.clear();
-			this->buffer.reset();
-			this->lastChunkInfo.reset();
-			this->wholeBufferInfo.reset();			
+			this->buffer.clear();
+			this->lastChunkInfo.clear();
+			this->wholeBufferInfo.clear();			
 		}
 		
-		void appendChunk( T* inChunk, size_t dim ) {
+		void appendChunk( std::shared_ptr<twoCTypeBlock<T> > inChunk ) {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii )
-				buffer[ii]->push_chunk( inChunk, dim );
+				buffer[ii]->push_chunk( inChunk );
 		}
 		
-		void appendChunk( std::vector<std::shared_ptr<twoCTypeBlock<T> > >& inChunk ) {
+		void appendChunk( std::vector<std::shared_ptr<twoCTypeBlock<T> > > inChunk ) {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii )
 				buffer[ii]->push_chunk( inChunk[ii] );
 		}
 		
-		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getLastChunkAccesor() {
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > > getLastChunkAccesor() {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				this->buffer[ii]->calcLastChunk();
 				this->lastChunkInfo[ii]->setData( this->buffer[ii]->getLastChunkAccesor() );
@@ -85,7 +84,7 @@ namespace openAFE {
 			return this->lastChunkInfo;
 		}
 		
-		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getWholeBufferAccesor() {
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > > getWholeBufferAccesor() {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				this->buffer[ii]->calcWholeBuffer();
 				this->lastChunkInfo[ii]->setData( this->buffer[ii]->getWholeBufferAccesor() );

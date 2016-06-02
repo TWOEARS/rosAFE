@@ -1,7 +1,6 @@
 #include "acrosAFE.h"
 #include "rosAFE_c_types.h"
 
-#include <apf/parameter_map.h>
 #include <memory>
 
 #include "genom3_dataFiles.hpp"
@@ -37,22 +36,10 @@ startPreProc(const char *name, const char *upperDepName,
              genom_context self)
 {
   std::shared_ptr < InputProc > upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
-  
-  apf::parameter_map params;
-  params.set("pp_bRemoveDC", pp_bRemoveDC);
-  params.set("pp_cutoffHzDC", pp_cutoffHzDC);
-  params.set("pp_bPreEmphasis", pp_bPreEmphasis);
-  params.set("pp_coefPreEmphasis", pp_coefPreEmphasis);
-  params.set("pp_bNormalizeRMS", pp_bNormalizeRMS);
-  params.set("pp_intTimeSecRMS", pp_intTimeSecRMS);
-  params.set("pp_bLevelScaling", pp_bLevelScaling);
-  params.set("pp_bPreEmphasis", pp_bPreEmphasis);
-  params.set("pp_refSPLdB", pp_refSPLdB);
-  params.set("pp_bMiddleEarFiltering", pp_bMiddleEarFiltering);
-  params.set("pp_middleEarModel", pp_middleEarModel);
-  params.set("pp_bUnityComp", pp_bUnityComp);
-	  
-  std::shared_ptr < PreProc > preProcessor (new PreProc( name, upperDepProc->getFsOut(), infos->innerBufferSize_s, upperDepProc, params) );  
+    
+  std::shared_ptr < PreProc > preProcessor (new PreProc( name, upperDepProc->getFsOut(), infos->innerBufferSize_s, upperDepProc,
+  pp_bRemoveDC, pp_cutoffHzDC, pp_bPreEmphasis, pp_coefPreEmphasis, pp_bNormalizeRMS, pp_intTimeSecRMS, pp_bLevelScaling,
+  pp_refSPLdB, pp_bMiddleEarFiltering, pp_middleEarModel, pp_bUnityComp) );  
   
   // Adding this procesor to the ids
   ((*preProcessorsSt)->processorsAccessor).addProcessor( preProcessor );
@@ -68,7 +55,7 @@ startPreProc(const char *name, const char *upperDepName,
   return rosAFE_waitExec;
 }
 
-/** Codel waitExecPreProc of activity PreProc.
+/** Codel waitExec of activity PreProc.
  *
  * Triggered by rosAFE_waitExec.
  * Yields to rosAFE_pause_waitExec, rosAFE_exec, rosAFE_ether,
@@ -77,8 +64,8 @@ startPreProc(const char *name, const char *upperDepName,
  *        rosAFE_e_noSuchProcessor.
  */
 genom_event
-waitExecPreProc(const char *name, const char *upperDepName,
-                rosAFE_flagMap **newDataMapSt, genom_context self)
+waitExec(const char *name, const char *upperDepName,
+         rosAFE_flagMap **newDataMapSt, genom_context self)
 {
   // If there is no new data, we will wait
   int check = SM::checkFlag( name, upperDepName, newDataMapSt, self);
@@ -115,7 +102,7 @@ execPreProc(const char *name, const char *upperDepName,
   return rosAFE_waitRelease;
 }
 
-/** Codel waitReleasePreProc of activity PreProc.
+/** Codel waitRelease of activity PreProc.
  *
  * Triggered by rosAFE_waitRelease.
  * Yields to rosAFE_pause_waitRelease, rosAFE_release, rosAFE_stop.
@@ -123,8 +110,8 @@ execPreProc(const char *name, const char *upperDepName,
  *        rosAFE_e_noSuchProcessor.
  */
 genom_event
-waitReleasePreProc(const char *name, rosAFE_flagMap **flagMapSt,
-                   genom_context self)
+waitRelease(const char *name, rosAFE_flagMap **flagMapSt,
+            genom_context self)
 {
   /* Waiting for all childs */
   if ( ! SM::checkFlag( name, flagMapSt, self) )
