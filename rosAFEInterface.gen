@@ -6,5 +6,6 @@ interface rosAFEInterface {
 
     port out rosAFE::TimeDomainSignalPortStruct inputProcPort;
     port multiple out rosAFE::TimeDomainSignalPortStruct preProcPort;
+    port multiple out rosAFE::TimeFrequencySignalPortStruct gammatonePort;
 };
 

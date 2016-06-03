@@ -1,7 +1,7 @@
 #ifndef INPUTPROC_HPP
 #define INPUTPROC_HPP
 
-#define MAXCODABLEVALUE 2147483647;
+#define MAXCODABLEVALUE 2147483647
 
 #include <thread>
 
@@ -22,16 +22,20 @@ namespace openAFE {
 	class InputProc : public TDSProcessor<float> {
 					
 		private:
+			
+			bool in_doNormalize;
+			uint64_t in_normalizeValue;
 									
 			void process ( float* firstValue, size_t dim ) {
 				for ( unsigned int i = 0 ; i < dim ; ++i )
-					*( firstValue + i ) = *( firstValue + i ) / MAXCODABLEVALUE;
+					*( firstValue + i ) = *( firstValue + i ) / this->in_normalizeValue;
 			}
 
 		public:
 
-			InputProc (const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s) : TDSProcessor<float> (nameArg, fs, fs, bufferSize_s, _inputProc) {
-				
+			InputProc ( const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s, bool in_doNormalize = true, uint64_t in_normalizeValue = MAXCODABLEVALUE ) : TDSProcessor<float> (nameArg, fs, fs, bufferSize_s, _inputProc) {
+				this->in_doNormalize = in_doNormalize;
+				this->in_normalizeValue = in_normalizeValue;
 			}
 				
 			~InputProc () {	}
@@ -49,31 +53,33 @@ namespace openAFE {
 				
 				std::shared_ptr<twoCTypeBlock<float> > l_PMZ = leftPMZ->getLastChunkAccesor();
 				std::shared_ptr<twoCTypeBlock<float> > r_PMZ = rightPMZ->getLastChunkAccesor();
-					
-				// 0- Initialization
-				unsigned long dim1_l = l_PMZ->array1.second;
-				unsigned long dim2_l = l_PMZ->array2.second;
-				unsigned long dim1_r = r_PMZ->array1.second;
-				unsigned long dim2_r = r_PMZ->array2.second;
-							
-				float* firstValue1_l = l_PMZ->array1.first;
-				float* firstValue2_l = l_PMZ->array2.first;
-				float* firstValue1_r = r_PMZ->array1.first;
-				float* firstValue2_r = r_PMZ->array2.first;				
-					
-				if ( ( dim1_l > 0 ) && ( dim1_r > 0 ) ) {
-					std::thread leftThread( &InputProc::process, this, firstValue1_l, dim1_l );
-					std::thread rightThread( &InputProc::process, this, firstValue1_r, dim1_r );
-					
-					leftThread.join();                // pauses until left finishes
-					rightThread.join();               // pauses until right finishes
-				}
-				if ( ( dim2_l > 0 ) && ( dim2_r > 0 ) )	{
-					std::thread leftThread( &InputProc::process, this, firstValue2_l, dim2_l );
-					std::thread rightThread( &InputProc::process, this, firstValue2_r, dim2_r );
-					
-					leftThread.join();                // pauses until left finishes
-					rightThread.join();               // pauses until right finishes
+
+				if ( this-> in_doNormalize ) {
+					// 0- Initialization
+					unsigned long dim1_l = l_PMZ->array1.second;
+					unsigned long dim2_l = l_PMZ->array2.second;
+					unsigned long dim1_r = r_PMZ->array1.second;
+					unsigned long dim2_r = r_PMZ->array2.second;
+								
+					float* firstValue1_l = l_PMZ->array1.first;
+					float* firstValue2_l = l_PMZ->array2.first;
+					float* firstValue1_r = r_PMZ->array1.first;
+					float* firstValue2_r = r_PMZ->array2.first;				
+						
+					if ( ( dim1_l > 0 ) && ( dim1_r > 0 ) ) {
+						std::thread leftThread( &InputProc::process, this, firstValue1_l, dim1_l );
+						std::thread rightThread( &InputProc::process, this, firstValue1_r, dim1_r );
+						
+						leftThread.join();                // pauses until left finishes
+						rightThread.join();               // pauses until right finishes
+					}
+					if ( ( dim2_l > 0 ) && ( dim2_r > 0 ) )	{
+						std::thread leftThread( &InputProc::process, this, firstValue2_l, dim2_l );
+						std::thread rightThread( &InputProc::process, this, firstValue2_r, dim2_r );
+						
+						leftThread.join();                // pauses until left finishes
+						rightThread.join();               // pauses until right finishes
+					}
 				}			
 			}
 			
@@ -83,10 +89,20 @@ namespace openAFE {
 
 			/* Comapres informations and the current parameters of two processors */
 			bool operator==( InputProc& toCompare ) {
-				if ( this->compareBase( toCompare ) )
+				if ( this->compareBase( toCompare ) ) {
+					if  ( ( this->get_in_doNormalize() == toCompare.get_in_doNormalize() ) and
+					    ( this->get_in_normalizeValue() == toCompare.get_in_normalizeValue() ) )			
 					return true;
-				return false;
+				} return false;
 			}
+			
+			const bool get_in_doNormalize() {return this->in_doNormalize;}
+			uint64_t get_in_normalizeValue() {return this->in_normalizeValue;}
+
+			// setters			
+			void set_in_doNormalize(const bool arg) {this->in_doNormalize=arg;}
+			void set_in_normalizeValue(const uint64_t arg) {this->in_normalizeValue=arg;}			
+	
 			 
 	}; /* class InputProc */
 }; /* namespace openAFE */

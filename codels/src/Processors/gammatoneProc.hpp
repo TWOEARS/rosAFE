@@ -178,7 +178,6 @@ namespace openAFE {
 			}
 			
 			void processChunk ( ) {
-				std::cout << "Process chunk is called." << std::endl;
 				this->setNFR ( this->upperProcPtr->getNFR() );
 				
 				// Appending the chunk to process (the processing must be done on the PMZ)
@@ -194,7 +193,6 @@ namespace openAFE {
 				rightThread.join();               // pauses until right finishes*/
 				this->processLR( this->leftFilters, l_PMZ );
 				this->processLR( this->rightFilters, r_PMZ );
-				std::cout << "Process chunk is ended." << std::endl;				
 			}
 			
 			void prepareForProcessing () {

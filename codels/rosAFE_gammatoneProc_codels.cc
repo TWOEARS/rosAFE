@@ -26,9 +26,11 @@ startGammatoneProc(const char *name, const char *upperDepName,
                    rosAFE_flagMap **flagMapSt,
                    rosAFE_flagMap **newDataMapSt,
                    rosAFE_preProcessors **preProcessorsSt,
-                   const rosAFE_infos *infos, const char *fb_type,
-                   float fb_lowFreqHz, float fb_highFreqHz,
-                   float fb_nERBs, uint32_t fb_nChannels,
+                   const rosAFE_infos *infos,
+                   const rosAFE_gammatonePort *gammatonePort,
+                   const char *fb_type, float fb_lowFreqHz,
+                   float fb_highFreqHz, float fb_nERBs,
+                   uint32_t fb_nChannels,
                    const sequence_float *fb_cfHz, uint32_t fb_nGamma,
                    float fb_bwERBs, genom_context self)
 {
@@ -44,7 +46,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
   // Initialization of the output port
-  // PORT::initGammatoneProcPort( name, preProcPort, infos->sampleRate, infos->bufferSize_s, self );
+  PORT::initGammatonePort( name, gammatonePort, infos->sampleRate, infos->bufferSize_s, gammatoneProcessor->get_fb_nChannels(), self );
   
   upperDepProc.reset();
   gammatoneProcessor.reset();
@@ -102,12 +104,13 @@ execGammatoneProc(const char *name, const char *upperDepName,
 genom_event
 releaseGammatoneProc(const char *name, rosAFE_ids *ids,
                      rosAFE_flagMap **newDataMapSt,
+                     const rosAFE_gammatonePort *gammatonePort,
                      genom_context self)
 {
   std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( name );
   thisProcessor->releaseChunk( );
   
-  // PORT::publishPreProcPort ( name, preProcPort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(float), thisProcessor->getNFR(), self );
+  PORT::publishGammatonePort ( name, gammatonePort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(float), thisProcessor->getNFR(), self );
 
   // Informing all the potential childs to say that this is a new chunk.
   SM::riseFlag ( name, newDataMapSt, self );

@@ -87,7 +87,7 @@ namespace openAFE {
 		std::vector<std::shared_ptr<twoCTypeBlock<T> > > getWholeBufferAccesor() {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				this->buffer[ii]->calcWholeBuffer();
-				this->lastChunkInfo[ii]->setData( this->buffer[ii]->getWholeBufferAccesor() );
+				this->wholeBufferInfo[ii]->setData( this->buffer[ii]->getWholeBufferAccesor() );
 			}
 			return this->wholeBufferInfo;
 		}

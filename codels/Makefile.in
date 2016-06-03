@@ -131,8 +131,7 @@ am_librosAFE_codels_la_OBJECTS = librosAFE_codels_la-rosAFE_codels.lo \
 	librosAFE_codels_la-rosAFE_preProc_codels.lo \
 	librosAFE_codels_la-rosAFE_gammatoneProc_codels.lo \
 	librosAFE_codels_la-stateMachine.lo \
-	librosAFE_codels_la-Ports.lo librosAFE_codels_la-bwCoef.lo \
-	librosAFE_codels_la-bwIIR.lo
+	librosAFE_codels_la-Ports.lo
 librosAFE_codels_la_OBJECTS = $(am_librosAFE_codels_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -374,11 +373,7 @@ lib_LTLIBRARIES = librosAFE_codels.la
 librosAFE_codels_la_SOURCES = rosAFE_c_types.h rosAFE_codels.cc \
 	rosAFE_init_codels.cc rosAFE_input_codels.cc \
 	rosAFE_preProc_codels.cc rosAFE_gammatoneProc_codels.cc \
-	stateMachine.hpp stateMachine.cpp Ports.hpp Ports.cpp \
-	src/Filters/bwFilter/bwFilter.hpp \
-	src/Filters/bwFilter/bwCoef.hpp \
-	src/Filters/bwFilter/bwCoef.cpp src/Filters/bwFilter/bwIIR.hpp \
-	src/Filters/bwFilter/bwIIR.cpp
+	stateMachine.hpp stateMachine.cpp Ports.hpp Ports.cpp
 librosAFE_codels_la_CPPFLAGS = $(requires_CFLAGS) -Wall -g -O \
 	-std=c++11 -DHAVE_INLINE -lpthread -D_REENTRANT -ljack \
 	-lsndfile -lfftw3f -Wunused-but-set-variable
@@ -469,8 +464,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-Ports.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-bwCoef.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-bwIIR.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_gammatoneProc_codels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librosAFE_codels_la-rosAFE_init_codels.Plo@am__quote@
@@ -547,20 +540,6 @@ librosAFE_codels_la-Ports.lo: Ports.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='Ports.cpp' object='librosAFE_codels_la-Ports.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-Ports.lo `test -f 'Ports.cpp' || echo '$(srcdir)/'`Ports.cpp
-
-librosAFE_codels_la-bwCoef.lo: src/Filters/bwFilter/bwCoef.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librosAFE_codels_la-bwCoef.lo -MD -MP -MF $(DEPDIR)/librosAFE_codels_la-bwCoef.Tpo -c -o librosAFE_codels_la-bwCoef.lo `test -f 'src/Filters/bwFilter/bwCoef.cpp' || echo '$(srcdir)/'`src/Filters/bwFilter/bwCoef.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librosAFE_codels_la-bwCoef.Tpo $(DEPDIR)/librosAFE_codels_la-bwCoef.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/Filters/bwFilter/bwCoef.cpp' object='librosAFE_codels_la-bwCoef.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-bwCoef.lo `test -f 'src/Filters/bwFilter/bwCoef.cpp' || echo '$(srcdir)/'`src/Filters/bwFilter/bwCoef.cpp
-
-librosAFE_codels_la-bwIIR.lo: src/Filters/bwFilter/bwIIR.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librosAFE_codels_la-bwIIR.lo -MD -MP -MF $(DEPDIR)/librosAFE_codels_la-bwIIR.Tpo -c -o librosAFE_codels_la-bwIIR.lo `test -f 'src/Filters/bwFilter/bwIIR.cpp' || echo '$(srcdir)/'`src/Filters/bwFilter/bwIIR.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librosAFE_codels_la-bwIIR.Tpo $(DEPDIR)/librosAFE_codels_la-bwIIR.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/Filters/bwFilter/bwIIR.cpp' object='librosAFE_codels_la-bwIIR.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librosAFE_codels_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librosAFE_codels_la-bwIIR.lo `test -f 'src/Filters/bwFilter/bwIIR.cpp' || echo '$(srcdir)/'`src/Filters/bwFilter/bwIIR.cpp
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

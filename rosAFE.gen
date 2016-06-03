@@ -129,13 +129,13 @@ component rosAFE {
         task        gammatoneProc;
 	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
 
-        codel <start>   	startGammatoneProc ( local in name, local in upperDepName, local in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, inout preProcessorsSt, in infos, /* Arguments Of processor*/ local in fb_type, local in fb_lowFreqHz, local in fb_highFreqHz, local in fb_nERBs, local in fb_nChannels, local in fb_cfHz, local in fb_nGamma, local in fb_bwERBs ) yield waitExec, stop;
+        codel <start>   	startGammatoneProc ( local in name, local in upperDepName, local in fsOut, inout gammatoneProcessorsSt, inout flagMapSt, inout newDataMapSt, inout preProcessorsSt, in infos, port out gammatonePort, /* Arguments Of processor*/ local in fb_type, local in fb_lowFreqHz, local in fb_highFreqHz, local in fb_nERBs, local in fb_nChannels, local in fb_cfHz, local in fb_nGamma, local in fb_bwERBs ) yield waitExec, stop;
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
         codel <exec>    	execGammatoneProc ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
         codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	releaseGammatoneProc ( local in name, inout ::ids, out newDataMapSt ) yield pause::waitExec, stop;
+        codel <release>    	releaseGammatoneProc ( local in name, inout ::ids, out newDataMapSt, port out gammatonePort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
         codel <delete>    	deleteGammatoneProc( local in name, inout gammatoneProcessorsSt ) yield ether;

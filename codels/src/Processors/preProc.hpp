@@ -7,7 +7,7 @@
 #include "TDSProcessor.hpp"
 #include "inputProc.hpp"	
 
-#include "../Filters/bwFilter/bwFilter.hpp"
+#include "../Filters/bwFilter.hpp"
 #include "../Filters/GenericFilter.hpp"
 
 #include "../tools/mathTools.hpp"
