@@ -1,0 +1,86 @@
+#ifndef TFSPROCESSOR_HPP
+#define TFSPROCESSOR_HPP
+
+#include <thread>
+
+#include "Processor.hpp"
+#include "../Signals/TimeFrequencySignal.hpp"
+
+namespace openAFE {
+
+   template<typename T = float>
+   class TFSProcessor  : public Processor {
+	   
+	   protected:
+	               			
+			std::shared_ptr <TimeFrequencySignal<T> > leftOutput, rightOutput;
+			std::shared_ptr <TimeFrequencySignal<T> > leftPMZ, rightPMZ;
+			
+		public:
+		
+			TFSProcessor (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, size_t nChannel, std::string argScaling, procType typeArg) : Processor (fsIn, fsOut, nameArg, typeArg) {
+
+				/* Creating the output signals */
+				if ( this->hasTwoOutputs == true ) {
+					leftOutput.reset( new TimeFrequencySignal<T>(fsOut, bufferSize_s, nChannel, nameArg, argScaling, _left) );
+					rightOutput.reset( new TimeFrequencySignal<T>(fsOut, bufferSize_s, nChannel, nameArg, argScaling, _right) );
+							
+					/* Creating the PMZ signals */
+					leftPMZ.reset( new TimeFrequencySignal<T>(fsOut, bufferSize_s, nChannel, "Left_PMZ", argScaling, _left) );
+					rightPMZ.reset( new TimeFrequencySignal<T>(fsOut, bufferSize_s, nChannel, "Right_PMZ", argScaling, _right) );
+				} else {
+					leftOutput.reset( new TimeFrequencySignal<T>(fsOut, bufferSize_s, nChannel, nameArg, argScaling, _mono ) );
+							
+					/* Creating the PMZ signals */
+					leftPMZ.reset( new TimeFrequencySignal<T>(fsOut, bufferSize_s, nChannel, "Mono_PMZ", argScaling, _mono ) );					
+				}
+			}
+			
+			~TFSProcessor() {
+				
+				leftOutput.reset();
+				rightOutput.reset();
+				leftPMZ.reset();
+				rightPMZ.reset();
+			}
+			
+			void reset() {
+				leftOutput->reset();
+				rightOutput->reset();
+				leftPMZ->reset();
+				rightPMZ->reset();
+			}					
+
+			std::vector<std::shared_ptr<twoCTypeBlock<T> > > getLeftLastChunkAccessor() {
+				return this->leftOutput->getLastChunkAccesor();
+			}
+
+			std::vector<std::shared_ptr<twoCTypeBlock<T> > > getRightLastChunkAccessor() {
+				return this->rightOutput->getLastChunkAccesor();
+			}
+
+			std::vector<std::shared_ptr<twoCTypeBlock<T> > > getLeftWholeBufferAccessor() {
+				return this->leftOutput->getWholeBufferAccesor();
+			}
+
+			std::vector<std::shared_ptr<twoCTypeBlock<T> > > getRightWholeBufferAccessor() {
+				return this->rightOutput->getWholeBufferAccesor();
+			}
+
+			void releaseChunk () {
+				if ( this->hasTwoOutputs ) {						
+					//std::thread leftAppendThread( &TimeFrequencySignal<T>::appendChunk, this->leftOutput, leftPMZ->getLastChunkAccesor() );
+					//std::thread rightAppendThread( &TimeFrequencySignal<T>::appendChunk, this->rightOutput, rightPMZ->getLastChunkAccesor() );
+						
+					//leftAppendThread.join();                // pauses until left finishes
+					//rightAppendThread.join();               // pauses until right finishes
+					this->leftOutput->appendChunk( leftPMZ->getLastChunkAccesor() );
+					this->rightOutput->appendChunk( rightPMZ->getLastChunkAccesor() );
+				} else this->leftOutput->appendChunk( leftPMZ->getLastChunkAccesor() );	
+			}
+
+			
+	};  /* TFSProcessor */
+
+}; /* namespace openAFE */			
+#endif /* TDSPROCESSOR_HPP */			
