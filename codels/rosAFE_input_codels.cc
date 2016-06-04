@@ -91,7 +91,7 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   uint32_t tmp = ceil( ( nFramesPerBlock * 4 ) / infos->sampleRate );
   infos->innerBufferSize_s = ( tmp < 1 ? 1 : tmp );
     
-  std::shared_ptr< InputProc > inputP ( new InputProc( name, infos->sampleRate, infos->innerBufferSize_s ) );
+  std::shared_ptr< InputProc > inputP ( new InputProc( name, infos->sampleRate, infos->innerBufferSize_s, true ) );
   
   /* Adding this procesor to the ids */
   ((*inputProcessorsSt)->processorsAccessor).addProcessor( inputP );

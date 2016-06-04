@@ -134,7 +134,8 @@ namespace openAFE {
 				freshData = this->getCapacity();
 		}
 
-		void push_chunk(twoCTypeBlockPtr inChunk) {		
+		void push_chunk(twoCTypeBlockPtr inChunk) {	
+			
 			/* The first array */
 			if ( inChunk->array1.second > 0 )
 				this->push_chunk( inChunk->array1.first, inChunk->array1.second, false );

@@ -51,7 +51,7 @@ namespace openAFE {
 				rightPMZ->reset();
 			}					
 
-			std::vector<std::shared_ptr<twoCTypeBlock<T> > > getLeftLastChunkAccessor() {
+			std::vector<std::shared_ptr<twoCTypeBlock<T> > > getLeftLastChunkAccessor() { 
 				return this->leftOutput->getLastChunkAccesor();
 			}
 

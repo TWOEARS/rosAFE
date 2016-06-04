@@ -19,6 +19,7 @@ namespace openAFE {
 		 *   erb  = erbscaled output vector
 		 * 
 		 */
+			 
 		template<typename T = float>
 		T freq2erb( T freq )  {
 			return ERB_Q * log ( 1 + freq / ( ERB_L * ERB_Q ));

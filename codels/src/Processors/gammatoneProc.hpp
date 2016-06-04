@@ -34,7 +34,7 @@ namespace openAFE {
 			float fb_bwERBs;        							    				// Bandwidth of the filters in ERBs
 			float fb_lowFreqHz;       							   	 				// Lowest center frequency used at instantiation
 			float fb_highFreqHz;      							    				// Highest center frequency used at instantiation
-			float fb_nChannels;
+			uint32_t fb_nChannels;
 
             typedef std::shared_ptr < GammatoneFilter > gammatoneFilterPtr;
             typedef std::vector <gammatoneFilterPtr > filterPtrVector;
@@ -96,10 +96,6 @@ namespace openAFE {
 		
 						this->cfHz.resize( ERBS.size() );
 						erb2freq( ERBS.data(), ERBS.size(), this->cfHz.data() );    // Convert to Hz
-						
-						for ( size_t ii = 0 ; ii < this->cfHz.size() ; ++ii )
-							std::cout << this->cfHz[ii] << " ";
-						std::cout << std::endl;
 
 						this->fb_nChannels = this->cfHz.size();														
 					}
@@ -124,17 +120,16 @@ namespace openAFE {
 							
 				float* firstValue1 = oneChannel->array1.first;
 				float* firstValue2 = oneChannel->array2.first;
-				
+								
 				std::vector< std::complex<float > > tmpComplex;
 				if ( dim1 > 0 ) {
-					tmpComplex.resize(dim1);
+					tmpComplex.resize(dim1, 1);
 					oneFilter->exec( firstValue1, dim1, tmpComplex.data() );
 					for ( size_t ii = 0 ; ii < dim1 ; ++ii )
 						*( firstValue1 + ii ) = tmpComplex[ii].real() * 2;
 				}
 				if ( dim2 > 0 )	{
-					tmpComplex.clear();
-					tmpComplex.resize(dim2);
+					tmpComplex.resize(dim2, 1);
 					oneFilter->exec( firstValue2, dim2, tmpComplex.data() );
 					for ( size_t ii = 0 ; ii < dim2 ; ++ii )
 						*( firstValue2 + ii ) = tmpComplex[ii].real() * 2;					

@@ -31,8 +31,8 @@ namespace openAFE {
 			*/
 			
             // One ERB value in Hz at this center frequency
-            float ERBHz;
-            freq2erb ( &cf, 1, &ERBHz);
+           // float ERBHz = freq2erb ( cf );
+            float ERBHz = 24.7 + 0.108 * cf;
 
             // Bandwidth of the filter in Hertz
             float bwHz = bwERB * ERBHz;
@@ -66,10 +66,14 @@ namespace openAFE {
 			//   2- Specific properties
 			this->CenterFrequency = cf;     		
 			this->FilterOrder = n;
-			this->delay = 0; // delaySpl
+			this->delay = 0; // delaySpl		
 		}
 		
 		~GammatoneFilter() {}
+		
+		const float getCenterFrequency() {
+			return this->CenterFrequency;
+		}
 
 	};
 };

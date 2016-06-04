@@ -29,7 +29,7 @@ namespace openAFE {
 			typedef std::shared_ptr<twoCTypeBlock<T> > twoCTypeBlockPtr;
 			std::pair<T*, size_t> array1, array2;
 
-			uint32_t getSize () {
+			size_t getSize () {
 				return array1.second + array2.second;
 			}
 			

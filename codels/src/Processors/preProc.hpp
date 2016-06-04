@@ -103,14 +103,14 @@ namespace openAFE {
 
 							// Mean square of input over the time constant
 							for ( unsigned int i = 0 ; i < minVal_l ; ++i ) {
-								sum_l =+ pow( *(firstValue_l + i ) , 2);
-								sum_r =+ pow( *(firstValue_r + i ) , 2);
+								sum_l += pow( *(firstValue_l + i ) , 2);
+								sum_r += pow( *(firstValue_r + i ) , 2);
 							}
 								
 							// Initial filter states
 							s0_l = exp ( -1 / intArg ) * ( sum_l / minVal_l );							
 							s0_r = exp ( -1 / intArg ) * ( sum_r / minVal_r );
-								
+							
 							this->agcFilter_l->reset( &s0_l, 1 );
 							this->agcFilter_r->reset( &s0_r, 1 );
 						}
@@ -141,9 +141,9 @@ namespace openAFE {
 					}
 					
 					// 4- Level Scaling
-					if ( this->pp_bUnityComp ) {
+					if ( this->pp_bLevelScaling ) {
 						
-						double current_dboffset = 100; //dbspl(1);
+						double current_dboffset = 100; // dbspl(1) = 100;
 						double dbVar = pow( 10 , ( current_dboffset - this->pp_refSPLdB ) / 20 );
 
 						for ( unsigned int i = 0 ; i < dim_l ; ++i ) {
@@ -218,9 +218,9 @@ namespace openAFE {
 			}
 			
 			void processChunk () {
-    					
+	
 					this->setNFR ( upperProcPtr->getNFR() ); /* for rosAFE */
-											
+
 					// Appending the chunk to process (the processing must be done on the PMZ)
 					leftPMZ->appendChunk( this->upperProcPtr->getLeftLastChunkAccessor() );
 					rightPMZ->appendChunk( this->upperProcPtr->getRightLastChunkAccessor() );
@@ -262,7 +262,7 @@ namespace openAFE {
 				if ( this->pp_bPreEmphasis ) {
 					
 					std::vector<float> vectB (2,1);
-					vectB[1] = -1 * abs( this->pp_coefPreEmphasis );
+					vectB[1] = -1 * fabs( this->pp_coefPreEmphasis );
 					std::vector<float> vectA (1,1);
 					
 					this->preEmphFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
