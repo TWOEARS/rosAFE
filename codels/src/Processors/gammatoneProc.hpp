@@ -22,18 +22,18 @@ namespace openAFE {
 		_drnlFilterBank
 	};
 	
-	class GammatoneProc : public TFSProcessor<float > {
+	class GammatoneProc : public TFSProcessor<double > {
 
 		private:
 
 			filterBankType fb_type;
 
-			std::vector<float> cfHz;            									// Filters center frequencies
-			float fb_nERBs;          												// Distance between neighboring filters in ERBs
+			std::vector<double> cfHz;            									// Filters center frequencies
+			double fb_nERBs;          												// Distance between neighboring filters in ERBs
 			uint32_t fb_nGamma;       							    				// Gammatone order of the filters
-			float fb_bwERBs;        							    				// Bandwidth of the filters in ERBs
-			float fb_lowFreqHz;       							   	 				// Lowest center frequency used at instantiation
-			float fb_highFreqHz;      							    				// Highest center frequency used at instantiation
+			double fb_bwERBs;        							    				// Bandwidth of the filters in ERBs
+			double fb_lowFreqHz;       							   	 				// Lowest center frequency used at instantiation
+			double fb_highFreqHz;      							    				// Highest center frequency used at instantiation
 			uint32_t fb_nChannels;
 
             typedef std::shared_ptr < GammatoneFilter > gammatoneFilterPtr;
@@ -42,8 +42,8 @@ namespace openAFE {
 			      
 			std::shared_ptr<PreProc > upperProcPtr;
 			      			
-            size_t verifyParameters( filterBankType fb_type, float fb_lowFreqHz, float fb_highFreqHz, float fb_nERBs,
-									 uint32_t fb_nChannels, float* fb_cfHz, size_t fb_cfHz_length, uint32_t fb_nGamma, float fb_bwERBs ) {
+            size_t verifyParameters( filterBankType fb_type, double fb_lowFreqHz, double fb_highFreqHz, double fb_nERBs,
+									 uint32_t fb_nChannels, double* fb_cfHz, size_t fb_cfHz_length, uint32_t fb_nGamma, double fb_bwERBs ) {
 				
 				this->fb_type = fb_type;
 				this->fb_lowFreqHz = fb_lowFreqHz;
@@ -76,7 +76,7 @@ namespace openAFE {
 						 */ 
 					   
 						// Build a vector of center ERB frequencies
-						std::vector<float> ERBS = linspace( freq2erb(this->fb_lowFreqHz),
+						std::vector<double> ERBS = linspace( freq2erb(this->fb_lowFreqHz),
 															freq2erb(this->fb_highFreqHz),
 															this->fb_nChannels ); 
 						this->cfHz.resize( ERBS.size() );
@@ -90,8 +90,8 @@ namespace openAFE {
 						 */
 						
 						// Build vector of center ERB frequencies
-						std::vector<float> ERBS;
-						for ( float tmp = freq2erb( this->fb_lowFreqHz ) ; tmp < freq2erb( this->fb_highFreqHz ) ; tmp += this->fb_nERBs )
+						std::vector<double> ERBS;
+						for ( double tmp = freq2erb( this->fb_lowFreqHz ) ; tmp < freq2erb( this->fb_highFreqHz ) ; tmp += this->fb_nERBs )
 							ERBS.push_back( tmp );
 		
 						this->cfHz.resize( ERBS.size() );
@@ -106,37 +106,45 @@ namespace openAFE {
 				
 				const uint32_t fs = this->getFsIn();
 				filters.clear();
+				filters.resize(cfHz.size());
 								
 				for ( unsigned int ii = 0 ; ii < this->cfHz.size() ; ++ii ) {
 					gammatoneFilterPtr thisFilter( new GammatoneFilter( this->cfHz[ii], fs, this->fb_nGamma, this->fb_bwERBs ) );
-					filters.push_back ( thisFilter );
+					filters[ii] = thisFilter ;
 				}
 			}
 
-			void processChannel ( gammatoneFilterPtr oneFilter, std::shared_ptr<twoCTypeBlock<float> > oneChannel ) {
+			void processChannel ( gammatoneFilterPtr oneFilter, std::shared_ptr<twoCTypeBlock<double> > oneChannel ) {
 				// 0- Initialization
 				size_t dim1 = oneChannel->array1.second;
 				size_t dim2 = oneChannel->array2.second;
 							
-				float* firstValue1 = oneChannel->array1.first;
-				float* firstValue2 = oneChannel->array2.first;
-								
-				std::vector< std::complex<float > > tmpComplex;
+				double* firstValue1 = oneChannel->array1.first;
+				double* firstValue2 = oneChannel->array2.first;
+													
+				std::vector< std::complex<double > > tmpComplex;
 				if ( dim1 > 0 ) {
-					tmpComplex.resize(dim1, 1);
-					oneFilter->exec( firstValue1, dim1, tmpComplex.data() );
+					tmpComplex.resize(dim1, 0);
+					oneFilter->exec( firstValue1, dim1, tmpComplex.data() );							
 					for ( size_t ii = 0 ; ii < dim1 ; ++ii )
 						*( firstValue1 + ii ) = tmpComplex[ii].real() * 2;
 				}
 				if ( dim2 > 0 )	{
-					tmpComplex.resize(dim2, 1);
+					tmpComplex.resize(dim2, 0);
 					oneFilter->exec( firstValue2, dim2, tmpComplex.data() );
 					for ( size_t ii = 0 ; ii < dim2 ; ++ii )
-						*( firstValue2 + ii ) = tmpComplex[ii].real() * 2;					
+						*( firstValue2 + ii ) = tmpComplex[ii].real() * 2;	
 				}
+
+			/*	if ( oneFilter->getCenterFrequency() < 81 ) {
+						std::cout << oneFilter->getCenterFrequency() << std::endl;
+						for ( size_t iix = 0 ; iix < oneFilter->getStates().size() ; ++iix )
+							std::cout << oneFilter->getStates()[iix] << ", ";	
+						std::cout << std::endl;
+				}*/
 			}
 
-			void processLR ( filterPtrVector& filters, std::vector<std::shared_ptr<twoCTypeBlock<float> > > PMZ ) {
+			void processLR ( filterPtrVector& filters, std::vector<std::shared_ptr<twoCTypeBlock<double> > > PMZ ) {
 				std::vector<std::thread> threads;
 				  for ( size_t ii = 0 ; ii < this->cfHz.size() ; ++ii )
 					threads.push_back(std::thread( &GammatoneProc::processChannel, this, filters[ii], PMZ[ii] ));
@@ -150,15 +158,15 @@ namespace openAFE {
 		
 			GammatoneProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, std::shared_ptr<PreProc > upperProcPtr,
 																																						filterBankType fb_type = _gammatoneFilterBank,
-																																						float fb_lowFreqHz = 80,
-																																						float fb_highFreqHz = 8000,
-																																						float fb_nERBs = 1,
+																																						double fb_lowFreqHz = 80,
+																																						double fb_highFreqHz = 8000,
+																																						double fb_nERBs = 1,
 																																						uint32_t fb_nChannels = 0,		
-																																						float* fb_cfHz = nullptr,		
+																																						double* fb_cfHz = nullptr,		
 																																						size_t fb_cfHz_length = 0,		
 																																						uint32_t fb_nGamma = 4,
-																																						float fb_bwERBs = 1.0180
-						  ) : TFSProcessor<float > (nameArg, fsIn, fsOut, bufferSize_s, verifyParameters( fb_type, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels,		
+																																						double fb_bwERBs = 1.0180
+						  ) : TFSProcessor<double > (nameArg, fsIn, fsOut, bufferSize_s, verifyParameters( fb_type, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels,		
 																										 fb_cfHz, fb_cfHz_length, fb_nGamma, fb_bwERBs), "magnitude", _gammatone) {
 																											 
 				this->verifyParameters( fb_type, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels, fb_cfHz, fb_cfHz_length, fb_nGamma, fb_bwERBs);
@@ -178,8 +186,8 @@ namespace openAFE {
 				// Appending the chunk to process (the processing must be done on the PMZ)
 				leftPMZ->appendChunk( this->upperProcPtr->getLeftLastChunkAccessor() );
 				rightPMZ->appendChunk( this->upperProcPtr->getRightLastChunkAccessor() );
-				std::vector<std::shared_ptr<twoCTypeBlock<float> > > l_PMZ = leftPMZ->getLastChunkAccesor();
-				std::vector<std::shared_ptr<twoCTypeBlock<float> > > r_PMZ = rightPMZ->getLastChunkAccesor();
+				std::vector<std::shared_ptr<twoCTypeBlock<double> > > l_PMZ = leftPMZ->getLastChunkAccesor();
+				std::vector<std::shared_ptr<twoCTypeBlock<double> > > r_PMZ = rightPMZ->getLastChunkAccesor();
 				
 			/*	std::thread leftThread( &GammatoneProc::processLR, this->leftFilters, l_PMZ );
 				std::thread rightThread( &GammatoneProc::processLR, this->rightFilters, r_PMZ );
@@ -212,17 +220,17 @@ namespace openAFE {
 
 			// getters
 			const filterBankType get_fb_type() {return this->fb_type;}
-			const float get_fb_lowFreqHz() {return this->fb_lowFreqHz;}
-			const float get_fb_highFreqHz() {return this->fb_highFreqHz;}
-			const float get_fb_nERBs() {return this->fb_nERBs;}
+			const double get_fb_lowFreqHz() {return this->fb_lowFreqHz;}
+			const double get_fb_highFreqHz() {return this->fb_highFreqHz;}
+			const double get_fb_nERBs() {return this->fb_nERBs;}
 			const uint32_t get_fb_nChannels() {return this->fb_nChannels;}
 			const uint32_t get_fb_nGamma() {return this->fb_nGamma;}
-			const float get_fb_bwERBs() {return this->fb_bwERBs;}
-			const float* get_fb_cfHz() {return this->cfHz.data();}
+			const double get_fb_bwERBs() {return this->fb_bwERBs;}
+			const double* get_fb_cfHz() {return this->cfHz.data();}
 
 			// setters
 			void set_fb_nGamma(const uint32_t arg) {this->fb_nGamma = arg; this->prepareForProcessing ();}
-			void set_fb_bwERBs(const float arg) {this->fb_bwERBs = arg; this->prepareForProcessing ();}
+			void set_fb_bwERBs(const double arg) {this->fb_bwERBs = arg; this->prepareForProcessing ();}
 
 	}; /* class GammatoneProc */
 }; /* namespace openAFE */

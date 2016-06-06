@@ -8,7 +8,7 @@
 
 namespace openAFE {
 
-   template<typename T = float>
+   template<typename T = double>
    class TFSProcessor  : public Processor {
 	   
 	   protected:

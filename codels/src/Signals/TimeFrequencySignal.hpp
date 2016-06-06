@@ -16,7 +16,7 @@
 
 namespace openAFE {
 	
-	template<typename T>	
+	template<typename T = double>	
 	class TimeFrequencySignal : public Signal {
 	
 	private:
@@ -54,8 +54,8 @@ namespace openAFE {
 			
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				buffer[ii].reset( new CircularContainer<T>( this->bufferSizeSamples ) );
-				lastChunkInfo[ii].reset( new twoCTypeBlock<float> );
-				wholeBufferInfo[ii].reset( new twoCTypeBlock<float> );
+				lastChunkInfo[ii].reset( new twoCTypeBlock<T> );
+				wholeBufferInfo[ii].reset( new twoCTypeBlock<T> );
 			}
 		}
 

@@ -195,18 +195,9 @@
 				
 
 	genom_event
-	PORT::publishGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, std::vector<std::shared_ptr<twoCTypeBlock<float> > > left,
-						std::vector<std::shared_ptr<twoCTypeBlock<float> > > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
-							
-		for ( size_t iii = 0 ; iii < right.size() ; ++iii) {
-			std::cout << "Channel : " << iii <<  std::endl;	
-			for ( unsigned int i = 0 ; i < right[iii]->array1.second ; i++ )
-				std::cout << *( right[iii]->array1.first + i ) << " ";
-			for ( unsigned int i = 0 ; i < right[iii]->array2.second ; i++ )
-				std::cout << *( right[iii]->array2.first + i ) << " ";
-			std::cout << std::endl;
-		}
-							
+	PORT::publishGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, std::vector<twoCTypeBlockPtr > left,
+						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
+											
 		rosAFE_TimeFrequencySignalPortStruct *thisPort;
 					
 		thisPort = gammatonePort->data( name, self );

@@ -23,12 +23,12 @@
 
 namespace openAFE {
 
-	class PreProc : public TDSProcessor<float> {
+	class PreProc : public TDSProcessor<double> {
 
 		private:
 			
-			typedef std::shared_ptr< bwFilter<float> > bwFilterPtr;
-			typedef std::shared_ptr< GenericFilter<float, float, float, float> > genericFilterPtr;
+			typedef std::shared_ptr< bwFilter<double> > bwFilterPtr;
+			typedef std::shared_ptr< GenericFilter<double, double, double, double> > genericFilterPtr;
 			
 			double meFilterPeakdB;
 
@@ -48,13 +48,13 @@ namespace openAFE {
 			std::shared_ptr<InputProc > upperProcPtr;
 			
 			bool pp_bRemoveDC;
-			float pp_cutoffHzDC;
+			double pp_cutoffHzDC;
 			bool pp_bPreEmphasis;
-			float pp_coefPreEmphasis;
+			double pp_coefPreEmphasis;
 			bool pp_bNormalizeRMS;
-			float pp_intTimeSecRMS;
+			double pp_intTimeSecRMS;
 			bool pp_bLevelScaling;
-			float pp_refSPLdB;
+			double pp_refSPLdB;
 			bool pp_bMiddleEarFiltering;
 			std::string pp_middleEarModel;
 			bool pp_bUnityComp;			
@@ -68,12 +68,12 @@ namespace openAFE {
 			}
 						
 			// Actual Processing
-			void process ( float* firstValue_l, size_t dim_l, float* firstValue_r, size_t dim_r ) {
+			void process ( double* firstValue_l, size_t dim_l, double* firstValue_r, size_t dim_r ) {
 			
 					// 1- DC-removal filter					
 					if ( this->pp_bRemoveDC ) {
-						std::thread leftThread1( &bwFilter<float>::filterChunk, this->dcFilter_l, firstValue_l, firstValue_l + dim_l , firstValue_l );
-						std::thread rightThread1( &bwFilter<float>::filterChunk, this->dcFilter_r, firstValue_r, firstValue_r + dim_r , firstValue_r );
+						std::thread leftThread1( &bwFilter<double>::filterChunk, this->dcFilter_l, firstValue_l, firstValue_l + dim_l , firstValue_l );
+						std::thread rightThread1( &bwFilter<double>::filterChunk, this->dcFilter_r, firstValue_r, firstValue_r + dim_r , firstValue_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
@@ -81,8 +81,8 @@ namespace openAFE {
 
 					// 2- Pre-whitening
 					if ( this->pp_bPreEmphasis ) {
-						std::thread leftThread1( &GenericFilter<float,float, float, float>::exec, this->preEmphFilter_l, firstValue_l, dim_l , firstValue_l );
-						std::thread rightThread1( &GenericFilter<float,float, float, float>::exec, this->preEmphFilter_r, firstValue_r, dim_r , firstValue_r );
+						std::thread leftThread1( &GenericFilter<double,double, double, double>::exec, this->preEmphFilter_l, firstValue_l, dim_l , firstValue_l );
+						std::thread rightThread1( &GenericFilter<double,double, double, double>::exec, this->preEmphFilter_r, firstValue_r, dim_r , firstValue_r );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes		
@@ -94,8 +94,8 @@ namespace openAFE {
 						// Initialize the filter states if empty
 						if ( !( agcFilter_l->isInitialized() ) ) {
 
-							float intArg = this->pp_intTimeSecRMS * this->getFsIn();
-							float sum_l = 0, sum_r = 0, s0_l, s0_r;
+							double intArg = this->pp_intTimeSecRMS * this->getFsIn();
+							double sum_l = 0, sum_r = 0, s0_l, s0_r;
 							uint32_t minVal_l, minVal_r;
 							
 							minVal_l = fmin ( dim_l, round( intArg ) );
@@ -116,16 +116,16 @@ namespace openAFE {
 						}
 						
 						// Estimate normalization constants
-						std::vector<float> tmp_l ( dim_l ), tmp_r ( dim_r );
+						std::vector<double> tmp_l ( dim_l ), tmp_r ( dim_r );
 						for ( unsigned int i = 0 ; i < dim_l ; ++i ) {
 							tmp_l[ i ] = pow(*( firstValue_l + i ), 2);
 							tmp_r[ i ] = pow(*( firstValue_r + i ), 2);
 						}
 						
-						float normFactor;
+						double normFactor;
 						
-						std::thread leftThread1( &GenericFilter<float,float, float, float>::exec, this->agcFilter_l, tmp_l.data(), dim_l , tmp_l.data() );
-						std::thread rightThread1( &GenericFilter<float,float, float, float>::exec, this->agcFilter_r, tmp_r.data(), dim_r , tmp_r.data() );
+						std::thread leftThread1( &GenericFilter<double,double, double, double>::exec, this->agcFilter_l, tmp_l.data(), dim_l , tmp_l.data() );
+						std::thread rightThread1( &GenericFilter<double,double, double, double>::exec, this->agcFilter_r, tmp_r.data(), dim_r , tmp_r.data() );
 							
 						leftThread1.join();                // pauses until left finishes
 						rightThread1.join();               // pauses until right finishes
@@ -173,17 +173,17 @@ namespace openAFE {
 		
 			/* PreProc */
 			PreProc (const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s, std::shared_ptr<InputProc > upperProcPtr, bool pp_bRemoveDC = false,
-																																		  float pp_cutoffHzDC = 20,
+																																		  double pp_cutoffHzDC = 20,
 																																		  bool pp_bPreEmphasis = false,
-																																		  float pp_coefPreEmphasis =  0.97,
+																																		  double pp_coefPreEmphasis =  0.97,
 																																		  bool pp_bNormalizeRMS = false,
-																																		  float pp_intTimeSecRMS = 0.5,
+																																		  double pp_intTimeSecRMS = 0.5,
 																																		  bool pp_bLevelScaling = false,
-																																		  float pp_refSPLdB = 100,
+																																		  double pp_refSPLdB = 100,
 																																		  bool pp_bMiddleEarFiltering = false,
 																																		  std::string pp_middleEarModel = "jepsen",
 																																		  bool pp_bUnityComp = true
-					) : TDSProcessor<float> (nameArg, fs, fs, bufferSize_s, _inputProc) {
+					) : TDSProcessor<double> (nameArg, fs, fs, bufferSize_s, _inputProc) {
 
 				this->pp_bRemoveDC = pp_bRemoveDC;
 				this->pp_cutoffHzDC = pp_cutoffHzDC;
@@ -225,8 +225,8 @@ namespace openAFE {
 					leftPMZ->appendChunk( this->upperProcPtr->getLeftLastChunkAccessor() );
 					rightPMZ->appendChunk( this->upperProcPtr->getRightLastChunkAccessor() );
 	
-					std::shared_ptr<twoCTypeBlock<float> > l_PMZ = leftPMZ->getLastChunkAccesor();
-					std::shared_ptr<twoCTypeBlock<float> > r_PMZ = rightPMZ->getLastChunkAccesor();
+					std::shared_ptr<twoCTypeBlock<double> > l_PMZ = leftPMZ->getLastChunkAccesor();
+					std::shared_ptr<twoCTypeBlock<double> > r_PMZ = rightPMZ->getLastChunkAccesor();
 					
 					// 0- Initialization
 					size_t dim1_l = l_PMZ->array1.second;
@@ -234,10 +234,10 @@ namespace openAFE {
 					size_t dim1_r = r_PMZ->array1.second;
 					size_t dim2_r = r_PMZ->array2.second;
 							
-					float* firstValue1_l = l_PMZ->array1.first;
-					float* firstValue2_l = l_PMZ->array2.first;
-					float* firstValue1_r = r_PMZ->array1.first;
-					float* firstValue2_r = r_PMZ->array2.first;				
+					double* firstValue1_l = l_PMZ->array1.first;
+					double* firstValue2_l = l_PMZ->array2.first;
+					double* firstValue1_r = r_PMZ->array1.first;
+					double* firstValue2_r = r_PMZ->array2.first;				
 					
 					if ( ( dim1_l > 0 ) && ( dim1_r > 0 ) )
 						process ( firstValue1_l, dim1_l, firstValue1_r, dim1_r );
@@ -250,8 +250,8 @@ namespace openAFE {
 				// Filter instantiation (if needed)	
 				if ( this->pp_bRemoveDC ) {
 					
-					this->dcFilter_l.reset ( new bwFilter<float> ( this->getFsIn(), 4 /* order */, this->pp_cutoffHzDC, (bwType)1 /* High */ ) );
-					this->dcFilter_r.reset ( new bwFilter<float> ( this->getFsIn(), 4 /* order */, this->pp_cutoffHzDC, (bwType)1 /* High */ ) );
+					this->dcFilter_l.reset ( new bwFilter<double> ( this->getFsIn(), 4 /* order */, this->pp_cutoffHzDC, (bwType)1 /* High */ ) );
+					this->dcFilter_r.reset ( new bwFilter<double> ( this->getFsIn(), 4 /* order */, this->pp_cutoffHzDC, (bwType)1 /* High */ ) );
 					
 				} else {
 					// Deleting the filter objects
@@ -261,12 +261,12 @@ namespace openAFE {
 
 				if ( this->pp_bPreEmphasis ) {
 					
-					std::vector<float> vectB (2,1);
+					std::vector<double> vectB (2,1);
 					vectB[1] = -1 * fabs( this->pp_coefPreEmphasis );
-					std::vector<float> vectA (1,1);
+					std::vector<double> vectA (1,1);
 					
-					this->preEmphFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					this->preEmphFilter_r.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_l.reset ( new GenericFilter<double,double, double, double> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->preEmphFilter_r.reset ( new GenericFilter<double,double, double, double> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -277,14 +277,14 @@ namespace openAFE {
 				
 				if ( this->pp_bNormalizeRMS ) {
 
-					std::vector<float> vectB (1,1);
-					std::vector<float> vectA (2,1);
+					std::vector<double> vectB (1,1);
+					std::vector<double> vectA (2,1);
 					
 					vectA[1] = -1 * exp( -1 / ( this->pp_intTimeSecRMS * this->getFsIn() ) );
 					vectB[0] = vectA[0] + vectA[1];
 
-					this->agcFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					this->agcFilter_r.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_l.reset ( new GenericFilter<double,double, double, double> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					this->agcFilter_r.reset ( new GenericFilter<double,double, double, double> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -295,8 +295,8 @@ namespace openAFE {
 
 				if ( this->pp_bMiddleEarFiltering ) {
 
-					 //this->midEarFilter_l.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
-					 //this->midEarFilter_r.reset ( new GenericFilter<float,float, float, float> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					 //this->midEarFilter_l.reset ( new GenericFilter<double,double, double, double> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
+					 //this->midEarFilter_r.reset ( new GenericFilter<double,double, double, double> ( vectB.data(), vectB.size(), vectA.data(), vectA.size() ) );
 					
 				} else {
 					
@@ -325,26 +325,26 @@ namespace openAFE {
 
 			// getters
 			const bool get_pp_bRemoveDC() {return this->pp_bRemoveDC;}
-			const float get_pp_cutoffHzDC() {return this->pp_cutoffHzDC;}
+			const double get_pp_cutoffHzDC() {return this->pp_cutoffHzDC;}
 			const bool get_pp_bPreEmphasis() {return this->pp_bPreEmphasis;}
-			const float get_pp_coefPreEmphasis() {return this->pp_coefPreEmphasis;}
+			const double get_pp_coefPreEmphasis() {return this->pp_coefPreEmphasis;}
 			const bool get_pp_bNormalizeRMS() {return this->pp_bNormalizeRMS;}
-			const float get_pp_intTimeSecRMS() {return this->pp_intTimeSecRMS;}
+			const double get_pp_intTimeSecRMS() {return this->pp_intTimeSecRMS;}
 			const bool get_pp_bLevelScaling() {return this->pp_bLevelScaling;}
-			const float get_pp_refSPLdB() {return this->pp_refSPLdB;}
+			const double get_pp_refSPLdB() {return this->pp_refSPLdB;}
 			const bool get_pp_bMiddleEarFiltering() {return this->pp_bMiddleEarFiltering;}
 			const std::string get_pp_middleEarModel() {return this->pp_middleEarModel;}
 			const bool get_pp_bUnityComp() {return this->pp_bUnityComp;}
 
 			// setters			
 			void set_pp_bRemoveDC(const bool arg) {this->pp_bRemoveDC=arg; this->prepareForProcessing ();}
-			void set_pp_cutoffHzDC(const float arg) {this->pp_cutoffHzDC=arg; this->prepareForProcessing ();}
+			void set_pp_cutoffHzDC(const double arg) {this->pp_cutoffHzDC=arg; this->prepareForProcessing ();}
 			void set_pp_bPreEmphasis(const bool arg) {this->pp_bPreEmphasis=arg; this->prepareForProcessing ();}
-			void set_pp_coefPreEmphasis(const float arg) {this->pp_coefPreEmphasis = arg; this->prepareForProcessing ();}
+			void set_pp_coefPreEmphasis(const double arg) {this->pp_coefPreEmphasis = arg; this->prepareForProcessing ();}
 			void set_pp_bNormalizeRMS(const bool arg) {this->pp_bNormalizeRMS=arg; this->prepareForProcessing ();}
-			void set_pp_intTimeSecRMS(const float arg) {this->pp_intTimeSecRMS=arg; this->prepareForProcessing ();}
+			void set_pp_intTimeSecRMS(const double arg) {this->pp_intTimeSecRMS=arg; this->prepareForProcessing ();}
 			void set_pp_bLevelScaling(const bool arg) {this->pp_bLevelScaling=arg; this->prepareForProcessing ();}
-			void set_pp_refSPLdB(const float arg) {this->pp_refSPLdB=arg; this->prepareForProcessing ();}
+			void set_pp_refSPLdB(const double arg) {this->pp_refSPLdB=arg; this->prepareForProcessing ();}
 			void set_pp_bMiddleEarFiltering(const bool arg) {this->pp_bMiddleEarFiltering=arg; this->prepareForProcessing ();}
 			void set_pp_middleEarModel(const std::string arg) {this->pp_middleEarModel=arg; this->prepareForProcessing ();}
 			void set_pp_bUnityComp(const bool arg) {this->pp_bUnityComp=arg; this->prepareForProcessing ();}			

@@ -30,8 +30,8 @@ namespace PORT {
 						uint32_t bufferSize_s, uint32_t nChannels, genom_context self );
 						
 	genom_event
-	publishGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, std::vector<std::shared_ptr<twoCTypeBlock<float> > > left,
-						std::vector<std::shared_ptr<twoCTypeBlock<float> > > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self );
+	publishGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, std::vector<twoCTypeBlockPtr > left,
+						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self );
 						
 	/*
 	genom_event

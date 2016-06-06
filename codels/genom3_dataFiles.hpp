@@ -12,7 +12,7 @@
 
 using namespace openAFE;
 
-using twoCTypeBlockPtr = typename twoCTypeBlock<float>::twoCTypeBlockPtr;
+using twoCTypeBlockPtr = typename twoCTypeBlock<double>::twoCTypeBlockPtr;
 
 struct rosAFE_inputProcessors {
 	ProcessorVector< InputProc > processorsAccessor; 

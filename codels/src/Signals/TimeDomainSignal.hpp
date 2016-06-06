@@ -25,8 +25,8 @@ namespace openAFE {
 		TimeDomainSignal( const uint32_t fs, const uint32_t bufferSize_s, const std::string argName = "Time", channel cha = _mono) : Signal(fs, argName, bufferSize_s, cha) {
 	
 			this->buffer.reset( new CircularContainer<T>( this->bufferSizeSamples ) );
-			this->lastChunkInfo.reset( new twoCTypeBlock<float> );
-			this->wholeBufferInfo.reset( new twoCTypeBlock<float> );
+			this->lastChunkInfo.reset( new twoCTypeBlock<T> );
+			this->wholeBufferInfo.reset( new twoCTypeBlock<T> );
 		}
 		
 		/* Calls automatically Signal's destructor */

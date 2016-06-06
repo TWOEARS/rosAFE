@@ -19,7 +19,7 @@ module rosAFE {
 
     struct signalOneD
     {
-        sequence<float>       	    data;
+        sequence<double>       	    data;
     };
 
     struct signalND

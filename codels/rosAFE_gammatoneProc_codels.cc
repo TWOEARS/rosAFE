@@ -28,11 +28,11 @@ startGammatoneProc(const char *name, const char *upperDepName,
                    rosAFE_preProcessors **preProcessorsSt,
                    const rosAFE_infos *infos,
                    const rosAFE_gammatonePort *gammatonePort,
-                   const char *fb_type, float fb_lowFreqHz,
-                   float fb_highFreqHz, float fb_nERBs,
+                   const char *fb_type, double fb_lowFreqHz,
+                   double fb_highFreqHz, double fb_nERBs,
                    uint32_t fb_nChannels,
-                   const sequence_float *fb_cfHz, uint32_t fb_nGamma,
-                   float fb_bwERBs, genom_context self)
+                   const sequence_double *fb_cfHz, uint32_t fb_nGamma,
+                   double fb_bwERBs, genom_context self)
 {
   std::shared_ptr<PreProc > upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
  
@@ -110,7 +110,7 @@ releaseGammatoneProc(const char *name, rosAFE_ids *ids,
   std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( name );
   thisProcessor->releaseChunk( );
   
-  PORT::publishGammatonePort ( name, gammatonePort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(float), thisProcessor->getNFR(), self );
+  PORT::publishGammatonePort ( name, gammatonePort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(double), thisProcessor->getNFR(), self );
 
   // Informing all the potential childs to say that this is a new chunk.
   SM::riseFlag ( name, newDataMapSt, self );

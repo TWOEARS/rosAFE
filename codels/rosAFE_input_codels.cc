@@ -22,7 +22,7 @@
  */
 
 int
-getAudioData(binaudio_portStruct *src, float *destL, float *destR,
+getAudioData(binaudio_portStruct *src, double *destL, double *destR,
                  int N, int64_t *nfr, int *loss)
 {
     int n;       /* amount of frames the function will be able to get */
@@ -62,8 +62,8 @@ getAudioData(binaudio_portStruct *src, float *destL, float *destR,
 static int N;
 static unsigned int globalLoss;
 static int64_t nfr;
-static float *li, *ri;
-std::vector<float> l, r;
+static double *li, *ri;
+std::vector<double> l, r;
 
 /** Codel startGetBlocks of activity GetBlocks.
  *
@@ -215,7 +215,7 @@ releaseInputProc(const char *name,
   thisProcessor->setNFR ( nfr );
   
   // Publishing on the output port
-  PORT::publishInputPort ( inputProcPort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(float), nfr, self );
+  PORT::publishInputPort ( inputProcPort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(double), nfr, self );
   
   
   // Informing all the potential childs to say that this is a new chunk.

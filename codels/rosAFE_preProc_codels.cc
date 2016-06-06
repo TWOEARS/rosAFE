@@ -27,10 +27,10 @@ startPreProc(const char *name, const char *upperDepName,
              rosAFE_inputProcessors **inputProcessorsSt,
              const rosAFE_infos *infos,
              const rosAFE_preProcPort *preProcPort,
-             uint16_t pp_bRemoveDC, float pp_cutoffHzDC,
-             uint16_t pp_bPreEmphasis, float pp_coefPreEmphasis,
-             uint16_t pp_bNormalizeRMS, float pp_intTimeSecRMS,
-             uint16_t pp_bLevelScaling, float pp_refSPLdB,
+             uint16_t pp_bRemoveDC, double pp_cutoffHzDC,
+             uint16_t pp_bPreEmphasis, double pp_coefPreEmphasis,
+             uint16_t pp_bNormalizeRMS, double pp_intTimeSecRMS,
+             uint16_t pp_bLevelScaling, double pp_refSPLdB,
              uint16_t pp_bMiddleEarFiltering,
              const char *pp_middleEarModel, uint16_t pp_bUnityComp,
              genom_context self)
@@ -140,7 +140,7 @@ releasePreProc(const char *name, rosAFE_ids *ids,
   std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( name );
   thisProcessor->releaseChunk( );
   
-  PORT::publishPreProcPort ( name, preProcPort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(float), thisProcessor->getNFR(), self );
+  PORT::publishPreProcPort ( name, preProcPort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(double), thisProcessor->getNFR(), self );
 
   // Informing all the potential childs to say that this is a new chunk.
   SM::riseFlag ( name, newDataMapSt, self );

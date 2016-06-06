@@ -20,12 +20,12 @@ namespace openAFE {
 		 * 
 		 */
 			 
-		template<typename T = float>
+		template<typename T = double>
 		T freq2erb( T freq )  {
 			return ERB_Q * log ( 1 + freq / ( ERB_L * ERB_Q ));
 		}		 
 		 
-		template<typename T = float>
+		template<typename T = double>
 		void freq2erb(T* firstValue_freq, size_t dim, T* firstValue_erb)  {
 			for ( unsigned int i = 0 ; i < dim ; ++i )
 				*( firstValue_erb + i ) = freq2erb ( *( firstValue_freq + i ) );
@@ -36,12 +36,12 @@ namespace openAFE {
 		 * Look : freq2erb
 		 * 
 		 * */
-		template<typename T = float>
+		template<typename T = double>
 		T erb2freq( T erb )  {
 			return ERB_L * ERB_Q * ( exp( erb / ERB_Q ) - 1 );
 		}
 				 
-		template<typename T = float>
+		template<typename T = double>
 		void erb2freq( T* firstValue_erb, size_t dim, T* firstValue_freq ) {
 			for ( unsigned int i = 0 ; i < dim ; ++i )
 				*( firstValue_freq + i ) = erb2freq ( *( firstValue_erb + i ) );
@@ -54,7 +54,7 @@ namespace openAFE {
 		 * Based On : http://toto-share.com/2011/11/cc-convolution-source-code/
 		 * 
 		 */		
-		template<typename T = float>
+		template<typename T = double>
 		std::vector<T> conv( T* A, size_t lenA, T* B, size_t lenB ) {
 			int32_t nconv;
 			int32_t j, i1;
@@ -89,7 +89,7 @@ namespace openAFE {
 		 * Source : https://gist.github.com/jmbr/2375233
 		 * 
          */
-		template <typename T = float>
+		template <typename T = double>
 		std::vector<T> linspace(T a, T b, size_t N) {
 		  T h = (b - a) / static_cast<T>(N-1);
 		  std::vector<T> xs(N);

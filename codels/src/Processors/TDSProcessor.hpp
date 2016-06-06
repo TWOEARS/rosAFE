@@ -7,7 +7,7 @@
 #include "../Signals/TimeDomainSignal.hpp"
 
 namespace openAFE {
-   template<typename T>
+   template<typename T  = double>
    class TDSProcessor : public Processor {
 	   
 	   protected:
@@ -21,17 +21,17 @@ namespace openAFE {
 				
 				/* Creating the output signals */
 				if ( this->hasTwoOutputs == true ) {
-					leftOutput.reset( new TimeDomainSignal<float>(fsOut, bufferSize_s, nameArg, _left) );
-					rightOutput.reset( new TimeDomainSignal<float>(fsOut, bufferSize_s, nameArg, _right) );
+					leftOutput.reset( new TimeDomainSignal<T>(fsOut, bufferSize_s, nameArg, _left) );
+					rightOutput.reset( new TimeDomainSignal<T>(fsOut, bufferSize_s, nameArg, _right) );
 							
 					/* Creating the PMZ signals */
-					leftPMZ.reset( new TimeDomainSignal<float>(fsOut, bufferSize_s, "Left_PMZ", _left) );
-					rightPMZ.reset( new TimeDomainSignal<float>(fsOut, bufferSize_s, "Right_PMZ", _right) );
+					leftPMZ.reset( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Left_PMZ", _left) );
+					rightPMZ.reset( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Right_PMZ", _right) );
 				} else {
-					leftOutput.reset( new TimeDomainSignal<float>(fsOut, bufferSize_s, nameArg, _mono ) );
+					leftOutput.reset( new TimeDomainSignal<T>(fsOut, bufferSize_s, nameArg, _mono ) );
 							
 					/* Creating the PMZ signals */
-					leftPMZ.reset( new TimeDomainSignal<float>(fsOut, bufferSize_s, "Mono_PMZ", _mono ) );					
+					leftPMZ.reset( new TimeDomainSignal<T>(fsOut, bufferSize_s, "Mono_PMZ", _mono ) );					
 				}
 			}
 
@@ -68,8 +68,8 @@ namespace openAFE {
 			
 			void releaseChunk () {
 				if ( this->hasTwoOutputs ) {						
-					std::thread leftAppendThread( &TimeDomainSignal<float>::appendChunk, this->leftOutput, leftPMZ->getLastChunkAccesor() );
-					std::thread rightAppendThread( &TimeDomainSignal<float>::appendChunk, this->rightOutput, rightPMZ->getLastChunkAccesor() );
+					std::thread leftAppendThread( &TimeDomainSignal<T>::appendChunk, this->leftOutput, leftPMZ->getLastChunkAccesor() );
+					std::thread rightAppendThread( &TimeDomainSignal<T>::appendChunk, this->rightOutput, rightPMZ->getLastChunkAccesor() );
 						
 					leftAppendThread.join();                // pauses until left finishes
 					rightAppendThread.join();               // pauses until right finishes

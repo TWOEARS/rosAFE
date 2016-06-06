@@ -9,18 +9,18 @@
 
 namespace openAFE {
 
-	class GammatoneFilter : public GenericFilter<float, std::complex<float>, float, std::complex<float> > {
+	class GammatoneFilter : public GenericFilter<double, std::complex<double>, double, std::complex<double> > {
 	
 	private:
 	
-        float CenterFrequency;     		// Center frequency for the filter (Hz)
+        double CenterFrequency;     		// Center frequency for the filter (Hz)
         uint32_t FilterOrder;         	// Gammatone slope order
-        float IRduration;         		// Duration of the impulse response for truncation (s)
-        float delay;               		// Delay in samples for time alignment	
+        double IRduration;         		// Duration of the impulse response for truncation (s)
+        double delay;               		// Delay in samples for time alignment	
 		
 	public:
 		
-		GammatoneFilter( float cf, float fs, unsigned int n = 4, float bwERB = 1.018 ) : GenericFilter<float, std::complex<float>, float, std::complex<float> > ( ) {
+		GammatoneFilter( double cf, double fs, uint32_t n = 4, double bwERB = 1.018 ) : GenericFilter<double, std::complex<double>, double, std::complex<double> > ( ) {
 
 			/*
              *         cf : center frequency of the filter (Hz)
@@ -29,29 +29,29 @@ namespace openAFE {
              *         bw : Bandwidth of the filter in ERBS 
              *              (default: bw = 1.018 ERBS)
 			*/
-			
+				
             // One ERB value in Hz at this center frequency
-           // float ERBHz = freq2erb ( cf );
-            float ERBHz = 24.7 + 0.108 * cf;
+			// double ERBHz = freq2erb ( cf );
+            double ERBHz = 24.7 + 0.108 * cf;
 
             // Bandwidth of the filter in Hertz
-            float bwHz = bwERB * ERBHz;
+            double bwHz = bwERB * ERBHz;
 
             // Generate an IIR Gammatone filter
-            float btmp = 1 - exp( -2*M_PI*bwHz/fs );
+            double btmp = 1 - exp( -2*M_PI*bwHz/fs );
                         
-            std::vector<std::complex<float> > atmp(2,1);
-            std::complex<float> tmp ( -2*M_PI*bwHz/fs, -2*M_PI*cf/fs);
+            std::vector<std::complex<double> > atmp(2,1);
+            std::complex<double> tmp ( -2*M_PI*bwHz/fs, -2*M_PI*cf/fs);
 			atmp[1] = -exp ( tmp );
             
-            std::vector<float> b(1,1);
-            std::vector<std::complex<float> > a(1,1);
-      
-			for ( unsigned int ii = 0 ; ii < n ; ++ii ) {
-				b = conv( &btmp, 1, b.data(), b.size() );				
+            std::vector<double> b(1,1);
+            std::vector<std::complex<double> > a(1,1);
+
+			for ( size_t ii = 0 ; ii < n ; ++ii ) {
+				b = conv( &btmp, 1, b.data(), b.size() );	
 				a = conv( atmp.data(), atmp.size(), a.data(), a.size() );
 			}
-											
+	
             // The transfer function is complex-valued
             this->setRealTF ( false );
             
@@ -62,16 +62,27 @@ namespace openAFE {
 			} catch(std::string const& message) {
 			   throw std::string( message );
 		    }
-        
+			this->reset();
+			
 			//   2- Specific properties
 			this->CenterFrequency = cf;     		
 			this->FilterOrder = n;
-			this->delay = 0; // delaySpl		
+			this->delay = 0; // delaySpl
+			
+	/*		std::cout << "cf ; " << getCenterFrequency() << std::endl;
+				std::cout << " A : " << std::endl;
+				for ( unsigned int i = 0 ; i < a.size() ; i++ )
+					std::cout << a[i] << " ";
+				std::cout << std::endl;	
+				std::cout << " B : " << std::endl;
+				for ( unsigned int i = 0 ; i < b.size() ; i++ )
+					std::cout << b[i] << " ";
+				std::cout << std::endl;*/
 		}
 		
 		~GammatoneFilter() {}
 		
-		const float getCenterFrequency() {
+		const double getCenterFrequency() {
 			return this->CenterFrequency;
 		}
 

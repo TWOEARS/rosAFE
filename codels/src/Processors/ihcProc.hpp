@@ -28,11 +28,11 @@ namespace openAFE {
         _bernstein
 	};
 
-	class IHCProc : public TFSProcessor<float > {
+	class IHCProc : public TFSProcessor<double > {
 
 		private:
 
-			typedef std::shared_ptr< bwFilter<float> > bwFilterPtr;
+			typedef std::shared_ptr< bwFilter<double> > bwFilterPtr;
             typedef std::vector <bwFilterPtr > filterPtrVector;
 			
 			ihcMethod method;
@@ -90,13 +90,13 @@ namespace openAFE {
 
 			}
 
-			void processFilteringChannel ( bwFilterPtr filter, std::shared_ptr<twoCTypeBlock<float> > oneChannel ) {
+			void processFilteringChannel ( bwFilterPtr filter, std::shared_ptr<twoCTypeBlock<double> > oneChannel ) {
 				// 0- Initialization
 				size_t dim1 = oneChannel->array1.second;
 				size_t dim2 = oneChannel->array2.second;
 							
-				float* firstValue1 = oneChannel->array1.first;
-				float* firstValue2 = oneChannel->array2.first;
+				double* firstValue1 = oneChannel->array1.first;
+				double* firstValue2 = oneChannel->array2.first;
 
                  switch ( this->method ) {
 
@@ -121,13 +121,13 @@ namespace openAFE {
 				}					
 			}
 			
-			void processChannel ( std::shared_ptr<twoCTypeBlock<float> > oneChannel ) {
+			void processChannel ( std::shared_ptr<twoCTypeBlock<double> > oneChannel ) {
 				// 0- Initialization
 				size_t dim1 = oneChannel->array1.second;
 				size_t dim2 = oneChannel->array2.second;
 							
-				float* firstValue1 = oneChannel->array1.first;
-				float* firstValue2 = oneChannel->array2.first;
+				double* firstValue1 = oneChannel->array1.first;
+				double* firstValue2 = oneChannel->array2.first;
 
                  switch ( this->method ) {
 
@@ -169,7 +169,7 @@ namespace openAFE {
 				}					
 			}
 			
-			void processLR ( filterPtrVector& filters, std::vector<std::shared_ptr<twoCTypeBlock<float> > > PMZ ) {
+			void processLR ( filterPtrVector& filters, std::vector<std::shared_ptr<twoCTypeBlock<double> > > PMZ ) {
 				std::vector<std::thread> threads;
 				  for ( size_t ii = 0 ; ii < this->fb_nChannels ; ++ii ) {
 					  if ( ( ( this->method == _joergensen ) or ( this->method == _dau ) or ( this->method == _breebart ) or ( this->method == _bernstein ) ) and ( filters.size() > 0 ) )
@@ -186,7 +186,7 @@ namespace openAFE {
 		
 			/* PreProc */
 			IHCProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, std::shared_ptr<GammatoneProc > upperProcPtr,
-				ihcMethod method = _dau  ) : TFSProcessor<float > (nameArg, fsIn, fsOut, bufferSize_s, upperProcPtr->get_fb_nChannels(), "magnitude", _ihc) {
+				ihcMethod method = _dau  ) : TFSProcessor<double > (nameArg, fsIn, fsOut, bufferSize_s, upperProcPtr->get_fb_nChannels(), "magnitude", _ihc) {
 					
 				this->fb_nChannels = upperProcPtr->get_fb_nChannels();
 				this->upperProcPtr = upperProcPtr;
@@ -211,8 +211,8 @@ namespace openAFE {
 				// Appending the chunk to process (the processing must be done on the PMZ)
 				leftPMZ->appendChunk( this->upperProcPtr->getLeftLastChunkAccessor() );
 				rightPMZ->appendChunk( this->upperProcPtr->getRightLastChunkAccessor() );
-				std::vector<std::shared_ptr<twoCTypeBlock<float> > > l_PMZ = leftPMZ->getLastChunkAccesor();
-				std::vector<std::shared_ptr<twoCTypeBlock<float> > > r_PMZ = rightPMZ->getLastChunkAccesor();
+				std::vector<std::shared_ptr<twoCTypeBlock<double> > > l_PMZ = leftPMZ->getLastChunkAccesor();
+				std::vector<std::shared_ptr<twoCTypeBlock<double> > > r_PMZ = rightPMZ->getLastChunkAccesor();
 				
 				this->processLR( ihcFilter_l, l_PMZ );
 				this->processLR( ihcFilter_r, r_PMZ );				
