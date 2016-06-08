@@ -20,3 +20,11 @@ enter "n" if you see "Apply this patch [y,n,c,q,?]?" on your terminal
 
 ./install
 .
+
+## How To Use It :
+
+Standard ROS commands :
+
+eltclsh :
+
+Matlab :

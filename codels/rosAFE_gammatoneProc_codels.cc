@@ -21,7 +21,6 @@
  */
 genom_event
 startGammatoneProc(const char *name, const char *upperDepName,
-                   uint32_t fsOut,
                    rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
                    rosAFE_flagMap **flagMapSt,
                    rosAFE_flagMap **newDataMapSt,
@@ -36,7 +35,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
 {
   std::shared_ptr<PreProc > upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
  
-  std::shared_ptr < GammatoneProc > gammatoneProcessor (new GammatoneProc( name, upperDepProc->getFsOut(), fsOut, infos->innerBufferSize_s, upperDepProc,
+  std::shared_ptr < GammatoneProc > gammatoneProcessor (new GammatoneProc( name, upperDepProc,
 	_gammatoneFilterBank, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels, fb_cfHz->_buffer, fb_cfHz->_length, fb_nGamma, fb_bwERBs ) );
   
   /* Adding this procesor to the ids */

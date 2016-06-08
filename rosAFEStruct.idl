@@ -52,61 +52,59 @@ module rosAFE {
 
     struct inputProcsParametres {
       string name;
+      boolean in_doNormalize;
+      unsigned long long in_normalizeValue;
     };
 
     struct preProcsParametres {
       string name;
       string upperDepName;
-      unsigned long fsOut;
-      unsigned short pp_bRemoveDC;
-      float pp_cutoffHzDC;
-      unsigned short pp_bPreEmphasis;
-      float pp_coefPreEmphasis;
-      unsigned short pp_bNormalizeRMS;
-      float pp_intTimeSecRMS;
-      unsigned short pp_bLevelScaling;
-      float pp_refSPLdB;
-      unsigned short pp_bMiddleEarFiltering;
+      boolean pp_bRemoveDC;
+      double pp_cutoffHzDC;
+      boolean pp_bPreEmphasis;
+      double pp_coefPreEmphasis;
+      boolean pp_bNormalizeRMS;
+      double pp_intTimeSecRMS;
+      boolean pp_bLevelScaling;
+      double pp_refSPLdB;
+      boolean pp_bMiddleEarFiltering;
       string pp_middleEarModel;
-      unsigned short pp_bUnityComp;
+      boolean pp_bUnityComp;
     };
 
     struct gammatoneProcsParametres {
       string name;
       string upperDepName;
-      unsigned long fsOut;
       string fb_type;
-      float fb_lowFreqHz;
-      float fb_highFreqHz;
-      float fb_nERBs;
+      double fb_lowFreqHz;
+      double fb_highFreqHz;
+      double fb_nERBs;
       unsigned long fb_nChannels;
       unsigned long fb_cfHz;
       unsigned long fb_nGamma;
-      float fb_bwERBs;
+      double fb_bwERBs;
     };
 
     struct ihcProcsParametres {
       string name;
       string upperDepName;
-      unsigned long fsOut;
       string ihc_method;
     };
 
     struct ildProcsParametres {
       string name;
       string upperDepName;
-      unsigned long fsOut;
       string ild_wname;
-      float ild_wSizeSec;
-      float ild_hSizeSec;
+      double ild_wSizeSec;
+      double ild_hSizeSec;
     };
 
-    struct RunningProcessorsSt {
-      sequence<inputProcsParametres> 		paramsInputProc;
-      sequence<preProcsParametres>      	paramsPreProc;
-      sequence<gammatoneProcsParametres>        paramsGammatoneProc;
-      sequence<ihcProcsParametres>      	paramsIhcProc;
-      sequence<ildProcsParametres>      	paramsIldProc;
+    struct parameters {
+      sequence<inputProcsParametres> 		input;
+      sequence<preProcsParametres>      	preProc;
+      sequence<gammatoneProcsParametres>        gammatone;
+      sequence<ihcProcsParametres>      	ihc;
+      sequence<ildProcsParametres>      	ild;
     };
 
     struct dataObjSt {

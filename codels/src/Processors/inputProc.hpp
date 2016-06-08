@@ -96,7 +96,7 @@ namespace openAFE {
 				} return false;
 			}
 			
-			const bool get_in_doNormalize() {return this->in_doNormalize;}
+			bool get_in_doNormalize() {return this->in_doNormalize;}
 			uint64_t get_in_normalizeValue() {return this->in_normalizeValue;}
 
 			// setters			

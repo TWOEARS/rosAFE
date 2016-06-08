@@ -12,8 +12,6 @@
 
 #include "../tools/mathTools.hpp"
 
-#define EPSILON 0.00000001
-
 /* 
  * preProc :
  * 
@@ -172,7 +170,7 @@ namespace openAFE {
 		public:
 		
 			/* PreProc */
-			PreProc (const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s, std::shared_ptr<InputProc > upperProcPtr, bool pp_bRemoveDC = false,
+			PreProc (const std::string nameArg, std::shared_ptr<InputProc > upperProcPtr, bool pp_bRemoveDC = false,
 																																		  double pp_cutoffHzDC = 20,
 																																		  bool pp_bPreEmphasis = false,
 																																		  double pp_coefPreEmphasis =  0.97,
@@ -183,7 +181,7 @@ namespace openAFE {
 																																		  bool pp_bMiddleEarFiltering = false,
 																																		  std::string pp_middleEarModel = "jepsen",
 																																		  bool pp_bUnityComp = true
-					) : TDSProcessor<double> (nameArg, fs, fs, bufferSize_s, _inputProc) {
+					) : TDSProcessor<double> (nameArg, upperProcPtr->getFsOut(), upperProcPtr->getFsOut(), upperProcPtr->getBufferSize_s(), _inputProc) {
 
 				this->pp_bRemoveDC = pp_bRemoveDC;
 				this->pp_cutoffHzDC = pp_cutoffHzDC;
@@ -324,17 +322,17 @@ namespace openAFE {
 			}
 
 			// getters
-			const bool get_pp_bRemoveDC() {return this->pp_bRemoveDC;}
-			const double get_pp_cutoffHzDC() {return this->pp_cutoffHzDC;}
-			const bool get_pp_bPreEmphasis() {return this->pp_bPreEmphasis;}
-			const double get_pp_coefPreEmphasis() {return this->pp_coefPreEmphasis;}
-			const bool get_pp_bNormalizeRMS() {return this->pp_bNormalizeRMS;}
-			const double get_pp_intTimeSecRMS() {return this->pp_intTimeSecRMS;}
-			const bool get_pp_bLevelScaling() {return this->pp_bLevelScaling;}
-			const double get_pp_refSPLdB() {return this->pp_refSPLdB;}
-			const bool get_pp_bMiddleEarFiltering() {return this->pp_bMiddleEarFiltering;}
-			const std::string get_pp_middleEarModel() {return this->pp_middleEarModel;}
-			const bool get_pp_bUnityComp() {return this->pp_bUnityComp;}
+			bool get_pp_bRemoveDC() {return this->pp_bRemoveDC;}
+			double get_pp_cutoffHzDC() {return this->pp_cutoffHzDC;}
+			bool get_pp_bPreEmphasis() {return this->pp_bPreEmphasis;}
+			double get_pp_coefPreEmphasis() {return this->pp_coefPreEmphasis;}
+			bool get_pp_bNormalizeRMS() {return this->pp_bNormalizeRMS;}
+			double get_pp_intTimeSecRMS() {return this->pp_intTimeSecRMS;}
+			bool get_pp_bLevelScaling() {return this->pp_bLevelScaling;}
+			double get_pp_refSPLdB() {return this->pp_refSPLdB;}
+			bool get_pp_bMiddleEarFiltering() {return this->pp_bMiddleEarFiltering;}
+			std::string get_pp_middleEarModel() {return this->pp_middleEarModel;}
+			bool get_pp_bUnityComp() {return this->pp_bUnityComp;}
 
 			// setters			
 			void set_pp_bRemoveDC(const bool arg) {this->pp_bRemoveDC=arg; this->prepareForProcessing ();}

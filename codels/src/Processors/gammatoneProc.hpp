@@ -156,7 +156,7 @@ namespace openAFE {
 														
 		public:
 		
-			GammatoneProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, std::shared_ptr<PreProc > upperProcPtr,
+			GammatoneProc (const std::string nameArg, std::shared_ptr<PreProc > upperProcPtr,
 																																						filterBankType fb_type = _gammatoneFilterBank,
 																																						double fb_lowFreqHz = 80,
 																																						double fb_highFreqHz = 8000,
@@ -166,7 +166,7 @@ namespace openAFE {
 																																						size_t fb_cfHz_length = 0,		
 																																						uint32_t fb_nGamma = 4,
 																																						double fb_bwERBs = 1.0180
-						  ) : TFSProcessor<double > (nameArg, fsIn, fsOut, bufferSize_s, verifyParameters( fb_type, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels,		
+						  ) : TFSProcessor<double > (nameArg, upperProcPtr->getFsOut(), upperProcPtr->getFsOut(), upperProcPtr->getBufferSize_s(), verifyParameters( fb_type, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels,		
 																										 fb_cfHz, fb_cfHz_length, fb_nGamma, fb_bwERBs), "magnitude", _gammatone) {
 																											 
 				this->verifyParameters( fb_type, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels, fb_cfHz, fb_cfHz_length, fb_nGamma, fb_bwERBs);

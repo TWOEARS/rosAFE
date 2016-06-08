@@ -22,24 +22,23 @@
  */
 genom_event
 startPreProc(const char *name, const char *upperDepName,
-             uint32_t fsOut, rosAFE_preProcessors **preProcessorsSt,
+             rosAFE_preProcessors **preProcessorsSt,
              rosAFE_flagMap **flagMapSt, rosAFE_flagMap **newDataMapSt,
              rosAFE_inputProcessors **inputProcessorsSt,
              const rosAFE_infos *infos,
-             const rosAFE_preProcPort *preProcPort,
-             uint16_t pp_bRemoveDC, double pp_cutoffHzDC,
-             uint16_t pp_bPreEmphasis, double pp_coefPreEmphasis,
-             uint16_t pp_bNormalizeRMS, double pp_intTimeSecRMS,
-             uint16_t pp_bLevelScaling, double pp_refSPLdB,
-             uint16_t pp_bMiddleEarFiltering,
-             const char *pp_middleEarModel, uint16_t pp_bUnityComp,
+             const rosAFE_preProcPort *preProcPort, bool pp_bRemoveDC,
+             double pp_cutoffHzDC, bool pp_bPreEmphasis,
+             double pp_coefPreEmphasis, bool pp_bNormalizeRMS,
+             double pp_intTimeSecRMS, bool pp_bLevelScaling,
+             double pp_refSPLdB, bool pp_bMiddleEarFiltering,
+             const char *pp_middleEarModel, bool pp_bUnityComp,
              genom_context self)
 {
   std::shared_ptr < InputProc > upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
     
-  std::shared_ptr < PreProc > preProcessor (new PreProc( name, upperDepProc->getFsOut(), infos->innerBufferSize_s, upperDepProc,
+  std::shared_ptr < PreProc > preProcessor (new PreProc( name, upperDepProc,
   pp_bRemoveDC, pp_cutoffHzDC, pp_bPreEmphasis, pp_coefPreEmphasis, pp_bNormalizeRMS, pp_intTimeSecRMS, pp_bLevelScaling,
-  pp_refSPLdB, pp_bMiddleEarFiltering, pp_middleEarModel, pp_bUnityComp) );  
+  pp_refSPLdB, pp_bMiddleEarFiltering, pp_middleEarModel, pp_bUnityComp) );
   
   // Adding this procesor to the ids
   ((*preProcessorsSt)->processorsAccessor).addProcessor( preProcessor );

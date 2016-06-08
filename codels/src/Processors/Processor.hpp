@@ -33,6 +33,8 @@ namespace openAFE {
 			uint32_t fsIn;						// Sampling frequency of input (i.e., prior to processing)
 			uint32_t fsOut;			 			// Sampling frequency of output (i.e., resulting from processing)
 			
+			uint32_t bufferSize_s;
+			
 		public:
 					
 			/* PROCESSOR Super-constructor of the processor class
@@ -43,12 +45,13 @@ namespace openAFE {
 			  * procName : Name of the processor to implement
 			  * parObj : Parameters instance to use for this processor
 			  */
-			Processor (const uint32_t fsIn, const uint32_t fsOut, const std::string& nameArg, procType typeArg) {
+			Processor (const uint32_t bufferSize_s, const uint32_t fsIn, const uint32_t fsOut, const std::string& nameArg, procType typeArg) {
 								
 				this->fsIn = fsIn;
 				this->fsOut = fsOut;
 				this->type = typeArg;
-				
+				this->bufferSize_s = bufferSize_s;
+								
 				this->name = nameArg;
 					
 				switch ( typeArg ) {
@@ -114,6 +117,10 @@ namespace openAFE {
 			const std::string getName() {
 				return this->name;
 			}							
+			
+			const uint32_t getBufferSize_s() {
+				return this->bufferSize_s;
+			}										
 	};
 
 };

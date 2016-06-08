@@ -76,7 +76,7 @@ namespace openAFE {
 				buffer[ii]->push_chunk( inChunk[ii] );
 		}
 		
-		std::vector<std::shared_ptr<twoCTypeBlock<T> > > getLastChunkAccesor() {
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getLastChunkAccesor() {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				this->buffer[ii]->calcLastChunk();
 				this->lastChunkInfo[ii]->setData( this->buffer[ii]->getLastChunkAccesor() );
@@ -84,7 +84,7 @@ namespace openAFE {
 			return this->lastChunkInfo;
 		}
 		
-		std::vector<std::shared_ptr<twoCTypeBlock<T> > > getWholeBufferAccesor() {
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getWholeBufferAccesor() {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				this->buffer[ii]->calcWholeBuffer();
 				this->wholeBufferInfo[ii]->setData( this->buffer[ii]->getWholeBufferAccesor() );

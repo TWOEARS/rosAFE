@@ -3,10 +3,11 @@
 
 #define ERB_L 24.7
 #define ERB_Q 9.265
+#define EPSILON 0.00000001
 
 #include <stdint.h>
 #include <vector>
-#include <math.h> /* M_PI, exp, log */
+#include <math.h> /* M_PI, exp, log, log10 */
 
 namespace openAFE {
 		
@@ -43,7 +44,7 @@ namespace openAFE {
 				 
 		template<typename T = double>
 		void erb2freq( T* firstValue_erb, size_t dim, T* firstValue_freq ) {
-			for ( unsigned int i = 0 ; i < dim ; ++i )
+			for ( size_t i = 0 ; i < dim ; ++i )
 				*( firstValue_freq + i ) = erb2freq ( *( firstValue_erb + i ) );
 		}
 			
@@ -99,6 +100,27 @@ namespace openAFE {
 			*x = val;
 		  return xs;
 		}
+
+		template <typename T = double>
+		void multiplication( T* firstValue_vect1, T* firstValue_vect2, size_t dim, T* firstValue_dest ) {
+			for ( size_t i = 0 ; i < dim ; ++i )
+				*( firstValue_dest + i ) = *( firstValue_vect1 + i ) * *( firstValue_vect2 + i );
+		}
+
+		template <typename T = double>
+		T meanSquare( T* firstValue_src, size_t dim ) {
+			T sum = 0;
+			for ( size_t i = 0 ; i < dim ; ++i )
+				sum += pow( *( firstValue_src + i ), 2);
+			return sum / dim;
+		}
+
+		template <typename T = double>
+		T ild( T frame_r, T frame_l ) {
+		  return 10 * log10 ( ( frame_r + EPSILON ) / ( frame_l + EPSILON ) );
+		}
+		
+
 		
 }; /* namespace openAFE */
 

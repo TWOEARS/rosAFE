@@ -1,5 +1,7 @@
 #include <pthread.h>
 
+#include <memory>
+
 #include "stateMachine.hpp"
 #include "processorCommon.hpp"
 #include "genom3_dataFiles.hpp"
@@ -7,9 +9,9 @@
 bool checkExists ( const char *name, const rosAFE_ids *ids ) {
 	if ( ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
 	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) /*or
+	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
 	     ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )	*/     	     
+	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )      	     
 	   )
 	     return true;
 	return false;
@@ -98,69 +100,58 @@ getSignal(uint64_t *startIndex, uint64_t endIndex,
  * Throws rosAFE_e_noMemory.
  */
 genom_event
-getParameters(const rosAFE_ids *ids,
-              rosAFE_RunningProcessorsSt *parameters,
+getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
               genom_context self)
 {
 	
 /* ****************************  Input START  ************************************ */
-/*
-  uint32_t sizeInputProc = ids->inputProcessorsSt->processorsAccessor.getSize();
-  if ( parameters->paramsInputProc._length > sizeInputProc )
-	parameters->paramsInputProc._length = 0;
-  
-  if ( parameters->paramsInputProc._length != sizeInputProc ) {
-	parameters->paramsInputProc._length = sizeInputProc;
-	if (genom_sequence_reserve(&(parameters->paramsInputProc), sizeInputProc))
-		return rosAFE_e_noMemory( self );
-  }
 
- for (uint32_t ii = 0 ; ii < parameters->paramsInputProc._length ; ii++) {
+  size_t sizeInputProc = ids->inputProcessorsSt->processorsAccessor.getSize();
+  parameters->input._length = sizeInputProc;
+  
+  if (genom_sequence_reserve(&(parameters->input), sizeInputProc))
+	return rosAFE_e_noMemory( self );
+
+  for ( size_t ii = 0 ; ii < sizeInputProc ; ++ii ) {
 	 
-	inputProcPtr thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
+    std::shared_ptr < InputProc > thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
-	parameters->paramsInputProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );
+	parameters->input._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
+	parameters->input._buffer[ii].in_doNormalize = thisProcessor->get_in_doNormalize();
+	parameters->input._buffer[ii].in_normalizeValue = thisProcessor->get_in_normalizeValue();
     
     thisProcessor.reset();
   }
-  */
-/* *****************************  Input END  ************************************* */
-
+  
 /* ****************************  PREPR START  ************************************ */
-/*  uint32_t sizePreProc = ids->preProcessorsSt->processorsAccessor.getSize();
-  if ( parameters->paramsPreProc._length > sizePreProc )
-	parameters->paramsPreProc._length = 0;
-  
-  if ( parameters->paramsPreProc._length < sizePreProc ) {	
-	parameters->paramsPreProc._length = sizePreProc;
-	if (genom_sequence_reserve(&(parameters->paramsPreProc), sizePreProc))
-		return rosAFE_e_noMemory( self );
-  }
+  size_t sizePreProc = ids->preProcessorsSt->processorsAccessor.getSize();
 
- for (uint32_t ii = 0 ; ii < parameters->paramsPreProc._length ; ii++) {
+  parameters->preProc._length = sizePreProc;  
+  if ( genom_sequence_reserve(&(parameters->preProc), sizePreProc) )
+	return rosAFE_e_noMemory( self );
+
+ for ( size_t ii = 0 ; ii < parameters->preProc._length ; ++ii ) {
 	 
-	preProcPtr thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
-	const apfMap thisParams = thisProcessor->getCurrentParameters();
+    std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
-    parameters->paramsPreProc._buffer[ii].name = strdup( thisProcessor->getProcessorInfo().name.c_str() );  
-    parameters->paramsPreProc._buffer[ii].upperDepName = strdup( thisProcessor->getInProcessorInfo(0).name.c_str() );	
-    parameters->paramsPreProc._buffer[ii].fsOut = thisProcessor->getFsOut();    
-    parameters->paramsPreProc._buffer[ii].pp_bRemoveDC = thisParams.get<unsigned long>("pp_bRemoveDC");
-    parameters->paramsPreProc._buffer[ii].pp_cutoffHzDC = thisParams.get<float>("pp_cutoffHzDC");
-    parameters->paramsPreProc._buffer[ii].pp_bPreEmphasis = thisParams.get<unsigned long>("pp_bPreEmphasis");
-    parameters->paramsPreProc._buffer[ii].pp_coefPreEmphasis = thisParams.get<float>("pp_coefPreEmphasis");
-    parameters->paramsPreProc._buffer[ii].pp_bNormalizeRMS = thisParams.get<unsigned long>("pp_bNormalizeRMS");
-    parameters->paramsPreProc._buffer[ii].pp_bBinauralRMS = thisParams.get<unsigned long>("pp_bBinauralRMS");
-    parameters->paramsPreProc._buffer[ii].pp_intTimeSecRMS = thisParams.get<float>("pp_intTimeSecRMS");
-    parameters->paramsPreProc._buffer[ii].pp_bLevelScaling = thisParams.get<unsigned long>("pp_bLevelScaling");
-    parameters->paramsPreProc._buffer[ii].pp_refSPLdB = thisParams.get<float>("pp_refSPLdB");
-    parameters->paramsPreProc._buffer[ii].pp_bMiddleEarFiltering = thisParams.get<unsigned long>("pp_bMiddleEarFiltering");    
-    parameters->paramsPreProc._buffer[ii].pp_middleEarModel = strdup( thisParams["pp_middleEarModel"].c_str() );
-    parameters->paramsPreProc._buffer[ii].pp_bUnityComp = thisParams.get<unsigned short>("pp_bUnityComp");
+    parameters->preProc._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
+    // parameters->preProc._buffer[ii].upperDepName = strdup( thisProcessor->upperProcPtr->getName().c_str() );
+    	
+    parameters->preProc._buffer[ii].pp_bRemoveDC = thisProcessor->get_pp_bRemoveDC();
+    parameters->preProc._buffer[ii].pp_cutoffHzDC = thisProcessor->get_pp_cutoffHzDC();
+    parameters->preProc._buffer[ii].pp_bPreEmphasis = thisProcessor->get_pp_bPreEmphasis();
+    parameters->preProc._buffer[ii].pp_coefPreEmphasis = thisProcessor->get_pp_coefPreEmphasis();
+    parameters->preProc._buffer[ii].pp_bNormalizeRMS = thisProcessor->get_pp_bNormalizeRMS();
+    parameters->preProc._buffer[ii].pp_intTimeSecRMS = thisProcessor->get_pp_intTimeSecRMS();
+    parameters->preProc._buffer[ii].pp_bLevelScaling = thisProcessor->get_pp_bLevelScaling();
+    parameters->preProc._buffer[ii].pp_refSPLdB = thisProcessor->get_pp_refSPLdB();
+    parameters->preProc._buffer[ii].pp_bMiddleEarFiltering = thisProcessor->get_pp_bMiddleEarFiltering();   
+    parameters->preProc._buffer[ii].pp_middleEarModel = strdup( thisProcessor->get_pp_middleEarModel().c_str() );
+    parameters->preProc._buffer[ii].pp_bUnityComp = thisProcessor->get_pp_bUnityComp();
     
     thisProcessor.reset();
   }
-*/
+
 /* *****************************  PREPR END  ************************************* */
 
 

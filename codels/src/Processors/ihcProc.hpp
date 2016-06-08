@@ -49,7 +49,7 @@ namespace openAFE {
 						 ihcFilter_l.resize( fb_nChannels ); ihcFilter_r.resize( fb_nChannels );
                          // First order butterworth filter @ 150Hz
 						 for ( size_t ii = 0 ; ii < fb_nChannels ; ++ii ) {
-							 
+
 						 }
 						 
                          break;
@@ -75,7 +75,6 @@ namespace openAFE {
                      case _bernstein:
                          // Second order butterworth filter @ 425Hz
 						 ihcFilter_l.resize( fb_nChannels ); ihcFilter_r.resize( fb_nChannels );
-                         // First order butterworth filter @ 150Hz
 						 for ( size_t ii = 0 ; ii < fb_nChannels ; ++ii ) {
 							 
 						 }
@@ -92,12 +91,12 @@ namespace openAFE {
 
 			void processFilteringChannel ( bwFilterPtr filter, std::shared_ptr<twoCTypeBlock<double> > oneChannel ) {
 				// 0- Initialization
-				size_t dim1 = oneChannel->array1.second;
+			/*	size_t dim1 = oneChannel->array1.second;
 				size_t dim2 = oneChannel->array2.second;
 							
 				double* firstValue1 = oneChannel->array1.first;
 				double* firstValue2 = oneChannel->array2.first;
-
+			*/
                  switch ( this->method ) {
 
                      case _joergensen:
@@ -139,7 +138,7 @@ namespace openAFE {
 						if ( dim1 > 0 )
 							for ( size_t ii = 0 ; ii < dim1 ; ++ii )
 								*( firstValue1 + ii ) = fmax( *( firstValue1 + ii ), 0 );
-						if ( dim2 > 0 )	
+						if ( dim2 > 0 )
 							for ( size_t ii = 0 ; ii < dim2 ; ++ii )
 								*( firstValue2 + ii ) = fmax( *( firstValue2 + ii ), 0 );
 					 	break;
@@ -184,9 +183,8 @@ namespace openAFE {
 														
 		public:
 		
-			/* PreProc */
-			IHCProc (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, std::shared_ptr<GammatoneProc > upperProcPtr,
-				ihcMethod method = _dau  ) : TFSProcessor<double > (nameArg, fsIn, fsOut, bufferSize_s, upperProcPtr->get_fb_nChannels(), "magnitude", _ihc) {
+			IHCProc (const std::string nameArg, std::shared_ptr<GammatoneProc > upperProcPtr,
+				ihcMethod method = _dau  ) : TFSProcessor<double > (nameArg, upperProcPtr->getFsOut(), upperProcPtr->getFsOut(), upperProcPtr->getBufferSize_s(), upperProcPtr->get_fb_nChannels(), "magnitude", _ihc) {
 					
 				this->fb_nChannels = upperProcPtr->get_fb_nChannels();
 				this->upperProcPtr = upperProcPtr;
@@ -227,7 +225,8 @@ namespace openAFE {
 			}
 
 			// getters
-			const ihcMethod get_ihc_method() {return this->method;}
+			const ihcMethod get_ihc_method() {return this->method;}  
+			const uint32_t get_ihc_nChannels() {return this->fb_nChannels;}
 
 			// setters			
 			void set_ihc_method(const ihcMethod arg) {this->method=arg; this->prepareForProcessing ();}
