@@ -28,12 +28,22 @@ startIldProc(const char *name, const char *upperDepName,
              const rosAFE_infos *infos, const rosAFE_ildPort *ildPort,
              const char *ild_wname, double ild_wSizeSec,
              double ild_hSizeSec, genom_context self)
-{
-  std::cout << "                    start of ild" << std::endl;
-	
+{	
   std::shared_ptr < IHCProc > upperDepProc = ((*ihcProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
-  
-  std::shared_ptr < ILDProc > ildProcessor ( new ILDProc( name, upperDepProc, ild_wSizeSec, ild_hSizeSec, _hann ) );
+
+  ildWindowType thisWindow = _hann;
+  if ( strcmp( ild_wname, "hamming" ) == 0 )
+    thisWindow = _hamming;
+  else if ( strcmp( ild_wname, "hanning" ) == 0 )
+     thisWindow = _hanning;
+  else if ( strcmp( ild_wname, "blackman" ) == 0 )
+     thisWindow = _blackman;
+  else if ( strcmp( ild_wname, "triang" ) == 0 )
+    thisWindow = _triang;
+  else if ( strcmp( ild_wname, "sqrt_win" ) == 0 )
+    thisWindow = _sqrt_win;							
+					  
+  std::shared_ptr < ILDProc > ildProcessor ( new ILDProc( name, upperDepProc, ild_wSizeSec, ild_hSizeSec, thisWindow ) );
 
   /* Adding this procesor to the ids */
   ((*ildProcessorsSt)->processorsAccessor).addProcessor( ildProcessor );
@@ -69,7 +79,6 @@ exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
      rosAFE_flagMap **flagMapSt, genom_context self)
 {
   ids->ildProcessorsSt->processorsAccessor.getProcessor ( name )->processChunk( );
-  std::cout << "                    exec of ild" << std::endl;
 
   // At the end of this codel, the upperDep will be able to overwite the data.
   SM::fallFlag ( name, upperDepName, flagMapSt, self);
@@ -105,12 +114,9 @@ release(const char *name, rosAFE_ids *ids,
 
 		std::vector<std::shared_ptr< twoCTypeBlock<double> > > info = thisProcessor->getLeftLastChunkAccessor();
 	
-		for ( size_t iii = 0 ; iii < info.size() ; ++iii) {
-			std::cout << "Channel : " << iii <<  std::endl;	
-			for ( unsigned int i = 0 ; i < info[iii]->array1.second ; i++ )
-				std::cout << *( info[iii]->array1.first + i ) << " ";
+			for ( unsigned int i = 0 ; i < info[20]->array1.second ; i++ )
+				std::cout << *( info[20]->array1.first + i ) << " ";
 			std::cout << std::endl;
-		}
 
   // Informing all the potential childs to say that this is a new chunk.
   SM::riseFlag ( name, newDataMapSt, self );

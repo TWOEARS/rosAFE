@@ -232,6 +232,8 @@ namespace openAFE {
 			void set_fb_nGamma(const uint32_t arg) {this->fb_nGamma = arg; this->prepareForProcessing ();}
 			void set_fb_bwERBs(const double arg) {this->fb_bwERBs = arg; this->prepareForProcessing ();}
 
+			std::string get_upperProcName() {return this->upperProcPtr->getName();}
+
 	}; /* class GammatoneProc */
 }; /* namespace openAFE */
 

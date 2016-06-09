@@ -34,9 +34,13 @@ startGammatoneProc(const char *name, const char *upperDepName,
                    double fb_bwERBs, genom_context self)
 {
   std::shared_ptr<PreProc > upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
- 
+
+  filterBankType thisBank = _gammatoneFilterBank;
+  if ( strcmp( fb_type, "drnl" ) == 0 )
+	thisBank = _drnlFilterBank;
+		 
   std::shared_ptr < GammatoneProc > gammatoneProcessor (new GammatoneProc( name, upperDepProc,
-	_gammatoneFilterBank, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels, fb_cfHz->_buffer, fb_cfHz->_length, fb_nGamma, fb_bwERBs ) );
+	thisBank, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels, fb_cfHz->_buffer, fb_cfHz->_length, fb_nGamma, fb_bwERBs ) );
   
   /* Adding this procesor to the ids */
   ((*gammatoneProcessorsSt)->processorsAccessor).addProcessor( gammatoneProcessor );

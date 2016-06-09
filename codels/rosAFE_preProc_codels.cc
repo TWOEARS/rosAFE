@@ -35,10 +35,14 @@ startPreProc(const char *name, const char *upperDepName,
              genom_context self)
 {
   std::shared_ptr < InputProc > upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
-    
+
+  middleEarModel thisModel = _jespen;
+  if ( strcmp( pp_middleEarModel, "lopezpoveda" ) == 0 )
+	thisModel = _lopezpoveda;
+	    
   std::shared_ptr < PreProc > preProcessor (new PreProc( name, upperDepProc,
   pp_bRemoveDC, pp_cutoffHzDC, pp_bPreEmphasis, pp_coefPreEmphasis, pp_bNormalizeRMS, pp_intTimeSecRMS, pp_bLevelScaling,
-  pp_refSPLdB, pp_bMiddleEarFiltering, pp_middleEarModel, pp_bUnityComp) );
+  pp_refSPLdB, pp_bMiddleEarFiltering, thisModel, pp_bUnityComp) );
   
   // Adding this procesor to the ids
   ((*preProcessorsSt)->processorsAccessor).addProcessor( preProcessor );

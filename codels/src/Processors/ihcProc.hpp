@@ -231,6 +231,8 @@ namespace openAFE {
 			// setters			
 			void set_ihc_method(const ihcMethod arg) {this->method=arg; this->prepareForProcessing ();}
 
+			std::string get_upperProcName() {return this->upperProcPtr->getName();}
+
 	}; /* class IHCProc */
 }; /* namespace openAFE */
 

@@ -80,7 +80,7 @@ module rosAFE {
       double fb_highFreqHz;
       double fb_nERBs;
       unsigned long fb_nChannels;
-      unsigned long fb_cfHz;
+      sequence<double> fb_cfHz;
       unsigned long fb_nGamma;
       double fb_bwERBs;
     };

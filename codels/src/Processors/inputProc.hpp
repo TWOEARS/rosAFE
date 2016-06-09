@@ -101,9 +101,10 @@ namespace openAFE {
 
 			// setters			
 			void set_in_doNormalize(const bool arg) {this->in_doNormalize=arg;}
-			void set_in_normalizeValue(const uint64_t arg) {this->in_normalizeValue=arg;}			
+			void set_in_normalizeValue(const uint64_t arg) { if ( arg > 0 ) this->in_normalizeValue=arg;}			
 	
-			 
+			std::string get_upperProcName()	{return "BASS";}
+			
 	}; /* class InputProc */
 }; /* namespace openAFE */
 

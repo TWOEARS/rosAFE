@@ -28,8 +28,26 @@ startIhcProc(const char *name, const char *upperDepName,
              const char *ihc_method, genom_context self)
 {
   std::shared_ptr < GammatoneProc > upperDepProc = ((*gammatoneProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
-  
-  std::shared_ptr < IHCProc > ihcProcessor ( new IHCProc( name, upperDepProc, _none) );
+
+  ihcMethod thisMethod = _dau;
+  if ( strcmp( ihc_method, "none" ) == 0 )
+	thisMethod = _none;
+  else if ( strcmp( ihc_method, "halfwave" ) == 0 )
+	thisMethod = _halfwave;
+  else if ( strcmp( ihc_method, "fullwave" ) == 0 )
+	thisMethod = _fullwave;
+  else if ( strcmp( ihc_method, "square" ) == 0 )
+	thisMethod = _square;
+  else if ( strcmp( ihc_method, "hilbert" ) == 0 )
+	thisMethod = _hilbert;
+  else if ( strcmp( ihc_method, "joergensen" ) == 0 )
+	thisMethod = _joergensen;
+  else if ( strcmp( ihc_method, "breebart" ) == 0 )
+	thisMethod = _breebart;
+  else if ( strcmp( ihc_method, "bernstein" ) == 0 )
+	thisMethod = _bernstein;
+					  
+  std::shared_ptr < IHCProc > ihcProcessor ( new IHCProc( name, upperDepProc, thisMethod) );
   
   /* Adding this procesor to the ids */
   ((*ihcProcessorsSt)->processorsAccessor).addProcessor( ihcProcessor );

@@ -177,7 +177,7 @@ namespace openAFE {
 					for ( size_t ii = 0 ; ii < nFrames_1 ; ++ii ) {
 						// Get start and end indexes for the current frame
 						uint32_t n_start = ii * this->ild_hSize;
-						uint32_t n_end = ii * this->ild_hSize + this->ild_wSize - 1;
+						// uint32_t n_end = ii * this->ild_hSize + this->ild_wSize - 1;
 					
 						// Loop on the channel
 						for ( size_t jj = 0 ; jj < this->fb_nChannels ; ++jj ) {
@@ -209,6 +209,8 @@ namespace openAFE {
 			void set_ild_wSizeSec(const double arg) {this->ild_wSizeSec=arg; this->prepareForProcessing ();}
 			void set_ild_hSizeSec(const double arg) {this->ild_hSizeSec=arg; this->prepareForProcessing ();}
 			void set_ild_wname(const ildWindowType arg) {this->ild_wname=arg; this->prepareForProcessing ();}
+
+			std::string get_upperProcName() {return this->upperProcPtr->getName();}
 			
 	}; /* class ILDProc */
 }; /* namespace openAFE */

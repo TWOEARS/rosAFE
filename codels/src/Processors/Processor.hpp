@@ -120,7 +120,9 @@ namespace openAFE {
 			
 			const uint32_t getBufferSize_s() {
 				return this->bufferSize_s;
-			}										
+			}
+
+			virtual std::string get_upperProcName()	= 0;										
 	};
 
 };

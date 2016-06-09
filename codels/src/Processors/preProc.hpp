@@ -21,6 +21,11 @@
 
 namespace openAFE {
 
+	enum middleEarModel{
+		_jespen,
+		_lopezpoveda
+	};
+	
 	class PreProc : public TDSProcessor<double> {
 
 		private:
@@ -54,8 +59,8 @@ namespace openAFE {
 			bool pp_bLevelScaling;
 			double pp_refSPLdB;
 			bool pp_bMiddleEarFiltering;
-			std::string pp_middleEarModel;
-			bool pp_bUnityComp;			
+			middleEarModel pp_middleEarModel;
+			bool pp_bUnityComp;
 	
             void verifyParameters() {
 				
@@ -153,11 +158,17 @@ namespace openAFE {
 					// 5- Middle Ear Filtering
 					if ( this->pp_bUnityComp ) {
 						
-						if ( this->pp_middleEarModel == "jespen" )
-							this->meFilterPeakdB = 55.9986;
-						else if ( this->pp_middleEarModel == "lopezpoveda" )
-							this->meFilterPeakdB = 66.2888;
-						
+						switch ( this->pp_middleEarModel ) {
+							case _jespen:
+								this->meFilterPeakdB = 55.9986;
+								break;
+							case _lopezpoveda:
+								this->meFilterPeakdB = 66.2888;
+								break;
+							default:
+					 			this->meFilterPeakdB = 0;
+								break;
+						}
 					} else this->meFilterPeakdB = 0;
 					
 					if ( this->pp_bMiddleEarFiltering ) {
@@ -179,7 +190,7 @@ namespace openAFE {
 																																		  bool pp_bLevelScaling = false,
 																																		  double pp_refSPLdB = 100,
 																																		  bool pp_bMiddleEarFiltering = false,
-																																		  std::string pp_middleEarModel = "jepsen",
+																																		  middleEarModel pp_middleEarModel = _jespen,
 																																		  bool pp_bUnityComp = true
 					) : TDSProcessor<double> (nameArg, upperProcPtr->getFsOut(), upperProcPtr->getFsOut(), upperProcPtr->getBufferSize_s(), _inputProc) {
 
@@ -331,7 +342,7 @@ namespace openAFE {
 			bool get_pp_bLevelScaling() {return this->pp_bLevelScaling;}
 			double get_pp_refSPLdB() {return this->pp_refSPLdB;}
 			bool get_pp_bMiddleEarFiltering() {return this->pp_bMiddleEarFiltering;}
-			std::string get_pp_middleEarModel() {return this->pp_middleEarModel;}
+			middleEarModel get_pp_middleEarModel() {return this->pp_middleEarModel;}
 			bool get_pp_bUnityComp() {return this->pp_bUnityComp;}
 
 			// setters			
@@ -344,8 +355,10 @@ namespace openAFE {
 			void set_pp_bLevelScaling(const bool arg) {this->pp_bLevelScaling=arg; this->prepareForProcessing ();}
 			void set_pp_refSPLdB(const double arg) {this->pp_refSPLdB=arg; this->prepareForProcessing ();}
 			void set_pp_bMiddleEarFiltering(const bool arg) {this->pp_bMiddleEarFiltering=arg; this->prepareForProcessing ();}
-			void set_pp_middleEarModel(const std::string arg) {this->pp_middleEarModel=arg; this->prepareForProcessing ();}
+			void set_pp_middleEarModel(const middleEarModel arg) {this->pp_middleEarModel=arg; this->prepareForProcessing ();}
 			void set_pp_bUnityComp(const bool arg) {this->pp_bUnityComp=arg; this->prepareForProcessing ();}			
+
+			std::string get_upperProcName() {return this->upperProcPtr->getName();}
 				
 	}; /* class PreProc */
 }; /* namespace openAFE */

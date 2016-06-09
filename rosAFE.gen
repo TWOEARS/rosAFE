@@ -31,7 +31,7 @@ component rosAFE {
 	flagMap newDataMapSt;
     };
 
-    exception e_noData, e_noMemory, e_existsAlready, e_noSuchProcessor, e_noSuchParameter, e_noUpperDependencie, e_badIndexParam;
+    exception e_noData, e_noMemory, e_existsAlready, e_noSuchProcessor, e_noSuchParameter, e_noUpperDependencie, e_badIndexParam, e_badNewValue;
 
     task init {
 	codel <start> initIDS( out ::ids ) yield ether;
@@ -213,7 +213,7 @@ component rosAFE {
 
 	codel 	modifyParameter( local in nameProc, local in nameParam, local in newValue, in ::ids );
 
-	throw   e_noMemory, e_noSuchProcessor, e_noSuchParameter;
+	throw   e_noMemory, e_noSuchProcessor, e_noSuchParameter, e_badNewValue;
     };
 
     function removeProcessor ( in string name = "name" : "The name of the processor to delete" ) {
