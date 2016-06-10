@@ -1,3 +1,6 @@
+#include "acrosAFE.h"
+#include "rosAFE_c_types.h"
+
 #include <pthread.h>
 
 #include <memory>
@@ -72,27 +75,6 @@ existsAlready(const char *name, const char *upperDepName,
  * rosAFE_e_noSuchProcessor.
  */
 /* already defined in service PreProc validation */
-
-
-
-/* --- Function getSignals ---------------------------------------------- */
-
-/** Codel getSignal of function getSignals.
- *
- * Returns genom_ok.
- * Throws rosAFE_e_noMemory, rosAFE_e_badIndexParam.
- */
-genom_event
-getSignal(uint64_t *startIndex, uint64_t endIndex,
-          rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
-          genom_context self)
-{
-  if (endIndex < *startIndex)
-	return rosAFE_e_badIndexParam( self );
-  
-  return genom_ok;
-}
-
 
 /* --- Function getParameters ------------------------------------------- */
 

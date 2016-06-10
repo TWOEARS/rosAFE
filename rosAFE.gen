@@ -1,5 +1,5 @@
 #pragma require "bass-genom3 >= 1.0"
-#include "bassInterface.gen"
+#include "bass/bassInterface.gen"
 #include "rosAFEInterface.gen"
 
 component rosAFE {

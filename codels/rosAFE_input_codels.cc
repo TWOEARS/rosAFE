@@ -54,9 +54,6 @@ getAudioData(binaudio_portStruct *src, double *destL, double *destR,
     return n;
 }
 
-/* --- Task read -------------------------------------------------------- */
-
-/* --- Activity GetBlocks ----------------------------------------------- */
 
 /* Variables shared between the codels (they could go in the IDS) */
 static int N;
@@ -65,7 +62,12 @@ static int64_t nfr;
 static double *li, *ri;
 std::vector<double> l, r;
 
-/** Codel startGetBlocks of activity GetBlocks.
+
+/* --- Task input ------------------------------------------------------- */
+
+/* --- Activity InputProc ----------------------------------------------- */
+
+/** Codel startInputProc of activity InputProc.
  *
  * Triggered by rosAFE_start.
  * Yields to rosAFE_waitExec.
