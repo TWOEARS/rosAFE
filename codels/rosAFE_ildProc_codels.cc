@@ -47,6 +47,10 @@ startIldProc(const char *name, const char *upperDepName,
 
   /* Adding this procesor to the ids */
   ((*ildProcessorsSt)->processorsAccessor).addProcessor( ildProcessor );
+
+  // Initialization of the output port
+  PORT::initILDPort ( name, ildPort, ildProcessor->getFsOut(),
+						ildProcessor->getBufferSize_s(), ildProcessor->get_ild_nChannels(), self );
   
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );
@@ -110,13 +114,7 @@ release(const char *name, rosAFE_ids *ids,
   std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( name );
   thisProcessor->releaseChunk( );
   
-  // PORT::publishGammatonePort ( name, gammatonePort, thisProcessor->getLeftLastChunkAccessor(), thisProcessor->getRightLastChunkAccessor(), sizeof(double), thisProcessor->getNFR(), self );
-
-		std::vector<std::shared_ptr< twoCTypeBlock<double> > > info = thisProcessor->getLeftLastChunkAccessor();
-	
-			for ( unsigned int i = 0 ; i < info[20]->array1.second ; i++ )
-				std::cout << *( info[20]->array1.first + i ) << " ";
-			std::cout << std::endl;
+  PORT::publishILDPort ( name, ildPort, thisProcessor->getLeftLastChunkAccessor(), sizeof(double), thisProcessor->getNFR(), self );
 
   // Informing all the potential childs to say that this is a new chunk.
   SM::riseFlag ( name, newDataMapSt, self );

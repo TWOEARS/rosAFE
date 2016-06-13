@@ -193,7 +193,6 @@
 	  return genom_ok;
 	}							
 				
-
 	genom_event
 	PORT::publishGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, std::vector<twoCTypeBlockPtr > left,
 						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
@@ -242,6 +241,8 @@
 							
 		return genom_ok;							
 	}
+
+/* IHC Port ----------------------------------------------------------------- */
 
 	genom_event
 	PORT::initIHCPort ( const char *name, const rosAFE_ihcPort *ihcPort, uint32_t sampleRate,
@@ -331,7 +332,90 @@
 							
 		return genom_ok;							
 	}
-									
+
+/* ILD Port ----------------------------------------------------------------- */
+
+	genom_event
+	PORT::initILDPort ( const char *name, const rosAFE_ildPort *ildPort, uint32_t sampleRate,
+						uint32_t bufferSize_s, uint32_t nChannels, genom_context self ) {
+
+
+	  uint32_t fop =  sampleRate * bufferSize_s; /* total amount of Frames On the Port */
+	  
+	  ildPort->open( name, self );
+		
+	  if ( genom_sequence_reserve(&(ildPort->data( name, self )->left.dataN), nChannels) )
+	  return rosAFE_e_noMemory( self );
+
+	  ildPort->data( name, self )->left.dataN._length = nChannels;
+	  ildPort->data( name, self )->right.dataN._length = 0;
+	  
+	  for ( size_t ii = 0 ; ii < nChannels ; ++ii ) {
+		if ( genom_sequence_reserve(&(ildPort->data( name, self )->left.dataN._buffer[ii].data), fop) )
+		return rosAFE_e_noMemory( self );
+	  
+	  	ildPort->data( name, self )->left.dataN._buffer[ii].data._length = fop;
+	  
+		for (uint32_t iii = 0; iii < fop; iii++) {
+			ildPort->data( name, self )->left.dataN._buffer[ii].data._buffer[iii] = 0;
+		}	  
+	  }
+
+	  ildPort->data( name, self )->sampleRate = sampleRate;
+	  ildPort->data( name, self )->framesOnPort = fop;	  
+	  ildPort->data( name, self )->numberOfChannels = nChannels;
+	  ildPort->data( name, self )->lastFrameIndex = 0;
+	  
+	  ildPort->write( name, self );
+	  
+	  return genom_ok;					
+	}
+
+
+	genom_event
+	PORT::publishILDPort ( const char *name, const rosAFE_ildPort *ildPort, std::vector<twoCTypeBlockPtr > left,
+						uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
+
+		rosAFE_TimeFrequencySignalPortStruct *thisPort;
+
+		thisPort = ildPort->data( name, self );
+
+		for ( size_t ii = 0 ; ii < thisPort->numberOfChannels ; ++ii ) {
+
+			uint32_t dim1 = left[ii]->array1.second;
+			uint32_t dim2 = left[ii]->array2.second;
+
+			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+			uint32_t fop = thisPort->framesOnPort; 	// total amount of Frames On the Port
+
+			memmove(thisPort->left.dataN._buffer[ii].data._buffer, thisPort->left.dataN._buffer[ii].data._buffer + fpc, (fop - fpc) * bytesPerFrame);
+
+			uint32_t pos, iii;
+			if (dim2 == 0) {
+				for (iii = 0, pos = fop - fpc; pos < fop ; iii++, pos++) {
+					thisPort->left.dataN._buffer[ii].data._buffer[pos] = *(left[ii]->array1.first + iii);
+				}
+			} else if (dim1 == 0) {
+					for (iii = 0, pos = fop - fpc; pos < fop ; iii++, pos++) {
+						thisPort->left.dataN._buffer[ii].data._buffer[pos] = *(left[ii]->array2.first + iii);
+					}
+			} else {
+					for (iii = 0, pos = fop - fpc; pos < fop - dim2 ; iii++, pos++) {
+						thisPort->left.dataN._buffer[ii].data._buffer[pos] = *(left[ii]->array1.first + iii);
+					}
+					
+					for (iii = 0, pos = fop - dim2; pos < fop ; iii++, pos++) {
+						thisPort->left.dataN._buffer[ii].data._buffer[pos] = *(left[ii]->array2.first + iii);
+					}			
+				}
+		}
+
+		thisPort->lastFrameIndex = nfr;
+		ildPort->write( name, self );	
+
+	  return genom_ok;							
+	}
+																					
 /*
 genom_event
 deleteTDSPort   (const char *name, const rosAFE_TDSPorts *TDSPorts, genom_context self) {

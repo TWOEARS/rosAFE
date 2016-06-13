@@ -65,7 +65,19 @@ namespace openAFE {
 			std::shared_ptr<twoCTypeBlock<T> > getRightWholeBufferAccessor() {
 				return this->rightOutput->getWholeBufferAccesor();
 			}
-			
+
+			std::shared_ptr<twoCTypeBlock<T> > getLeftOldDataAccessor() {
+				std::cout << "TDSProcessor Left" << std::endl;
+
+				return this->leftOutput->getOldDataAccesor();
+			}
+
+			std::shared_ptr<twoCTypeBlock<T> > getRightOldDataAccessor() {
+								std::cout << "TDSProcessor Right" << std::endl;
+
+				return this->rightOutput->getOldDataAccesor();
+			}
+						
 			void releaseChunk () {
 				if ( this->hasTwoOutputs ) {						
 					std::thread leftAppendThread( &TimeDomainSignal<T>::appendChunk, this->leftOutput, leftPMZ->getLastChunkAccesor() );

@@ -106,7 +106,7 @@ namespace openAFE {
 				return this->fsIn;
 			}
 			
-			const uint64_t getNFR () {
+			const uint64_t getNFR() {
 				return this->nfr;
 			}
 			

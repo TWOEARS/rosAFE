@@ -233,6 +233,7 @@ namespace openAFE {
 		 * 
 		 * */
 		void calcOldData(uint32_t samplesArg = 0) {
+			std::cout << "buffer" << std::endl;
 			
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();

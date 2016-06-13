@@ -17,7 +17,7 @@ namespace openAFE {
 	private:
 	
 	    std::shared_ptr<CircularContainer<T> > buffer;
-	    std::shared_ptr<twoCTypeBlock<T> > lastChunkInfo, wholeBufferInfo;
+	    std::shared_ptr<twoCTypeBlock<T> > lastChunkInfo, wholeBufferInfo, oldDataInfo;
 			    
 	public:
 			
@@ -27,6 +27,7 @@ namespace openAFE {
 			this->buffer.reset( new CircularContainer<T>( this->bufferSizeSamples ) );
 			this->lastChunkInfo.reset( new twoCTypeBlock<T> );
 			this->wholeBufferInfo.reset( new twoCTypeBlock<T> );
+			this->oldDataInfo.reset( new twoCTypeBlock<T> );			
 		}
 		
 		/* Calls automatically Signal's destructor */
@@ -34,6 +35,7 @@ namespace openAFE {
 			this->buffer.reset();
 			this->lastChunkInfo.reset();
 			this->wholeBufferInfo.reset();
+			this->oldDataInfo.reset();
 		}
 		
 		void appendTChunk( T* inChunk, size_t dim ) {							
@@ -55,7 +57,14 @@ namespace openAFE {
 			this->wholeBufferInfo->setData( this->buffer->getWholeBufferAccesor() );
 			return this->wholeBufferInfo;
 		}
-		
+
+		std::shared_ptr<twoCTypeBlock<T> > getOldDataAccesor() {
+			std::cout << "TimeDomainSignal" << std::endl;
+			this->buffer->calcOldData();
+			this->wholeBufferInfo->setData( this->buffer->getOldDataAccesor() );
+			return this->wholeBufferInfo;
+		}
+				
 		/* Puts zero to all over the buffer */
 		void reset () {
 			this->buffer->reset();

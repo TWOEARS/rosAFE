@@ -5,6 +5,8 @@ p=0.25;
 
 %% Paths
 addpath(genpath('~/openrobots/lib/matlab'));
+addpath(genpath('~/genom_ws/rosAFE/AuditoryModel'));
+startRosAFE;
 
 %% Genom
 client = genomix.client;
@@ -17,7 +19,7 @@ pause(p);
 %% Acquiring Audio
 sampleRate = 44100;
 bufferSize_s_bass = 1;
-bufferSize_s_rosAFE = 10;
+bufferSize_s_rosAFE = 2;
 nFramesPerChunk = 2205;
 nChunksOnPort = sampleRate * bufferSize_s_bass / nFramesPerChunk;
 inputDevice = 'hw:2,0';
@@ -42,12 +44,11 @@ thisProc = rosAFE.InputProc('-a', inputName, 12000, bufferSize_s_rosAFE );
 pause(p);
 
 preProcName = 'preProc';
-preProcProc = rosAFE.PreProc('-a', preProcName, inputName, sampleRate, 0, ... % 'pp_bRemoveDC'
+preProcProc = rosAFE.PreProc('-a', preProcName, inputName, 0, ... % 'pp_bRemoveDC'
                                                                        5000, ... % 'pp_cutoffHzDC'
                                                                        0, ... % 'pp_bPreEmphasis'
                                                                        0.97, ... % 'pp_coefPreEmphasis'
                                                                        0, ... % 'pp_bNormalizeRMS'
-                                                                       1, ... % 'pp_bBinauralRMS'
                                                                        500e-3, ... % 'pp_intTimeSecRMS'
                                                                        1, ... % 'pp_bLevelScaling'
                                                                        10, ... % 'pp_refSPLdB'
@@ -57,7 +58,7 @@ preProcProc = rosAFE.PreProc('-a', preProcName, inputName, sampleRate, 0, ... % 
 pause(p);
 
 gammatoneProcName = 'gammatoneProc';
-gammatoneProc = rosAFE.GammatoneProc('-a', gammatoneProcName, preProcName, sampleRate, 'gammatone', ... % 'fb_type'
+gammatoneProc = rosAFE.GammatoneProc('-a', gammatoneProcName, preProcName, 'gammatone', ... % 'fb_type'
                                                                        80, ... % 'fb_lowFreqHz'
                                                                        8000, ... % 'fb_highFreqHz'
                                                                        1, ... % 'fb_nERBs'
@@ -65,6 +66,14 @@ gammatoneProc = rosAFE.GammatoneProc('-a', gammatoneProcName, preProcName, sampl
                                                                        0, ... % 'fb_cfHz'
                                                                        4, ... % 'fb_nGamma'
                                                                        1.0180 );  % 'fb_bwERBs'
+pause(p);
+
+ihcProcName = 'ihcP';
+ihcProc = rosAFE.IhcProc('-a', ihcProcName, gammatoneProcName, 'dau' );  % 'fb_bwERBs'
+pause(p);
+
+ildName = 'ildP';
+ildProc = rosAFE.IldProc('-a', ildName, ihcProcName, 'hann', 0.02, 0.01 );  % 
 pause(p);
 
 %% Services
@@ -89,11 +98,22 @@ kill = rosAFE.removeProcessor(preProcName);
 if ( strcmp(kill.status,'error') )
    error(strcat('Error',kill.exception.ex));
 end
+tic
+signal = rosAFE.GetSignals();
+toc
+if ( strcmp(kill.status,'error') )
+   error(strcat('Error',kill.exception.ex));
+end
 
 %% Getting the output
 
+ildOut = rosAFE.ildPort(ildName);
+ihcOut = rosAFE.ihcPort(ihcProcName);
+gammatoneOut = rosAFE.gammatonePort(gammatoneProcName);
+tic
 preProc = rosAFE.preProcPort(preProcName);
 inputPort = rosAFE.inputProcPort();
+toc
 bassPort = bass.Audio();
 
 %% Tools
@@ -118,6 +138,10 @@ audiowrite('pp.wav',sound, sampleRate);
 % audiowrite('preProc.wav',[dObj.time_input_0_0{1}.Data(:) dObj.time_input_0_0{2}.Data(:)], sampleRate);
 
 
+%%
 
+a = TimeDomainSignal;
+a.construct(44100,2,'test','test');
 
-
+signal = rosAFE.GetSignals();
+a.appendChunk(cell2mat(signal.result.signals.input{1}.left.data)');

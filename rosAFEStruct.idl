@@ -108,9 +108,11 @@ module rosAFE {
     };
 
     struct dataObjSt {
-      unsigned long         			sampleRate;
-      sequence<TimeDomainSignalPortStruct>	allTDSPorts;
-      sequence<TimeFrequencySignalPortStruct>	allTFSPorts;
+      sequence<TimeDomainSignalPortStruct> 		input;
+      sequence<TimeDomainSignalPortStruct>      	preProc;
+      sequence<TimeFrequencySignalPortStruct>        	gammatone;
+      sequence<TimeFrequencySignalPortStruct>      	ihc;
+      sequence<TimeFrequencySignalPortStruct>      	ild;
     };
 };
 

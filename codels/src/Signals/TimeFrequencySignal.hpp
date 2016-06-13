@@ -25,7 +25,7 @@ namespace openAFE {
 		size_t nChannel;	
 		
 		std::vector<std::shared_ptr<CircularContainer<T> > > buffer;
-		std::vector<std::shared_ptr<twoCTypeBlock<T> > > lastChunkInfo, wholeBufferInfo;
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > > lastChunkInfo, wholeBufferInfo, oldDataInfo;
 		
 		std::string scaling;
 
@@ -51,11 +51,13 @@ namespace openAFE {
 			buffer.resize( this->nChannel );
 			lastChunkInfo.resize( this->nChannel );
 			wholeBufferInfo.resize( this->nChannel );
+			oldDataInfo.resize( this->nChannel );
 			
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
 				buffer[ii].reset( new CircularContainer<T>( this->bufferSizeSamples ) );
 				lastChunkInfo[ii].reset( new twoCTypeBlock<T> );
 				wholeBufferInfo[ii].reset( new twoCTypeBlock<T> );
+				oldDataInfo[ii].reset( new twoCTypeBlock<T> );
 			}
 		}
 
@@ -63,7 +65,8 @@ namespace openAFE {
 		~TimeFrequencySignal() {
 			this->buffer.clear();
 			this->lastChunkInfo.clear();
-			this->wholeBufferInfo.clear();			
+			this->wholeBufferInfo.clear();
+			this->oldDataInfo.clear();
 		}
 		
 		void appendChunk( std::shared_ptr<twoCTypeBlock<T> > inChunk ) {
@@ -91,7 +94,15 @@ namespace openAFE {
 			}
 			return this->wholeBufferInfo;
 		}
-		
+
+		std::vector<std::shared_ptr<twoCTypeBlock<T> > >& getOldDataAccesor() {
+			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii ) {
+				this->buffer[ii]->calcOldData();
+				this->oldDataInfo[ii]->setData( this->buffer[ii]->getOldDataAccesor() );
+			}
+			return this->oldDataInfo;
+		}
+				
 		/* Puts zero to all over the buffer */
 		void reset () {
 			for ( unsigned int ii = 0 ; ii < this->nChannel ; ++ii )

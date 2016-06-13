@@ -57,6 +57,8 @@ component rosAFE {
         period      50ms;
     };
 
+    task getSignals;
+
     activity InputProc(
       in string name = "input" : "The name of this activity",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
@@ -195,6 +197,16 @@ component rosAFE {
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
     };
+
+
+   activity GetSignals ( out rosAFE::dataObjSt signals ) {
+	doc      "Returns the asked chunks.";
+        task        getSignals;
+
+	codel <start>	 getSignal( out signals, in ::ids, in infos ) yield ether;
+
+	throw    e_noMemory, e_badIndexParam;
+   };
 
    function getParameters ( out rosAFE::parameters parameters ) {
 	doc      "Returns all parameter informations for each running processor.";
