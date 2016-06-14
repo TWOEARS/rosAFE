@@ -109,7 +109,8 @@ namespace openAFE {
 				this->upperProcPtr = upperProcPtr;
 				this->ild_wSizeSec = ild_wSizeSec;
 				this->ild_hSizeSec = ild_hSizeSec;
-				
+				this->ild_wname = ild_wname;
+								
 				buffer_l.reset( new TimeFrequencySignal<double>( this->getFsIn(), this->getBufferSize_s(), this->fb_nChannels, "inner buffer", "magnitude", _left) );
 				buffer_r.reset( new TimeFrequencySignal<double>( this->getFsIn(), this->getBufferSize_s(), this->fb_nChannels, "inner buffer", "magnitude", _right) );
 								
@@ -183,6 +184,17 @@ namespace openAFE {
 						for ( size_t jj = 0 ; jj < this->fb_nChannels ; ++jj ) {
 							processChannel( l_innerBuffer[jj]->array1.first + n_start, r_innerBuffer[jj]->array1.first + n_start, PMZ[jj], ii );
 						}
+						
+			/*			std::vector<std::thread> threads;
+						for ( size_t jj = 0 ; ii < this->fb_nChannels ; ++jj )
+							threads.push_back(std::thread( &ILDProc::processChannel, this, l_innerBuffer[jj]->array1.first + n_start, r_innerBuffer[jj]->array1.first + n_start, PMZ[jj], ii ));
+
+						// Waiting to join the threads
+						for (auto& t : threads)
+							t.join();						
+			*/			
+						
+						
 					}
 				}
 				

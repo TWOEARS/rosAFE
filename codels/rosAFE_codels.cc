@@ -76,6 +76,322 @@ existsAlready(const char *name, const char *upperDepName,
  */
 /* already defined in service PreProc validation */
 
+
+
+/* --- Function getSignals ---------------------------------------------- */
+
+/** Codel getSignal of function getSignals.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noMemory, rosAFE_e_badIndexParam.
+ */
+genom_event
+getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
+          genom_context self)
+{
+/* ****************************  Input START  ************************************ */
+  size_t sizeInputProc = ids->inputProcessorsSt->processorsAccessor.getSize();
+
+  signals->input._length = sizeInputProc;
+
+  if (genom_sequence_reserve(&(signals->input), sizeInputProc))
+	return rosAFE_e_noMemory( self );
+
+  for ( size_t ii = 0 ; ii < sizeInputProc ; ++ii ) {
+    std::shared_ptr < InputProc > thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
+    
+	twoCTypeBlockPtr left = thisProcessor->getLeftWholeBufferAccessor();
+	twoCTypeBlockPtr right = thisProcessor->getRightWholeBufferAccessor();
+
+	uint32_t dim1 = left->array1.second;
+	uint32_t dim2 = left->array2.second;
+
+ 	uint32_t fpc = dim1 + dim2; // amount of Frames On this Chunk
+ 	 	
+	signals->input._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	signals->input._buffer[ii].framesOnPort = fpc;
+	signals->input._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+
+	signals->input._buffer[ii].left.data._length = fpc;
+	signals->input._buffer[ii].right.data._length = fpc;
+	
+	if (genom_sequence_reserve(&(signals->input._buffer[ii].left.data), fpc) ||
+		genom_sequence_reserve(&(signals->input._buffer[ii].right.data), fpc))
+	return rosAFE_e_noMemory( self );
+ 	
+	uint32_t pos, pos2 = 0;
+	for ( pos = 0 ; pos < dim1 ; ++pos )  {
+		signals->input._buffer[ii].left.data._buffer[pos] = *(left->array1.first + pos);
+		signals->input._buffer[ii].right.data._buffer[pos] = *(right->array1.first + pos);
+	}
+	for ( pos = dim1 ; pos < fpc ; ++pos, ++pos2 ) {
+		signals->input._buffer[ii].left.data._buffer[pos] = *(left->array2.first + pos2 );
+		signals->input._buffer[ii].right.data._buffer[pos] = *(right->array2.first + pos2 );
+	}
+											  
+	left.reset();
+	right.reset();
+    thisProcessor.reset();
+  }
+
+/* ****************************  PreProc START  ************************************ */
+  size_t sizePreProc = ids->preProcessorsSt->processorsAccessor.getSize();
+
+  signals->preProc._length = sizePreProc;
+
+  if (genom_sequence_reserve(&(signals->preProc), sizePreProc))
+	return rosAFE_e_noMemory( self );
+
+  for ( size_t ii = 0 ; ii < sizePreProc ; ++ii ) {
+    std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
+ 
+	twoCTypeBlockPtr left = thisProcessor->getLeftWholeBufferAccessor();
+	twoCTypeBlockPtr right = thisProcessor->getRightWholeBufferAccessor();
+
+	uint32_t dim1 = left->array1.second;
+	uint32_t dim2 = left->array2.second;
+
+ 	uint32_t fpc = dim1 + dim2; // amount of Frames On this Chunk
+ 	
+	signals->preProc._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	signals->preProc._buffer[ii].framesOnPort = fpc;
+	signals->preProc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+
+	signals->preProc._buffer[ii].left.data._length = fpc;
+	signals->preProc._buffer[ii].right.data._length = fpc;
+	
+	if (genom_sequence_reserve(&(signals->preProc._buffer[ii].left.data), fpc) ||
+		genom_sequence_reserve(&(signals->preProc._buffer[ii].right.data), fpc))
+	return rosAFE_e_noMemory( self );
+
+	uint32_t pos, pos2 = 0;
+	for ( pos = 0 ; pos < dim1 ; ++pos )  {
+		signals->preProc._buffer[ii].left.data._buffer[pos] = *(left->array1.first + pos);
+		signals->preProc._buffer[ii].right.data._buffer[pos] = *(right->array1.first + pos);
+	}
+	for ( pos = dim1 ; pos < fpc ; ++pos, ++pos2 ) {
+		signals->preProc._buffer[ii].left.data._buffer[pos] = *(left->array2.first + pos2 );
+		signals->preProc._buffer[ii].right.data._buffer[pos] = *(right->array2.first + pos2 );
+	}
+												  
+	left.reset();
+	right.reset();
+    thisProcessor.reset();
+  }
+
+/* ****************************  Gammatone START  ************************************ */
+  size_t sizeGammatone = ids->gammatoneProcessorsSt->processorsAccessor.getSize();
+  
+  signals->gammatone._length = sizeGammatone;
+  if (genom_sequence_reserve(&(signals->gammatone), sizeGammatone))
+	return rosAFE_e_noMemory( self );
+	
+  for ( size_t ii = 0 ; ii < sizeGammatone ; ++ii ) {
+    std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	if (genom_sequence_reserve(&(signals->gammatone._buffer[ii].left.dataN), thisProcessor->get_fb_nChannels() ) ||
+		  genom_sequence_reserve(&(signals->gammatone._buffer[ii].right.dataN), thisProcessor->get_fb_nChannels() ))
+	  return rosAFE_e_noMemory( self );
+
+	  signals->gammatone._buffer[ii].left.dataN._length = thisProcessor->get_fb_nChannels();
+	  signals->gammatone._buffer[ii].right.dataN._length = thisProcessor->get_fb_nChannels();
+	  
+	  signals->gammatone._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  	  
+	  signals->gammatone._buffer[ii].numberOfChannels = thisProcessor->get_fb_nChannels();
+	  signals->gammatone._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftWholeBufferAccessor();
+	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightWholeBufferAccessor();
+
+			uint32_t dim1 = left[0]->array1.second;
+			uint32_t dim2 = left[0]->array2.second;
+			
+			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+			
+			signals->gammatone._buffer[ii].framesOnPort = fpc;
+		
+		for ( size_t jj = 0 ; jj < thisProcessor->get_fb_nChannels() ; ++jj ) {
+			
+			uint32_t dim1 = left[jj]->array1.second;
+			uint32_t dim2 = left[jj]->array2.second;
+			
+			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+
+			if (genom_sequence_reserve(&(signals->gammatone._buffer[ii].left.dataN._buffer[jj].data), fpc) ||
+				genom_sequence_reserve(&(signals->gammatone._buffer[ii].right.dataN._buffer[jj].data), fpc))
+			return rosAFE_e_noMemory( self );
+		  
+			signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._length = fpc;
+			signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._length = fpc;
+		
+			uint32_t pos, iii;
+			if (dim2 == 0) {	
+				for ( pos = 0; pos < dim1 ; ++pos ) {
+					signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
+					signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
+				}
+			} else if (dim1 == 0) {
+					for ( pos = 0; pos < dim2 ; ++pos )  {
+						signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + pos);
+						signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + pos);
+					}
+			} else {
+					for ( pos = 0 ; pos < fpc - dim2 ; ++pos ) {
+						signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
+						signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
+					}
+					
+					for ( iii = 0, pos = fpc - dim2 ; pos < fpc ; ++pos, ++iii ) {
+						signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + iii );
+						signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + iii );
+					}			
+				}
+		}
+								  
+    thisProcessor.reset();
+  }	    
+
+/* ****************************  IHC START  ************************************ */
+  size_t sizeIhcProc = ids->ihcProcessorsSt->processorsAccessor.getSize();
+  signals->ihc._length = sizeIhcProc;
+  if (genom_sequence_reserve(&(signals->ihc), sizeIhcProc))
+	return rosAFE_e_noMemory( self );
+	
+  for ( size_t ii = 0 ; ii < sizeIhcProc ; ++ii ) {
+    std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	if (genom_sequence_reserve(&(signals->ihc._buffer[ii].left.dataN), thisProcessor->get_ihc_nChannels() ) ||
+		  genom_sequence_reserve(&(signals->ihc._buffer[ii].right.dataN), thisProcessor->get_ihc_nChannels() ))
+	  return rosAFE_e_noMemory( self );
+
+	  signals->ihc._buffer[ii].left.dataN._length = thisProcessor->get_ihc_nChannels();
+	  signals->ihc._buffer[ii].right.dataN._length = thisProcessor->get_ihc_nChannels();
+	  
+	  signals->ihc._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  	  
+	  signals->ihc._buffer[ii].numberOfChannels = thisProcessor->get_ihc_nChannels();
+	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftWholeBufferAccessor();
+	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightWholeBufferAccessor();
+
+			uint32_t dim1 = left[0]->array1.second;
+			uint32_t dim2 = left[0]->array2.second;
+			
+			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+			
+			signals->ihc._buffer[ii].framesOnPort = fpc;
+		
+		for ( size_t jj = 0 ; jj < thisProcessor->get_ihc_nChannels() ; ++jj ) {
+			
+			uint32_t dim1 = left[jj]->array1.second;
+			uint32_t dim2 = left[jj]->array2.second;
+			
+			fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+
+			if (genom_sequence_reserve(&(signals->ihc._buffer[ii].left.dataN._buffer[jj].data), fpc) ||
+				genom_sequence_reserve(&(signals->ihc._buffer[ii].right.dataN._buffer[jj].data), fpc))
+			return rosAFE_e_noMemory( self );
+		  
+			signals->ihc._buffer[ii].left.dataN._buffer[jj].data._length = fpc;
+			signals->ihc._buffer[ii].right.dataN._buffer[jj].data._length = fpc;
+		
+			uint32_t pos, iii;
+			if (dim2 == 0) {	
+				for ( pos = 0; pos < dim1 ; ++pos ) {
+					signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
+					signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
+				}
+			} else if (dim1 == 0) {
+					for ( pos = 0; pos < dim2 ; ++pos )  {
+						signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + pos);
+						signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + pos);
+					}
+			} else {
+					for ( pos = 0 ; pos < fpc - dim2 ; ++pos ) {
+						signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
+						signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
+					}
+					
+					for ( iii = 0, pos = fpc - dim2 ; pos < fpc ; ++pos, ++iii ) {
+						signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + iii );
+						signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + iii );
+					}			
+				}
+		}
+								  
+    thisProcessor.reset();
+  }	    
+
+/* ****************************  ILD START  ************************************ */
+  size_t sizeIldProc = ids->ildProcessorsSt->processorsAccessor.getSize();
+  signals->ild._length = sizeIldProc;
+  if (genom_sequence_reserve(&(signals->ild), sizeIldProc))
+	return rosAFE_e_noMemory( self );
+	 
+  for ( size_t ii = 0 ; ii < sizeIldProc ; ++ii ) {
+    std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	if (genom_sequence_reserve(&(signals->ild._buffer[ii].left.dataN), thisProcessor->get_ild_nChannels() ) ||
+		  genom_sequence_reserve(&(signals->ild._buffer[ii].right.dataN), thisProcessor->get_ild_nChannels() ))
+	  return rosAFE_e_noMemory( self );
+	  
+	  signals->ild._buffer[ii].left.dataN._length = thisProcessor->get_ild_nChannels();
+	  signals->ild._buffer[ii].right.dataN._length = thisProcessor->get_ild_nChannels();
+ 	  
+	  signals->ild._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  	  
+	  signals->ild._buffer[ii].numberOfChannels = thisProcessor->get_ild_nChannels();
+	  signals->ild._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftWholeBufferAccessor();
+
+			uint32_t dim1 = left[0]->array1.second;
+			uint32_t dim2 = left[0]->array2.second;
+			
+			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+			
+			signals->ild._buffer[ii].framesOnPort = fpc;
+			
+		for ( size_t jj = 0 ; jj < thisProcessor->get_ild_nChannels() ; ++jj ) {
+			
+			uint32_t dim1 = left[jj]->array1.second;
+			uint32_t dim2 = left[jj]->array2.second;
+			
+			fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+
+			if ( genom_sequence_reserve(&(signals->ild._buffer[ii].left.dataN._buffer[jj].data), fpc) )
+			return rosAFE_e_noMemory( self );
+		  
+			signals->ild._buffer[ii].left.dataN._buffer[jj].data._length = fpc;
+		
+			uint32_t pos, iii;
+			if (dim2 == 0) {	
+				for ( pos = 0; pos < dim1 ; ++pos ) {
+					signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
+				}
+			} else if (dim1 == 0) {
+					for ( pos = 0; pos < dim2 ; ++pos )  {
+						signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + pos);
+					}
+			} else {
+					for ( pos = 0 ; pos < fpc - dim2 ; ++pos ) {
+						signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
+					}
+					
+					for ( iii = 0, pos = fpc - dim2 ; pos < fpc ; ++pos, ++iii ) {
+						signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + iii );
+					}			
+				}
+ 			}
+							  
+    thisProcessor.reset();
+  }	  
+  return genom_ok;
+}
+
+
 /* --- Function getParameters ------------------------------------------- */
 
 /** Codel getParameters of function getParameters.

@@ -1,0 +1,14 @@
+AuditoryModel/
+autoconf/
+autom4te.cache/
+build/
+codels/Makefile.in
+examples/rosAFEclient.m
+aclocal.m4
+bootstrap.sh
+configure
+configure.ac
+Makefile.am
+Makefile.im
+rosAFE-genom3.pc.in
+rosAFE-genom3-uninstalled.pc.in

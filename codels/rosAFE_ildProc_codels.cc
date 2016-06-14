@@ -31,6 +31,9 @@ startIldProc(const char *name, const char *upperDepName,
 {	
   std::shared_ptr < IHCProc > upperDepProc = ((*ihcProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
 
+  if (!(upperDepProc))
+	return rosAFE_e_noUpperDependencie (self);
+	
   ildWindowType thisWindow = _hann;
   if ( strcmp( ild_wname, "hamming" ) == 0 )
     thisWindow = _hamming;
@@ -132,10 +135,12 @@ release(const char *name, rosAFE_ids *ids,
  */
 genom_event
 deleteIldProc(const char *name, rosAFE_ildProcessors **ildProcessorsSt,
-              genom_context self)
+              const rosAFE_ildPort *ildPort, genom_context self)
 {
   /* Delting the processor */
   ((*ildProcessorsSt)->processorsAccessor).removeProcessor( name );
+  PORT::deleteILDPort ( name, ildPort, self ); 
+    
   return rosAFE_ether;
 }
 

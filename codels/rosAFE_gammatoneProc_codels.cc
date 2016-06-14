@@ -35,6 +35,9 @@ startGammatoneProc(const char *name, const char *upperDepName,
 {
   std::shared_ptr<PreProc > upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
 
+  if (!(upperDepProc))
+	return rosAFE_e_noUpperDependencie (self);
+	
   filterBankType thisBank = _gammatoneFilterBank;
   if ( strcmp( fb_type, "drnl" ) == 0 )
 	thisBank = _drnlFilterBank;
@@ -132,10 +135,12 @@ releaseGammatoneProc(const char *name, rosAFE_ids *ids,
 genom_event
 deleteGammatoneProc(const char *name,
                     rosAFE_gammatoneProcessors **gammatoneProcessorsSt,
+                    const rosAFE_gammatonePort *gammatonePort,
                     genom_context self)
 {
   /* Delting the processor */
   ((*gammatoneProcessorsSt)->processorsAccessor).removeProcessor( name );
+  PORT::deleteGammatonePort ( name, gammatonePort, self );  
   return rosAFE_ether;
 }
 

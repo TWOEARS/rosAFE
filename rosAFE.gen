@@ -57,8 +57,6 @@ component rosAFE {
         period      50ms;
     };
 
-    task getSignals;
-
     activity InputProc(
       in string name = "input" : "The name of this activity",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
@@ -111,7 +109,7 @@ component rosAFE {
         codel <release>    	releasePreProc ( local in name, inout ::ids, out newDataMapSt, port out preProcPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <delete>    	deletePreProc( local in name, inout preProcessorsSt ) yield ether;
+        codel <delete>    	deletePreProc( local in name, inout preProcessorsSt, port out preProcPort ) yield ether;
         codel <stop>    	stopPreProc( inout preProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
@@ -142,7 +140,7 @@ component rosAFE {
         codel <release>    	releaseGammatoneProc ( local in name, inout ::ids, out newDataMapSt, port out gammatonePort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <delete>    	deleteGammatoneProc( local in name, inout gammatoneProcessorsSt ) yield ether;
+        codel <delete>    	deleteGammatoneProc( local in name, inout gammatoneProcessorsSt, port out gammatonePort ) yield ether;
         codel <stop>    	stopGammatoneProc( inout gammatoneProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
@@ -166,7 +164,7 @@ component rosAFE {
         codel <release>    	releaseIhcProc ( local in name, inout ::ids, out newDataMapSt, port out ihcPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <delete>    	deleteIhcProc ( local in name, inout ihcProcessorsSt ) yield ether;
+        codel <delete>    	deleteIhcProc ( local in name, inout ihcProcessorsSt, port out ihcPort ) yield ether;
         codel <stop>    	stopIhcProc ( inout ihcProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
@@ -192,18 +190,17 @@ component rosAFE {
         codel <release>    	release ( local in name, inout ::ids, out newDataMapSt, port out ildPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
-        codel <delete>    	deleteIldProc ( local in name, inout ildProcessorsSt ) yield ether;
+        codel <delete>    	deleteIldProc ( local in name, inout ildProcessorsSt, port out ildPort ) yield ether;
         codel <stop>    	stopIldProc ( inout ildProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
     };
 
 
-   activity GetSignals ( out rosAFE::dataObjSt signals ) {
-	doc      "Returns the asked chunks.";
-        task        getSignals;
+   function getSignals ( out rosAFE::dataObjSt signals ) {
+	doc         "Returns the output signals.";
 
-	codel <start>	 getSignal( out signals, in ::ids, in infos ) yield ether;
+	codel	 getSignal( out signals, in ::ids );
 
 	throw    e_noMemory, e_badIndexParam;
    };

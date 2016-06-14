@@ -35,7 +35,10 @@ startPreProc(const char *name, const char *upperDepName,
              genom_context self)
 {
   std::shared_ptr < InputProc > upperDepProc = ((*inputProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
-
+  
+  if (!(upperDepProc))
+	return rosAFE_e_noUpperDependencie (self);
+  
   middleEarModel thisModel = _jespen;
   if ( strcmp( pp_middleEarModel, "lopezpoveda" ) == 0 )
 	thisModel = _lopezpoveda;
@@ -161,10 +164,13 @@ releasePreProc(const char *name, rosAFE_ids *ids,
  */
 genom_event
 deletePreProc(const char *name, rosAFE_preProcessors **preProcessorsSt,
+              const rosAFE_preProcPort *preProcPort,
               genom_context self)
 {
   /* Delting the processor */
   ((*preProcessorsSt)->processorsAccessor).removeProcessor( name );
+  PORT::deletePreProcPort ( name, preProcPort, self );
+ 
   return rosAFE_ether;
 }
 

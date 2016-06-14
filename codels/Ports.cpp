@@ -151,6 +151,12 @@
 		return genom_ok;
 	}
 
+	genom_event
+	PORT::deletePreProcPort   ( const char *name, const rosAFE_preProcPort *preProcPort, genom_context self ) {
+		preProcPort->close( name, self );
+		return genom_ok;
+	}
+	
 /* Gammatone Port ----------------------------------------------------------------- */
 
 	genom_event
@@ -242,6 +248,12 @@
 		return genom_ok;							
 	}
 
+	genom_event
+	PORT::deleteGammatonePort   ( const char *name, const rosAFE_gammatonePort *gammatonePort, genom_context self ) {
+		gammatonePort->close( name, self );
+		return genom_ok;		
+	}
+	
 /* IHC Port ----------------------------------------------------------------- */
 
 	genom_event
@@ -333,6 +345,12 @@
 		return genom_ok;							
 	}
 
+	genom_event
+	PORT::deleteIHCPort   ( const char *name, const rosAFE_ihcPort *ihcPort, genom_context self ) {
+		ihcPort->close( name, self );
+		return genom_ok;		
+	}
+
 /* ILD Port ----------------------------------------------------------------- */
 
 	genom_event
@@ -370,7 +388,6 @@
 	  
 	  return genom_ok;					
 	}
-
 
 	genom_event
 	PORT::publishILDPort ( const char *name, const rosAFE_ildPort *ildPort, std::vector<twoCTypeBlockPtr > left,
@@ -415,12 +432,9 @@
 
 	  return genom_ok;							
 	}
-																					
-/*
-genom_event
-deleteTDSPort   (const char *name, const rosAFE_TDSPorts *TDSPorts, genom_context self) {
-	
-  TDSPorts->close( name, self );
-  return genom_ok;
-}
-*/
+
+	genom_event
+	PORT::deleteILDPort   ( const char *name, const rosAFE_ildPort *ildPort, genom_context self ) {
+		ildPort->close( name, self );
+		return genom_ok;		
+	}

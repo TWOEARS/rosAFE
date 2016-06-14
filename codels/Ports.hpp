@@ -26,6 +26,9 @@ namespace PORT {
 	publishPreProcPort ( const char *name, const rosAFE_preProcPort *preProcPort, twoCTypeBlockPtr left, twoCTypeBlockPtr right, uint32_t bytesPerFrame, int64_t nfr, genom_context self );
 
 	genom_event
+	deletePreProcPort   ( const char *name, const rosAFE_preProcPort *preProcPort, genom_context self );
+
+	genom_event
 	initGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, uint32_t sampleRate,
 						uint32_t bufferSize_s, uint32_t nChannels, genom_context self );
 						
@@ -33,6 +36,9 @@ namespace PORT {
 	publishGammatonePort ( const char *name, const rosAFE_gammatonePort *gammatonePort, std::vector<twoCTypeBlockPtr > left,
 						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self );
 
+	genom_event
+	deleteGammatonePort   ( const char *name, const rosAFE_gammatonePort *gammatonePort, genom_context self );
+	
 	genom_event
 	initIHCPort ( const char *name, const rosAFE_ihcPort *ihcPort, uint32_t sampleRate,
 						uint32_t bufferSize_s, uint32_t nChannels, genom_context self );
@@ -42,6 +48,9 @@ namespace PORT {
 						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self );
 
 	genom_event
+	deleteIHCPort   ( const char *name, const rosAFE_ihcPort *ihcPort, genom_context self );
+	
+	genom_event
 	initILDPort ( const char *name, const rosAFE_ildPort *ildPort, uint32_t sampleRate,
 						uint32_t bufferSize_s, uint32_t nChannels, genom_context self );
 						
@@ -49,9 +58,7 @@ namespace PORT {
 	publishILDPort ( const char *name, const rosAFE_ildPort *ildPort, std::vector<twoCTypeBlockPtr > left,
 						uint32_t bytesPerFrame, int64_t nfr, genom_context self );
 																		
-	/*
 	genom_event
-	deleteTDSPort (const char *name, const rosAFE_TDSPorts *TDSPorts, genom_context self);
-	*/
+	deleteILDPort   ( const char *name, const rosAFE_ildPort *ildPort, genom_context self );
 }
 #endif /* PORTS_HPP */

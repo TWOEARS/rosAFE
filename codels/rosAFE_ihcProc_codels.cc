@@ -29,6 +29,9 @@ startIhcProc(const char *name, const char *upperDepName,
 {
   std::shared_ptr < GammatoneProc > upperDepProc = ((*gammatoneProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
 
+  if (!(upperDepProc))
+	return rosAFE_e_noUpperDependencie (self);
+	
   ihcMethod thisMethod = _dau;
   if ( strcmp( ihc_method, "none" ) == 0 )
 	thisMethod = _none;
@@ -136,10 +139,12 @@ releaseIhcProc(const char *name, rosAFE_ids *ids,
  */
 genom_event
 deleteIhcProc(const char *name, rosAFE_ihcProcessors **ihcProcessorsSt,
-              genom_context self)
+              const rosAFE_ihcPort *ihcPort, genom_context self)
 {
   /* Delting the processor */
   ((*ihcProcessorsSt)->processorsAccessor).removeProcessor( name );
+  PORT::deleteIHCPort ( name, ihcPort, self );  
+    
   return rosAFE_ether;
 }
 
