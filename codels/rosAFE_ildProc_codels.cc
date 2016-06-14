@@ -44,8 +44,8 @@ startIldProc(const char *name, const char *upperDepName,
   else if ( strcmp( ild_wname, "triang" ) == 0 )
     thisWindow = _triang;
   else if ( strcmp( ild_wname, "sqrt_win" ) == 0 )
-    thisWindow = _sqrt_win;							
-					  
+    thisWindow = _sqrt_win;
+
   std::shared_ptr < ILDProc > ildProcessor ( new ILDProc( name, upperDepProc, ild_wSizeSec, ild_hSizeSec, thisWindow ) );
 
   /* Adding this procesor to the ids */
@@ -53,7 +53,7 @@ startIldProc(const char *name, const char *upperDepName,
 
   // Initialization of the output port
   PORT::initILDPort ( name, ildPort, ildProcessor->getFsOut(),
-						ildProcessor->getBufferSize_s(), ildProcessor->get_ild_nChannels(), self );
+						infos->bufferSize_s_port, ildProcessor->get_ild_nChannels(), self );
   
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );

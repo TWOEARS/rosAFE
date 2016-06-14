@@ -33,7 +33,7 @@ namespace openAFE {
 
 		public:
 
-			InputProc ( const std::string nameArg, const uint32_t fs, const uint32_t bufferSize_s, bool in_doNormalize = true, uint64_t in_normalizeValue = MAXCODABLEVALUE ) : TDSProcessor<double> (nameArg, fs, fs, bufferSize_s, _inputProc) {
+			InputProc ( const std::string nameArg, const uint32_t fs, const double bufferSize_s, bool in_doNormalize = true, uint64_t in_normalizeValue = MAXCODABLEVALUE ) : TDSProcessor<double> (nameArg, fs, fs, bufferSize_s, _inputProc) {
 				this->in_doNormalize = in_doNormalize;
 				this->in_normalizeValue = in_normalizeValue;
 			}

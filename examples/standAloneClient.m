@@ -5,6 +5,8 @@ p=0.25;
 
 %% Paths
 addpath(genpath('~/openrobots/lib/matlab'));
+addpath(genpath('/home/musabini/TwoEars/AuditoryModel/TwoEars-1.2/AuditoryFrontEnd'));
+startAuditoryFrontEnd;
 
 %% Genom
 client = genomix.client;
@@ -17,7 +19,6 @@ pause(p);
 %% Acquiring Audio
 sampleRate = 44100;
 bufferSize_s_bass = 1;
-bufferSize_s_rosAFE = 2;
 nFramesPerChunk = 2205;
 nChunksOnPort = sampleRate * bufferSize_s_bass / nFramesPerChunk;
 inputDevice = 'hw:1,0';
@@ -35,10 +36,13 @@ pause(p);
 if ( strcmp(connection.status,'error') )
     error(strcat('Error',connection.exception.ex));
 end
-            
+
+bufferSize_s_rosAFE_port = 2;
+bufferSize_s_rosAFE_getSignal = 5;
+
 %% Ading processors
 inputName = 'input';
-thisProc = rosAFE.InputProc('-a', inputName, 12000, bufferSize_s_rosAFE );
+thisProc = rosAFE.InputProc('-a', inputName, 12000, bufferSize_s_rosAFE_port, bufferSize_s_rosAFE_getSignal );
 pause(p);
 
 preProcName = 'preProc';
@@ -96,8 +100,8 @@ end
 %% Getting the output signals
 
 signal = rosAFE.getSignals();
-if ( strcmp(kill.status,'error') )
-   error(strcat('Error',kill.exception.ex));
+if ( strcmp(signal.status,'error') )
+   error(strcat('Error',signal.exception.ex));
 end
 
 %% Getting the individual outputs

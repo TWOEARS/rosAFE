@@ -59,7 +59,7 @@ startIhcProc(const char *name, const char *upperDepName,
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
   // Initialization of the output port
-  PORT::initIHCPort( name, ihcPort, infos->sampleRate, infos->bufferSize_s, ihcProcessor->get_ihc_nChannels(), self );
+  PORT::initIHCPort( name, ihcPort, infos->sampleRate, infos->bufferSize_s_port, ihcProcessor->get_ihc_nChannels(), self );
   
   upperDepProc.reset();
   ihcProcessor.reset();

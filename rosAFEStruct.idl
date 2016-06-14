@@ -46,8 +46,8 @@ module rosAFE {
 
     struct infos {
        unsigned long sampleRate;
-       unsigned long bufferSize_s;
-       unsigned long innerBufferSize_s;
+       double bufferSize_s_port;
+       double bufferSize_s_getSignal;
     };
 
     struct inputProcsParametres {

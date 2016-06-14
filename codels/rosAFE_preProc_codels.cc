@@ -54,7 +54,7 @@ startPreProc(const char *name, const char *upperDepName,
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
   // Initialization of the output port
-  PORT::initPreProcPort( name, preProcPort, infos->sampleRate, infos->bufferSize_s, self );
+  PORT::initPreProcPort( name, preProcPort, infos->sampleRate, infos->bufferSize_s_port, self );
 
   upperDepProc.reset();
   preProcessor.reset();

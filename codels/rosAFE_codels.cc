@@ -100,35 +100,39 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
   for ( size_t ii = 0 ; ii < sizeInputProc ; ++ii ) {
     std::shared_ptr < InputProc > thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( ii );
     
-	twoCTypeBlockPtr left = thisProcessor->getLeftWholeBufferAccessor();
-	twoCTypeBlockPtr right = thisProcessor->getRightWholeBufferAccessor();
+	twoCTypeBlockPtr left = thisProcessor->getLeftOldDataAccessor();
+	twoCTypeBlockPtr right = thisProcessor->getRightOldDataAccessor();
 
 	uint32_t dim1 = left->array1.second;
 	uint32_t dim2 = left->array2.second;
 
  	uint32_t fpc = dim1 + dim2; // amount of Frames On this Chunk
- 	 	
+ 	 	 	 	 	 	 	
 	signals->input._buffer[ii].sampleRate = thisProcessor->getFsOut();
 	signals->input._buffer[ii].framesOnPort = fpc;
 	signals->input._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
 	signals->input._buffer[ii].left.data._length = fpc;
 	signals->input._buffer[ii].right.data._length = fpc;
-	
+
 	if (genom_sequence_reserve(&(signals->input._buffer[ii].left.data), fpc) ||
 		genom_sequence_reserve(&(signals->input._buffer[ii].right.data), fpc))
 	return rosAFE_e_noMemory( self );
- 	
+	
+
 	uint32_t pos, pos2 = 0;
-	for ( pos = 0 ; pos < dim1 ; ++pos )  {
+	for ( pos = 0 ; pos < dim1 ; ++pos )  { 
 		signals->input._buffer[ii].left.data._buffer[pos] = *(left->array1.first + pos);
 		signals->input._buffer[ii].right.data._buffer[pos] = *(right->array1.first + pos);
-	}
-	for ( pos = dim1 ; pos < fpc ; ++pos, ++pos2 ) {
-		signals->input._buffer[ii].left.data._buffer[pos] = *(left->array2.first + pos2 );
-		signals->input._buffer[ii].right.data._buffer[pos] = *(right->array2.first + pos2 );
-	}
-											  
+	}			
+
+	if ( dim2 > 0) { 
+		for ( pos = dim1 ; pos < fpc ; ++pos, ++pos2 ) { 
+			signals->input._buffer[ii].left.data._buffer[pos] = *(left->array2.first + pos2 );
+			signals->input._buffer[ii].right.data._buffer[pos] = *(right->array2.first + pos2 );
+		}
+	}				
+								  
 	left.reset();
 	right.reset();
     thisProcessor.reset();
@@ -145,8 +149,8 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
   for ( size_t ii = 0 ; ii < sizePreProc ; ++ii ) {
     std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
  
-	twoCTypeBlockPtr left = thisProcessor->getLeftWholeBufferAccessor();
-	twoCTypeBlockPtr right = thisProcessor->getRightWholeBufferAccessor();
+	twoCTypeBlockPtr left = thisProcessor->getLeftOldDataAccessor();
+	twoCTypeBlockPtr right = thisProcessor->getRightOldDataAccessor();
 
 	uint32_t dim1 = left->array1.second;
 	uint32_t dim2 = left->array2.second;
@@ -201,8 +205,8 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  signals->gammatone._buffer[ii].numberOfChannels = thisProcessor->get_fb_nChannels();
 	  signals->gammatone._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftWholeBufferAccessor();
-	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightWholeBufferAccessor();
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
+	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightOldDataAccessor();
 
 			uint32_t dim1 = left[0]->array1.second;
 			uint32_t dim2 = left[0]->array2.second;
@@ -273,8 +277,8 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  signals->ihc._buffer[ii].numberOfChannels = thisProcessor->get_ihc_nChannels();
 	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftWholeBufferAccessor();
-	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightWholeBufferAccessor();
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
+	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightOldDataAccessor();
 
 			uint32_t dim1 = left[0]->array1.second;
 			uint32_t dim2 = left[0]->array2.second;
@@ -345,8 +349,8 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  signals->ild._buffer[ii].numberOfChannels = thisProcessor->get_ild_nChannels();
 	  signals->ild._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftWholeBufferAccessor();
-
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
+	  
 			uint32_t dim1 = left[0]->array1.second;
 			uint32_t dim2 = left[0]->array2.second;
 			

@@ -196,7 +196,6 @@ namespace openAFE {
 		 * 
 		 * */
 		void calcLatestData(uint32_t samplesArg) {
-			
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();
 			
@@ -207,18 +206,18 @@ namespace openAFE {
 			if ( ar2.second == 0 ) {
 				this->lastDataInfo->array1.first = ar1.first + ar1.second - samplesArg;
 				this->lastDataInfo->array1.second = samplesArg;
-				this->lastDataInfo->array1.first = NULL;
+				this->lastDataInfo->array2.first = NULL;
 				this->lastDataInfo->array2.second = 0;
 			} else if ( samplesArg >= ar2.second ) {
 				this->lastDataInfo->array1.second = samplesArg - ar2.second;
 				this->lastDataInfo->array1.first = ar1.first + ar1.second - this->lastDataInfo->array1.second;
 				this->lastDataInfo->array2.second  = ar2.second;
-				this->lastDataInfo->array1.first = ar2.first;
+				this->lastDataInfo->array2.first = ar2.first;
 			} else /* if ( samplesArg <= ar2.second ) */ {
 				this->lastDataInfo->array1.first = ar2.first + ar2.second - samplesArg;
 				this->lastDataInfo->array1.second = samplesArg;
 
-				this->lastDataInfo->array1.first = NULL;
+				this->lastDataInfo->array2.first = NULL;
 				this->lastDataInfo->array2.second = 0;
 				}
 		}
@@ -233,7 +232,6 @@ namespace openAFE {
 		 * 
 		 * */
 		void calcOldData(uint32_t samplesArg = 0) {
-			std::cout << "buffer" << std::endl;
 			
 			boostArrayRange ar1 = buffer.array_one();
 			boostArrayRange ar2 = buffer.array_two();
@@ -250,29 +248,29 @@ namespace openAFE {
 			if ( ar2.second == 0 ) {
 				this->oldDataInfo->array1.first = ar1.first + ar1.second - freshData;
 				this->oldDataInfo->array1.second = samplesArg;
-				this->oldDataInfo->array1.first = NULL;
+				this->oldDataInfo->array2.first = NULL;
 				this->oldDataInfo->array2.second = 0;
 			       /* It is in ar1 ( but ar2 exists ) */
-			} else if ( ar2.second < freshData ) {
+			} else if ( ar2.second < freshData ) { 
 					if ( ( freshData - samplesArg ) > ar2.second) {
 						this->oldDataInfo->array1.first = ar1.first + ar1.second + ar2.second - freshData;
 						this->oldDataInfo->array1.second = samplesArg;
-						this->oldDataInfo->array1.first = NULL;
+						this->oldDataInfo->array2.first = NULL;
 						this->oldDataInfo->array2.second = 0;	
 					/* It is in ar1 and  ar2 */	
 					} else {
 						this->oldDataInfo->array1.first = ar1.first + ar1.second + ar2.second - freshData;
 						this->oldDataInfo->array1.second = freshData - ar2.second;
-						this->oldDataInfo->array1.first = ar2.first;
+						this->oldDataInfo->array2.first = ar2.first;
 						this->oldDataInfo->array2.second = samplesArg - freshData + ar2.second ;	
 					}
 			/* Eveything is in ar2 */
 			} else {
 				this->oldDataInfo->array1.first = ar2.first + ar2.second - freshData;
 				this->oldDataInfo->array1.second = samplesArg;
-				this->oldDataInfo->array1.first = NULL;
+				this->oldDataInfo->array2.first = NULL;
 				this->oldDataInfo->array2.second = 0;	
-			}		
+			}
 			
 			this->freshData -= samplesArg;
 			if ( this->freshData < 0 )

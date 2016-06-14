@@ -35,14 +35,14 @@ namespace openAFE {
 		 *  bufferSize_s : Buffer duration in s
 		*/
 				      
-		Signal( const uint32_t fs, const std::string& nameArg, const uint32_t bufferSize_s, channel cha ) {
+		Signal( const uint32_t fs, const std::string& nameArg, const double bufferSize_s, channel cha ) {
 		
 			this->FsHz = fs;
 			this->Name = nameArg;
 			this->Channel = cha;
 
 			/* Calculation of the buffer size in samples */
-			this->bufferSizeSamples = ceil( bufferSize_s * this->FsHz );
+			this->bufferSizeSamples = floor( bufferSize_s * this->FsHz );
 		}
 		
 		~Signal() { }

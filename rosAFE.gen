@@ -60,13 +60,14 @@ component rosAFE {
     activity InputProc(
       in string name = "input" : "The name of this activity",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
-      in unsigned long bufferSize_s = 10 : "Buffer size in seconds"
+      in double bufferSize_s_port = 10 : "Buffer size in seconds",
+      in double bufferSize_s_getSignal = 1 : "Buffer size in seconds"
       ) {
         doc         "Get consecutive blocks of audio data from bass and normalizes that data";
         task        input;
         interrupts  InputProc;  // Only one audio input can exist simultaneously
 
-        codel <start>   	startInputProc( local in name, local in nFramesPerBlock, local in bufferSize_s, inout inputProcessorsSt,
+        codel <start>   	startInputProc( local in name, local in nFramesPerBlock, local in bufferSize_s_port, local in bufferSize_s_getSignal, inout inputProcessorsSt,
                             		port in Audio, out infos, port out inputProcPort ) yield waitExec;
 	
 	// The state Machine, start

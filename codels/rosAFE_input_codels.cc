@@ -75,7 +75,7 @@ std::vector<double> l, r;
  */
 genom_event
 startInputProc(const char *name, uint32_t nFramesPerBlock,
-               uint32_t bufferSize_s,
+               double bufferSize_s_port, double bufferSize_s_getSignal,
                rosAFE_inputProcessors **inputProcessorsSt,
                const rosAFE_Audio *Audio, rosAFE_infos *infos,
                const rosAFE_inputProcPort *inputProcPort,
@@ -89,11 +89,13 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   }
   
   infos->sampleRate = Audio->data(self)->sampleRate;
-  infos->bufferSize_s = bufferSize_s;
-  uint32_t tmp = ceil( ( nFramesPerBlock * 4 ) / infos->sampleRate );
-  infos->innerBufferSize_s = ( tmp < 1 ? 1 : tmp );
+  infos->bufferSize_s_port = bufferSize_s_port;
+  
+  // infos->bufferSize_s_getSignal can't be less than 2 times nFramesPerBlock
+  double tmp = nFramesPerBlock * 2 / infos->sampleRate;
+  infos->bufferSize_s_getSignal = ( bufferSize_s_getSignal < tmp ? tmp : bufferSize_s_getSignal );
     
-  std::shared_ptr< InputProc > inputP ( new InputProc( name, infos->sampleRate, infos->innerBufferSize_s, true ) );
+  std::shared_ptr< InputProc > inputP ( new InputProc( name, infos->sampleRate, infos->bufferSize_s_getSignal, true ) );
   
   /* Adding this procesor to the ids */
   ((*inputProcessorsSt)->processorsAccessor).addProcessor( inputP );
@@ -107,7 +109,7 @@ startInputProc(const char *name, uint32_t nFramesPerBlock,
   li = l.data(); ri = r.data(); // li and ri point to the current position in the block
 
   /* Initialization of the output port */
-  PORT::initInputPort( inputProcPort, infos->sampleRate, infos->bufferSize_s, self );
+  PORT::initInputPort( inputProcPort, infos->sampleRate, infos->bufferSize_s_port, self );
 
   globalLoss = 0;
   

@@ -22,7 +22,7 @@ namespace openAFE {
 	public:
 			
 		/* Create a TimeDomainSignal without initialising a first chunk */
-		TimeDomainSignal( const uint32_t fs, const uint32_t bufferSize_s, const std::string argName = "Time", channel cha = _mono) : Signal(fs, argName, bufferSize_s, cha) {
+		TimeDomainSignal( const uint32_t fs, const double bufferSize_s, const std::string argName = "Time", channel cha = _mono) : Signal(fs, argName, bufferSize_s, cha) {
 	
 			this->buffer.reset( new CircularContainer<T>( this->bufferSizeSamples ) );
 			this->lastChunkInfo.reset( new twoCTypeBlock<T> );
@@ -59,10 +59,9 @@ namespace openAFE {
 		}
 
 		std::shared_ptr<twoCTypeBlock<T> > getOldDataAccesor() {
-			std::cout << "TimeDomainSignal" << std::endl;
 			this->buffer->calcOldData();
-			this->wholeBufferInfo->setData( this->buffer->getOldDataAccesor() );
-			return this->wholeBufferInfo;
+			this->oldDataInfo->setData( this->buffer->getOldDataAccesor() );
+			return this->oldDataInfo;
 		}
 				
 		/* Puts zero to all over the buffer */

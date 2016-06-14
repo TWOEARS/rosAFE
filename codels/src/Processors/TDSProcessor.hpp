@@ -17,7 +17,7 @@ namespace openAFE {
 						
 		public:
 
-		    TDSProcessor (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const uint32_t bufferSize_s, procType typeArg) : Processor (bufferSize_s, fsIn, fsOut, nameArg, typeArg) {
+		    TDSProcessor (const std::string nameArg, const uint32_t fsIn, const uint32_t fsOut, const double bufferSize_s, procType typeArg) : Processor (bufferSize_s, fsIn, fsOut, nameArg, typeArg) {
 				
 				/* Creating the output signals */
 				if ( this->hasTwoOutputs == true ) {
@@ -67,14 +67,10 @@ namespace openAFE {
 			}
 
 			std::shared_ptr<twoCTypeBlock<T> > getLeftOldDataAccessor() {
-				std::cout << "TDSProcessor Left" << std::endl;
-
 				return this->leftOutput->getOldDataAccesor();
 			}
 
 			std::shared_ptr<twoCTypeBlock<T> > getRightOldDataAccessor() {
-								std::cout << "TDSProcessor Right" << std::endl;
-
 				return this->rightOutput->getOldDataAccesor();
 			}
 						

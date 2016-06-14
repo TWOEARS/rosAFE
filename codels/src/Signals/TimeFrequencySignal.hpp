@@ -41,7 +41,7 @@ namespace openAFE {
          *               (default: channel = 'mono')
         */    
 
-		TimeFrequencySignal( const uint32_t fs, const uint32_t bufferSize_s, size_t nChannel,
+		TimeFrequencySignal( const uint32_t fs, const double bufferSize_s, size_t nChannel,
 							 const std::string argName = "tfRepresentation",
 							 std::string argScaling = "magnitude", channel cha = _mono) : Signal(fs, argName, bufferSize_s, cha) {
 													

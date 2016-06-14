@@ -52,7 +52,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
   SM::addFlag( name, upperDepName, newDataMapSt, self );
 
   // Initialization of the output port
-  PORT::initGammatonePort( name, gammatonePort, infos->sampleRate, infos->bufferSize_s, gammatoneProcessor->get_fb_nChannels(), self );
+  PORT::initGammatonePort( name, gammatonePort, infos->sampleRate, infos->bufferSize_s_port, gammatoneProcessor->get_fb_nChannels(), self );
   
   upperDepProc.reset();
   gammatoneProcessor.reset();
