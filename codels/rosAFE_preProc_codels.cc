@@ -39,7 +39,7 @@ startPreProc(const char *name, const char *upperDepName,
   if (!(upperDepProc))
 	return rosAFE_e_noUpperDependencie (self);
   
-  middleEarModel thisModel = _jespen;
+  middleEarModel thisModel = _jepsen;
   if ( strcmp( pp_middleEarModel, "lopezpoveda" ) == 0 )
 	thisModel = _lopezpoveda;
 	    

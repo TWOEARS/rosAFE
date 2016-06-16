@@ -11,14 +11,23 @@
 
 #include <apf/parameter_map.h>
 
+unsigned int findType ( const char *name, const rosAFE_ids *ids ) {
+	if ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+		return 1;
+	else if ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+		return 2;
+	else if ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+		return 3;
+	else if ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+		return 4;
+	else if ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+	    return 5;
+	else return 0;
+}
+
 bool checkExists ( const char *name, const rosAFE_ids *ids ) {
-	if ( ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) ) or
-	     ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )      	     
-	   )
-	     return true;
+	if ( findType(name, ids) > 0 )
+	   return true;
 	return false;
 }
 
@@ -396,6 +405,52 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 }
 
 
+/* --- Function getDependencies ----------------------------------------- */
+
+/** Codel getDependencie of function getDependencies.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noMemory, rosAFE_e_noSuchProcessor.
+ */
+genom_event
+getDependencie(const char *nameProc, sequence_string *dependencies,
+               const rosAFE_ids *ids, genom_context self)
+{ 
+  unsigned int type = findType(nameProc, ids);
+  
+  // Reserving genom_sequence once per call
+  if ( dependencies->_length == 0 ) {
+	  dependencies->_length = type ;
+	  
+	  if ( genom_sequence_reserve(dependencies, type) )
+		return rosAFE_e_noMemory( self );
+  }
+  
+	if ( type == 1 ) {
+		std::shared_ptr < InputProc > thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+	} else if ( type == 2 ) {
+		std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
+	} else if ( type == 3 ) {
+		std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
+	} else if ( type == 4 ) {
+		std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
+	} else if ( type == 5 ) {
+		std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
+	} else return rosAFE_e_noSuchProcessor( self );
+  
+  return genom_ok;
+}
+
+
 /* --- Function getParameters ------------------------------------------- */
 
 /** Codel getParameters of function getParameters.
@@ -451,8 +506,8 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     parameters->preProc._buffer[ii].pp_bMiddleEarFiltering = thisProcessor->get_pp_bMiddleEarFiltering(); 
     
 	switch ( thisProcessor->get_pp_middleEarModel() ) {
-		case _jespen:
-			parameters->preProc._buffer[ii].pp_middleEarModel = strdup ( "jespen" );
+		case _jepsen:
+			parameters->preProc._buffer[ii].pp_middleEarModel = strdup ( "jepsen" );
 			break;
 		case _lopezpoveda:
 			parameters->preProc._buffer[ii].pp_middleEarModel = strdup ( "lopezpoveda" );
@@ -631,9 +686,13 @@ modifyParameter(const char *nameProc, const char *nameParam,
   apf::parameter_map params;
   std::string newValueSt = strdup( newValue );
   params.set("newValue", newValueSt);
-	
+
+  unsigned int type = findType(nameProc, ids);
+  if ( type == 0 ) 
+	return rosAFE_e_noSuchProcessor( self );
+  	
   try {
-	  if ( ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	  if ( type == 1 ) {
 		if ( strcmp( nameParam, "in_doNormalize" ) == 0 ) {
 			ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_in_doNormalize( params.get<bool>("newValue") );
 			return genom_ok;
@@ -642,7 +701,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }
-	  else if ( ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	  else if ( type == 2 ) {
 		
 		if ( strcmp( nameParam, "pp_bRemoveDC" ) == 0 ) {
 				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_bRemoveDC( params.get<bool>("set_pp_bRemoveDC") );
@@ -672,7 +731,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_bMiddleEarFiltering( params.get<bool>("newValue") );
 				return genom_ok;
 		} else if ( strcmp( nameParam, "pp_middleEarModel" ) == 0 ) {
-				middleEarModel thisModel = _jespen;
+				middleEarModel thisModel = _jepsen;
 				if ( strcmp( params["newValue"].c_str(), "lopezpoveda" ) == 0 )
 					thisModel = _lopezpoveda;
 				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_middleEarModel( thisModel );
@@ -682,7 +741,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;																				
 		} else return rosAFE_e_noSuchParameter(self);		
 	  }
-	  else if ( ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	  else if ( type == 3 ) {
 
 		if ( strcmp( nameParam, "fb_nGamma" ) == 0 ) {
 				ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_fb_nGamma( params.get<unsigned int>("newValue") );
@@ -692,7 +751,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }
-	  else if ( ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	  else if ( type == 4 ) {
 
 		if ( strcmp( nameParam, "ihc_method" ) == 0 ) {
 				ihcMethod thisMethod = _dau;
@@ -716,7 +775,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }
-	  else if ( ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc ) ) {
+	  else if ( type == 5 ) {
 
 		if ( strcmp( nameParam, "ild_wSizeSec" ) == 0 ) {
 			ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_ild_wSizeSec( params.get<double>("newValue") );

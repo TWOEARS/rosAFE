@@ -206,6 +206,17 @@ component rosAFE {
 	throw    e_noMemory, e_badIndexParam;
    };
 
+   function getDependencies (
+	in string nameProc = "nameProc" : "The name of the processor to search the dependencies",
+	out sequence<string> dependencies
+   ) {
+	doc         "Returns the output signals.";
+
+	codel	 getDependencie( local in nameProc, out dependencies, in ::ids );
+
+	throw    e_noMemory, e_noSuchProcessor;
+   };
+
    function getParameters ( out rosAFE::parameters parameters ) {
 	doc      "Returns all parameter informations for each running processor.";
 

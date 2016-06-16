@@ -22,7 +22,7 @@
 namespace openAFE {
 
 	enum middleEarModel{
-		_jespen,
+		_jepsen,
 		_lopezpoveda
 	};
 	
@@ -159,7 +159,7 @@ namespace openAFE {
 					if ( this->pp_bUnityComp ) {
 						
 						switch ( this->pp_middleEarModel ) {
-							case _jespen:
+							case _jepsen:
 								this->meFilterPeakdB = 55.9986;
 								break;
 							case _lopezpoveda:
@@ -190,7 +190,7 @@ namespace openAFE {
 																																		  bool pp_bLevelScaling = false,
 																																		  double pp_refSPLdB = 100,
 																																		  bool pp_bMiddleEarFiltering = false,
-																																		  middleEarModel pp_middleEarModel = _jespen,
+																																		  middleEarModel pp_middleEarModel = _jepsen,
 																																		  bool pp_bUnityComp = true
 					) : TDSProcessor<double> (nameArg, upperProcPtr->getFsOut(), upperProcPtr->getFsOut(), upperProcPtr->getBufferSize_s(), _inputProc) {
 
