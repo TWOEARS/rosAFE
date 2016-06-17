@@ -8,27 +8,30 @@
 #include "stateMachine.hpp"
 #include "processorCommon.hpp"
 #include "genom3_dataFiles.hpp"
+#include "Ports.hpp"
 
 #include <apf/parameter_map.h>
 
-unsigned int findType ( const char *name, const rosAFE_ids *ids ) {
+openAFE::procType findType ( const char *name, const rosAFE_ids *ids )
+{
 	if ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
-		return 1;
+		return _inputProc;
 	else if ( (ids->preProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
-		return 2;
+		return _preProc;
 	else if ( (ids->gammatoneProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
-		return 3;
+		return _gammatone;
 	else if ( (ids->ihcProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
-		return 4;
+		return _ihc;
 	else if ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
-	    return 5;
-	else return 0;
+	    return _ild;
+	else return _unknow;
 }
 
-bool checkExists ( const char *name, const rosAFE_ids *ids ) {
-	if ( findType(name, ids) > 0 )
-	   return true;
-	return false;
+bool checkExists ( const char *name, const rosAFE_ids *ids )
+{
+	if ( findType(name, ids) == _unknow )
+	   return false;
+	else return true;
 }
 
 /* --- Activity PreProc ------------------------------------------------- */
@@ -121,30 +124,12 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	signals->input._buffer[ii].framesOnPort = fpc;
 	signals->input._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-	signals->input._buffer[ii].left.data._length = fpc;
-	signals->input._buffer[ii].right.data._length = fpc;
-
-	if (genom_sequence_reserve(&(signals->input._buffer[ii].left.data), fpc) ||
-		genom_sequence_reserve(&(signals->input._buffer[ii].right.data), fpc))
-	return rosAFE_e_noMemory( self );
+    PORT::iniTDS_port ( &(signals->input._buffer[ii].left.data), fpc, false, self );
+    PORT::iniTDS_port ( &(signals->input._buffer[ii].right.data), fpc, false, self );
+        
+	PORT::publishTDS_port ( &(signals->input._buffer[ii].left.data), left, fpc, 0, self );
+	PORT::publishTDS_port ( &(signals->input._buffer[ii].right.data), right, fpc, 0, self );
 	
-
-	uint32_t pos, pos2 = 0;
-	for ( pos = 0 ; pos < dim1 ; ++pos )  { 
-		signals->input._buffer[ii].left.data._buffer[pos] = *(left->array1.first + pos);
-		signals->input._buffer[ii].right.data._buffer[pos] = *(right->array1.first + pos);
-	}			
-
-	if ( dim2 > 0) { 
-		for ( pos = dim1 ; pos < fpc ; ++pos, ++pos2 ) { 
-			signals->input._buffer[ii].left.data._buffer[pos] = *(left->array2.first + pos2 );
-			signals->input._buffer[ii].right.data._buffer[pos] = *(right->array2.first + pos2 );
-		}
-	}				
-								  
-	left.reset();
-	right.reset();
-    thisProcessor.reset();
   }
 
 /* ****************************  PreProc START  ************************************ */
@@ -170,22 +155,11 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	signals->preProc._buffer[ii].framesOnPort = fpc;
 	signals->preProc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-	signals->preProc._buffer[ii].left.data._length = fpc;
-	signals->preProc._buffer[ii].right.data._length = fpc;
-	
-	if (genom_sequence_reserve(&(signals->preProc._buffer[ii].left.data), fpc) ||
-		genom_sequence_reserve(&(signals->preProc._buffer[ii].right.data), fpc))
-	return rosAFE_e_noMemory( self );
-
-	uint32_t pos, pos2 = 0;
-	for ( pos = 0 ; pos < dim1 ; ++pos )  {
-		signals->preProc._buffer[ii].left.data._buffer[pos] = *(left->array1.first + pos);
-		signals->preProc._buffer[ii].right.data._buffer[pos] = *(right->array1.first + pos);
-	}
-	for ( pos = dim1 ; pos < fpc ; ++pos, ++pos2 ) {
-		signals->preProc._buffer[ii].left.data._buffer[pos] = *(left->array2.first + pos2 );
-		signals->preProc._buffer[ii].right.data._buffer[pos] = *(right->array2.first + pos2 );
-	}
+    PORT::iniTDS_port ( &(signals->preProc._buffer[ii].left.data), fpc, false, self );
+    PORT::iniTDS_port ( &(signals->preProc._buffer[ii].right.data), fpc, false, self );
+        
+	PORT::publishTDS_port ( &(signals->preProc._buffer[ii].left.data), left, fpc, 0, self );
+	PORT::publishTDS_port ( &(signals->preProc._buffer[ii].right.data), right, fpc, 0, self );
 												  
 	left.reset();
 	right.reset();
@@ -200,70 +174,29 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	return rosAFE_e_noMemory( self );
 	
   for ( size_t ii = 0 ; ii < sizeGammatone ; ++ii ) {
-    std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( ii );
+	  std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( ii );
 	
-	if (genom_sequence_reserve(&(signals->gammatone._buffer[ii].left.dataN), thisProcessor->get_fb_nChannels() ) ||
-		  genom_sequence_reserve(&(signals->gammatone._buffer[ii].right.dataN), thisProcessor->get_fb_nChannels() ))
-	  return rosAFE_e_noMemory( self );
-
-	  signals->gammatone._buffer[ii].left.dataN._length = thisProcessor->get_fb_nChannels();
-	  signals->gammatone._buffer[ii].right.dataN._length = thisProcessor->get_fb_nChannels();
-	  
-	  signals->gammatone._buffer[ii].sampleRate = thisProcessor->getFsOut();
-	  	  
-	  signals->gammatone._buffer[ii].numberOfChannels = thisProcessor->get_fb_nChannels();
-	  signals->gammatone._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
-
 	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
 	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightOldDataAccessor();
 
-			uint32_t dim1 = left[0]->array1.second;
-			uint32_t dim2 = left[0]->array2.second;
+	  uint32_t dim1 = left[0]->array1.second;
+	  uint32_t dim2 = left[0]->array2.second;
 			
-			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-			
-			signals->gammatone._buffer[ii].framesOnPort = fpc;
-		
-		for ( size_t jj = 0 ; jj < thisProcessor->get_fb_nChannels() ; ++jj ) {
-			
-			uint32_t dim1 = left[jj]->array1.second;
-			uint32_t dim2 = left[jj]->array2.second;
-			
-			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-
-			if (genom_sequence_reserve(&(signals->gammatone._buffer[ii].left.dataN._buffer[jj].data), fpc) ||
-				genom_sequence_reserve(&(signals->gammatone._buffer[ii].right.dataN._buffer[jj].data), fpc))
-			return rosAFE_e_noMemory( self );
-		  
-			signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._length = fpc;
-			signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._length = fpc;
-		
-			uint32_t pos, iii;
-			if (dim2 == 0) {	
-				for ( pos = 0; pos < dim1 ; ++pos ) {
-					signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
-					signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
-				}
-			} else if (dim1 == 0) {
-					for ( pos = 0; pos < dim2 ; ++pos )  {
-						signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + pos);
-						signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + pos);
-					}
-			} else {
-					for ( pos = 0 ; pos < fpc - dim2 ; ++pos ) {
-						signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
-						signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
-					}
-					
-					for ( iii = 0, pos = fpc - dim2 ; pos < fpc ; ++pos, ++iii ) {
-						signals->gammatone._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + iii );
-						signals->gammatone._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + iii );
-					}			
-				}
-		}
+	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+	  uint32_t nChannels = thisProcessor->get_fb_nChannels();
+	  		
+	  PORT::iniTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), nChannels,  fpc, false, self );
+	  PORT::iniTFS_port ( &(signals->gammatone._buffer[ii].right.dataN), nChannels,  fpc, false, self );
+	  
+	  PORT::publishTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), left, nChannels, fpc, 0, self );
+	  PORT::publishTFS_port ( &(signals->gammatone._buffer[ii].right.dataN), right, nChannels, fpc, 0, self );
+	  
+	  signals->gammatone._buffer[ii].framesOnPort = fpc;	  
+	  signals->gammatone._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  signals->gammatone._buffer[ii].numberOfChannels = nChannels;
+	  signals->gammatone._buffer[ii].lastFrameIndex = thisProcessor->getNFR();	  
 								  
-    thisProcessor.reset();
-  }	    
+  }
 
 /* ****************************  IHC START  ************************************ */
   size_t sizeIhcProc = ids->ihcProcessorsSt->processorsAccessor.getSize();
@@ -272,69 +205,28 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	return rosAFE_e_noMemory( self );
 	
   for ( size_t ii = 0 ; ii < sizeIhcProc ; ++ii ) {
-    std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( ii );
+      std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( ii );
 	
-	if (genom_sequence_reserve(&(signals->ihc._buffer[ii].left.dataN), thisProcessor->get_ihc_nChannels() ) ||
-		  genom_sequence_reserve(&(signals->ihc._buffer[ii].right.dataN), thisProcessor->get_ihc_nChannels() ))
-	  return rosAFE_e_noMemory( self );
-
-	  signals->ihc._buffer[ii].left.dataN._length = thisProcessor->get_ihc_nChannels();
-	  signals->ihc._buffer[ii].right.dataN._length = thisProcessor->get_ihc_nChannels();
-	  
-	  signals->ihc._buffer[ii].sampleRate = thisProcessor->getFsOut();
-	  	  
-	  signals->ihc._buffer[ii].numberOfChannels = thisProcessor->get_ihc_nChannels();
-	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
-
 	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
 	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightOldDataAccessor();
 
-			uint32_t dim1 = left[0]->array1.second;
-			uint32_t dim2 = left[0]->array2.second;
+	  uint32_t dim1 = left[0]->array1.second;
+	  uint32_t dim2 = left[0]->array2.second;
 			
-			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-			
-			signals->ihc._buffer[ii].framesOnPort = fpc;
-		
-		for ( size_t jj = 0 ; jj < thisProcessor->get_ihc_nChannels() ; ++jj ) {
-			
-			uint32_t dim1 = left[jj]->array1.second;
-			uint32_t dim2 = left[jj]->array2.second;
-			
-			fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-
-			if (genom_sequence_reserve(&(signals->ihc._buffer[ii].left.dataN._buffer[jj].data), fpc) ||
-				genom_sequence_reserve(&(signals->ihc._buffer[ii].right.dataN._buffer[jj].data), fpc))
-			return rosAFE_e_noMemory( self );
-		  
-			signals->ihc._buffer[ii].left.dataN._buffer[jj].data._length = fpc;
-			signals->ihc._buffer[ii].right.dataN._buffer[jj].data._length = fpc;
-		
-			uint32_t pos, iii;
-			if (dim2 == 0) {	
-				for ( pos = 0; pos < dim1 ; ++pos ) {
-					signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
-					signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
-				}
-			} else if (dim1 == 0) {
-					for ( pos = 0; pos < dim2 ; ++pos )  {
-						signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + pos);
-						signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + pos);
-					}
-			} else {
-					for ( pos = 0 ; pos < fpc - dim2 ; ++pos ) {
-						signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
-						signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array1.first + pos);
-					}
-					
-					for ( iii = 0, pos = fpc - dim2 ; pos < fpc ; ++pos, ++iii ) {
-						signals->ihc._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + iii );
-						signals->ihc._buffer[ii].right.dataN._buffer[jj].data._buffer[pos] = *(right[jj]->array2.first + iii );
-					}			
-				}
-		}
-								  
-    thisProcessor.reset();
+	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+	  uint32_t nChannels = thisProcessor->get_ihc_nChannels();
+	  		
+	  PORT::iniTFS_port ( &(signals->ihc._buffer[ii].left.dataN), nChannels,  fpc, false, self );
+	  PORT::iniTFS_port ( &(signals->ihc._buffer[ii].right.dataN), nChannels,  fpc, false, self );
+	  
+	  PORT::publishTFS_port ( &(signals->ihc._buffer[ii].left.dataN), left, nChannels, fpc, 0, self );
+	  PORT::publishTFS_port ( &(signals->ihc._buffer[ii].right.dataN), right, nChannels, fpc, 0, self );
+	  
+	  signals->ihc._buffer[ii].framesOnPort = fpc;	  
+	  signals->ihc._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  signals->ihc._buffer[ii].numberOfChannels = nChannels;
+	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+	  
   }	    
 
 /* ****************************  ILD START  ************************************ */
@@ -344,63 +236,27 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	return rosAFE_e_noMemory( self );
 	 
   for ( size_t ii = 0 ; ii < sizeIldProc ; ++ii ) {
-    std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( ii );
+      std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( ii );
 	
-	if (genom_sequence_reserve(&(signals->ild._buffer[ii].left.dataN), thisProcessor->get_ild_nChannels() ) ||
-		  genom_sequence_reserve(&(signals->ild._buffer[ii].right.dataN), thisProcessor->get_ild_nChannels() ))
-	  return rosAFE_e_noMemory( self );
-	  
-	  signals->ild._buffer[ii].left.dataN._length = thisProcessor->get_ild_nChannels();
-	  signals->ild._buffer[ii].right.dataN._length = thisProcessor->get_ild_nChannels();
- 	  
-	  signals->ild._buffer[ii].sampleRate = thisProcessor->getFsOut();
-	  	  
-	  signals->ild._buffer[ii].numberOfChannels = thisProcessor->get_ild_nChannels();
-	  signals->ild._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
-
 	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
-	  
-			uint32_t dim1 = left[0]->array1.second;
-			uint32_t dim2 = left[0]->array2.second;
-			
-			uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-			
-			signals->ild._buffer[ii].framesOnPort = fpc;
-			
-		for ( size_t jj = 0 ; jj < thisProcessor->get_ild_nChannels() ; ++jj ) {
-			
-			uint32_t dim1 = left[jj]->array1.second;
-			uint32_t dim2 = left[jj]->array2.second;
-			
-			fpc = dim1 + dim2; 			// amount of Frames On this Chunk
 
-			if ( genom_sequence_reserve(&(signals->ild._buffer[ii].left.dataN._buffer[jj].data), fpc) )
-			return rosAFE_e_noMemory( self );
-		  
-			signals->ild._buffer[ii].left.dataN._buffer[jj].data._length = fpc;
-		
-			uint32_t pos, iii;
-			if (dim2 == 0) {	
-				for ( pos = 0; pos < dim1 ; ++pos ) {
-					signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
-				}
-			} else if (dim1 == 0) {
-					for ( pos = 0; pos < dim2 ; ++pos )  {
-						signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + pos);
-					}
-			} else {
-					for ( pos = 0 ; pos < fpc - dim2 ; ++pos ) {
-						signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array1.first + pos);
-					}
-					
-					for ( iii = 0, pos = fpc - dim2 ; pos < fpc ; ++pos, ++iii ) {
-						signals->ild._buffer[ii].left.dataN._buffer[jj].data._buffer[pos] = *(left[jj]->array2.first + iii );
-					}			
-				}
- 			}
-							  
-    thisProcessor.reset();
-  }	  
+	  uint32_t dim1 = left[0]->array1.second;
+	  uint32_t dim2 = left[0]->array2.second;
+			
+	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+	  uint32_t nChannels = thisProcessor->get_ild_nChannels();
+	  		
+	  PORT::iniTFS_port ( &(signals->ild._buffer[ii].left.dataN), nChannels,  fpc, false, self );
+	  
+	  PORT::publishTFS_port ( &(signals->ild._buffer[ii].left.dataN), left, nChannels, fpc, 0, self );
+	  
+	  signals->ild._buffer[ii].framesOnPort = fpc;	  
+	  signals->ild._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  signals->ild._buffer[ii].numberOfChannels = nChannels;
+	  signals->ild._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+	  
+  }
+  	  
   return genom_ok;
 }
 
@@ -416,36 +272,38 @@ genom_event
 getDependencie(const char *nameProc, sequence_string *dependencies,
                const rosAFE_ids *ids, genom_context self)
 { 
-  unsigned int type = findType(nameProc, ids);
-  
-  // Reserving genom_sequence once per call
+  openAFE::procType type = findType(nameProc, ids);
+  if ( type == _unknow ) 
+	return rosAFE_e_noSuchProcessor( self );
+	
+  // Reserving genom_sequence only once
   if ( dependencies->_length == 0 ) {
-	  dependencies->_length = type ;
 	  
+	  dependencies->_length = type ;
 	  if ( genom_sequence_reserve(dependencies, type) )
 		return rosAFE_e_noMemory( self );
   }
   
-	if ( type == 1 ) {
+	if ( type == _inputProc ) {
 		std::shared_ptr < InputProc > thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc );
 		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
-	} else if ( type == 2 ) {
+	} else if ( type == _preProc ) {
 		std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc );
 		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
-	} else if ( type == 3 ) {
+	} else if ( type == _gammatone ) {
 		std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc );
 		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
-	} else if ( type == 4 ) {
+	} else if ( type == _ihc ) {
 		std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc );
 		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
-	} else if ( type == 5 ) {
+	} else if ( type == _ild ) {
 		std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc );
 		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
-	} else return rosAFE_e_noSuchProcessor( self );
+	}
   
   return genom_ok;
 }
@@ -494,7 +352,6 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
     parameters->preProc._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
-    parameters->preProc._buffer[ii].upperDepName = strdup( thisProcessor->get_upperProcName().c_str() );
     parameters->preProc._buffer[ii].pp_bRemoveDC = thisProcessor->get_pp_bRemoveDC();
     parameters->preProc._buffer[ii].pp_cutoffHzDC = thisProcessor->get_pp_cutoffHzDC();
     parameters->preProc._buffer[ii].pp_bPreEmphasis = thisProcessor->get_pp_bPreEmphasis();
@@ -536,7 +393,6 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
     parameters->gammatone._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
-    parameters->gammatone._buffer[ii].upperDepName = strdup( thisProcessor->get_upperProcName().c_str() );
     
     switch ( thisProcessor->get_fb_type() ) {
 		case _gammatoneFilterBank:
@@ -579,7 +435,6 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
 	parameters->ihc._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
-	parameters->ihc._buffer[ii].upperDepName = strdup( thisProcessor->get_upperProcName().c_str() );
     
     switch ( thisProcessor->get_ihc_method() ) {
 		case _none:
@@ -630,9 +485,7 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 	 
     std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
-	parameters->ild._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
-	parameters->ild._buffer[ii].upperDepName = strdup( thisProcessor->get_upperProcName().c_str() );
-	
+	parameters->ild._buffer[ii].name = strdup( thisProcessor->getName().c_str() );	
 
     switch ( thisProcessor->get_ild_wname() ) {
 		case _hamming:
@@ -687,12 +540,12 @@ modifyParameter(const char *nameProc, const char *nameParam,
   std::string newValueSt = strdup( newValue );
   params.set("newValue", newValueSt);
 
-  unsigned int type = findType(nameProc, ids);
-  if ( type == 0 ) 
+  openAFE::procType type = findType(nameProc, ids);
+  if ( type == _unknow ) 
 	return rosAFE_e_noSuchProcessor( self );
   	
   try {
-	  if ( type == 1 ) {
+	  if ( type == _inputProc ) {
 		if ( strcmp( nameParam, "in_doNormalize" ) == 0 ) {
 			ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_in_doNormalize( params.get<bool>("newValue") );
 			return genom_ok;
@@ -701,7 +554,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }
-	  else if ( type == 2 ) {
+	  else if ( type == _preProc ) {
 		
 		if ( strcmp( nameParam, "pp_bRemoveDC" ) == 0 ) {
 				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_bRemoveDC( params.get<bool>("set_pp_bRemoveDC") );
@@ -741,7 +594,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;																				
 		} else return rosAFE_e_noSuchParameter(self);		
 	  }
-	  else if ( type == 3 ) {
+	  else if ( type == _gammatone ) {
 
 		if ( strcmp( nameParam, "fb_nGamma" ) == 0 ) {
 				ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_fb_nGamma( params.get<unsigned int>("newValue") );
@@ -751,7 +604,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }
-	  else if ( type == 4 ) {
+	  else if ( type == _ihc ) {
 
 		if ( strcmp( nameParam, "ihc_method" ) == 0 ) {
 				ihcMethod thisMethod = _dau;
@@ -775,7 +628,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }
-	  else if ( type == 5 ) {
+	  else if ( type == _ild ) {
 
 		if ( strcmp( nameParam, "ild_wSizeSec" ) == 0 ) {
 			ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_ild_wSizeSec( params.get<double>("newValue") );

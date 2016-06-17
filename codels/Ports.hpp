@@ -10,7 +10,19 @@
 #include <string>
 
 namespace PORT {
-	
+
+	genom_event
+	iniTDS_port ( sequence_double *signal, uint32_t fop, bool initToZero, genom_context self );
+
+	genom_event
+	publishTDS_port ( sequence_double *signal, twoCTypeBlockPtr chunk, uint32_t fop, uint32_t bytesPerFrame, genom_context self );
+
+	genom_event
+	iniTFS_port ( sequence_rosAFE_signalOneD *signal, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self );
+
+	genom_event
+	publishTFS_port ( sequence_rosAFE_signalOneD *signal, std::vector<twoCTypeBlockPtr >& chunk, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, genom_context self ) ;
+				
 	genom_event
 	initInputPort ( const rosAFE_inputProcPort *inputProcPort, uint32_t sampleRate,
 						uint32_t bufferSize_s, genom_context self );

@@ -74,7 +74,7 @@ startIldProc(const char *name, const char *upperDepName,
 /* already defined in service PreProc */
 
 
-/** Codel exec of activity IldProc.
+/** Codel execIldProc of activity IldProc.
  *
  * Triggered by rosAFE_exec.
  * Yields to rosAFE_waitRelease.
@@ -82,8 +82,9 @@ startIldProc(const char *name, const char *upperDepName,
  *        rosAFE_e_noSuchProcessor.
  */
 genom_event
-exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
-     rosAFE_flagMap **flagMapSt, genom_context self)
+execIldProc(const char *name, const char *upperDepName,
+            rosAFE_ids *ids, rosAFE_flagMap **flagMapSt,
+            genom_context self)
 {
   ids->ildProcessorsSt->processorsAccessor.getProcessor ( name )->processChunk( );
 
@@ -102,7 +103,7 @@ exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
 /* already defined in service PreProc */
 
 
-/** Codel release of activity IldProc.
+/** Codel releaseIldProc of activity IldProc.
  *
  * Triggered by rosAFE_release.
  * Yields to rosAFE_pause_waitExec, rosAFE_stop.
@@ -110,9 +111,9 @@ exec(const char *name, const char *upperDepName, rosAFE_ids *ids,
  *        rosAFE_e_noSuchProcessor.
  */
 genom_event
-release(const char *name, rosAFE_ids *ids,
-        rosAFE_flagMap **newDataMapSt, const rosAFE_ildPort *ildPort,
-        genom_context self)
+releaseIldProc(const char *name, rosAFE_ids *ids,
+               rosAFE_flagMap **newDataMapSt,
+               const rosAFE_ildPort *ildPort, genom_context self)
 {
   std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( name );
   thisProcessor->releaseChunk( );

@@ -13,6 +13,7 @@ namespace openAFE {
 
 	/* The type of the processing */
 	enum procType {
+		_unknow,
 		_inputProc,
 		_preProc,
 		_gammatone,

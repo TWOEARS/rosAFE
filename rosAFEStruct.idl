@@ -1,20 +1,12 @@
 #ifndef ROSAFESTRUCT_IDL
 #define ROSAFESTRUCT_IDL
 
-#define MAX_STRING_LENGTH 500
-
 module rosAFE {	
 
-    struct timestamp
-    {
-        unsigned long sec;
-        unsigned long usec; // should be nsec
-    };
-
-    struct std_msgs__Header
-    {
-        unsigned long seq;
-        timestamp stamp;
+    struct infos {
+       unsigned long sampleRate;
+       double bufferSize_s_port;
+       double bufferSize_s_getSignal;
     };
 
     struct signalOneD
@@ -44,12 +36,6 @@ module rosAFE {
         signalND              		right;
     };
 
-    struct infos {
-       unsigned long sampleRate;
-       double bufferSize_s_port;
-       double bufferSize_s_getSignal;
-    };
-
     struct inputProcsParametres {
       string name;
       boolean in_doNormalize;
@@ -58,7 +44,6 @@ module rosAFE {
 
     struct preProcsParametres {
       string name;
-      string upperDepName;
       boolean pp_bRemoveDC;
       double pp_cutoffHzDC;
       boolean pp_bPreEmphasis;
@@ -74,7 +59,6 @@ module rosAFE {
 
     struct gammatoneProcsParametres {
       string name;
-      string upperDepName;
       string fb_type;
       double fb_lowFreqHz;
       double fb_highFreqHz;
@@ -87,13 +71,11 @@ module rosAFE {
 
     struct ihcProcsParametres {
       string name;
-      string upperDepName;
       string ihc_method;
     };
 
     struct ildProcsParametres {
       string name;
-      string upperDepName;
       string ild_wname;
       double ild_wSizeSec;
       double ild_hSizeSec;

@@ -63,9 +63,9 @@ component rosAFE {
       in double bufferSize_s_port = 10 : "Buffer size in seconds",
       in double bufferSize_s_getSignal = 1 : "Buffer size in seconds"
       ) {
-        doc         "Get consecutive blocks of audio data from bass and normalizes that data";
+        doc         "Get consecutive blocks of audio data from bass.";
         task        input;
-        interrupts  InputProc;  // Only one audio input can exist simultaneously
+        interrupts  InputProc;  // Only one audio input can exist
 
         codel <start>   	startInputProc( local in name, local in nFramesPerBlock, local in bufferSize_s_port, local in bufferSize_s_getSignal, inout inputProcessorsSt,
                             		port in Audio, out infos, port out inputProcPort ) yield waitExec;
@@ -186,9 +186,9 @@ component rosAFE {
 	
 	// The state Machine, start
         codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
-        codel <exec>    	exec ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
+        codel <exec>    	execIldProc ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
         codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
-        codel <release>    	release ( local in name, inout ::ids, out newDataMapSt, port out ildPort ) yield pause::waitExec, stop;
+        codel <release>    	releaseIldProc ( local in name, inout ::ids, out newDataMapSt, port out ildPort ) yield pause::waitExec, stop;
 	// The state Machine, end
 
         codel <delete>    	deleteIldProc ( local in name, inout ildProcessorsSt, port out ildPort ) yield ether;
