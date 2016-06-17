@@ -2,7 +2,7 @@ autoconf/
 autom4te.cache/
 build/
 codels/Makefile.in
-examples/rosAFEclient.m
+examples/standAloneClient.m
 aclocal.m4
 bootstrap.sh
 configure

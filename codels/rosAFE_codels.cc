@@ -557,7 +557,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 	  else if ( type == _preProc ) {
 		
 		if ( strcmp( nameParam, "pp_bRemoveDC" ) == 0 ) {
-				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_bRemoveDC( params.get<bool>("set_pp_bRemoveDC") );
+				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_bRemoveDC( params.get<bool>("newValue") );
 				return genom_ok;
 		} else if ( strcmp( nameParam, "pp_cutoffHzDC" ) == 0 ) {
 				ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_pp_cutoffHzDC( params.get<double>("newValue") );
