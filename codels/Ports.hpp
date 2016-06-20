@@ -8,20 +8,32 @@
 #include "genom3_dataFiles.hpp"
 
 #include <string>
+#include <thread>         // std::thread
 
 namespace PORT {
 
 	genom_event
-	iniTDS_port ( sequence_double *signal, uint32_t fop, bool initToZero, genom_context self );
+	iniTDS_port ( sequence_double *left, sequence_double *right, uint32_t fop, bool initToZero, genom_context self );
 
+	void
+	TDS_exec ( sequence_double *signal, twoCTypeBlockPtr chunk, uint32_t fop, uint32_t bytesPerFrame );
+	
 	genom_event
-	publishTDS_port ( sequence_double *signal, twoCTypeBlockPtr chunk, uint32_t fop, uint32_t bytesPerFrame, genom_context self );
+	publishTDS_port ( sequence_double *signalLeft, twoCTypeBlockPtr chunkLeft, sequence_double *signalRight, twoCTypeBlockPtr chunkRight, uint32_t fop, uint32_t bytesPerFrame, genom_context self );
+	
+	genom_event
+	TFS_init( sequence_rosAFE_signalOneD *signal, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self );
+	
+	genom_event
+	iniTFS_port ( sequence_rosAFE_signalOneD *signalLeft, sequence_rosAFE_signalOneD *signalRight, uint32_t nChannels, uint32_t fop, bool isBinaural, bool initToZero, genom_context self );
 
+	void
+	TFS_exec ( sequence_rosAFE_signalOneD *signal, std::vector<twoCTypeBlockPtr >& chunk, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame );
+	
 	genom_event
-	iniTFS_port ( sequence_rosAFE_signalOneD *signal, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self );
-
-	genom_event
-	publishTFS_port ( sequence_rosAFE_signalOneD *signal, std::vector<twoCTypeBlockPtr >& chunk, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, genom_context self ) ;
+	publishTFS_port ( sequence_rosAFE_signalOneD *signalLeft, std::vector<twoCTypeBlockPtr >& chunkLeft,
+							sequence_rosAFE_signalOneD *signalRight, std::vector<twoCTypeBlockPtr >& chunkRight,
+							uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, bool isBinaural, genom_context self );
 				
 	genom_event
 	initInputPort ( const rosAFE_inputProcPort *inputProcPort, uint32_t sampleRate,

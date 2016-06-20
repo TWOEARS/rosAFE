@@ -124,11 +124,9 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	signals->input._buffer[ii].framesOnPort = fpc;
 	signals->input._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-    PORT::iniTDS_port ( &(signals->input._buffer[ii].left.data), fpc, false, self );
-    PORT::iniTDS_port ( &(signals->input._buffer[ii].right.data), fpc, false, self );
+    PORT::iniTDS_port ( &(signals->input._buffer[ii].left.data), &(signals->input._buffer[ii].right.data), fpc, false, self );
         
-	PORT::publishTDS_port ( &(signals->input._buffer[ii].left.data), left, fpc, 0, self );
-	PORT::publishTDS_port ( &(signals->input._buffer[ii].right.data), right, fpc, 0, self );
+	PORT::publishTDS_port ( &(signals->input._buffer[ii].left.data), left, &(signals->input._buffer[ii].right.data), right, fpc, 0, self );
 	
   }
 
@@ -155,11 +153,9 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	signals->preProc._buffer[ii].framesOnPort = fpc;
 	signals->preProc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 
-    PORT::iniTDS_port ( &(signals->preProc._buffer[ii].left.data), fpc, false, self );
-    PORT::iniTDS_port ( &(signals->preProc._buffer[ii].right.data), fpc, false, self );
+    PORT::iniTDS_port ( &(signals->preProc._buffer[ii].left.data), &(signals->preProc._buffer[ii].right.data), fpc, false, self );
         
-	PORT::publishTDS_port ( &(signals->preProc._buffer[ii].left.data), left, fpc, 0, self );
-	PORT::publishTDS_port ( &(signals->preProc._buffer[ii].right.data), right, fpc, 0, self );
+	PORT::publishTDS_port ( &(signals->preProc._buffer[ii].left.data), left, &(signals->preProc._buffer[ii].right.data), right, fpc, 0, self );
 												  
 	left.reset();
 	right.reset();
@@ -185,11 +181,11 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
 	  uint32_t nChannels = thisProcessor->get_fb_nChannels();
 	  		
-	  PORT::iniTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), nChannels,  fpc, false, self );
-	  PORT::iniTFS_port ( &(signals->gammatone._buffer[ii].right.dataN), nChannels,  fpc, false, self );
+	  PORT::iniTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), &(signals->gammatone._buffer[ii].right.dataN), nChannels,  fpc, true, false, self );
 	  
-	  PORT::publishTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), left, nChannels, fpc, 0, self );
-	  PORT::publishTFS_port ( &(signals->gammatone._buffer[ii].right.dataN), right, nChannels, fpc, 0, self );
+	  PORT::publishTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), left, 
+							  &(signals->gammatone._buffer[ii].right.dataN), right,
+							  nChannels, fpc, 0, true, self );
 	  
 	  signals->gammatone._buffer[ii].framesOnPort = fpc;	  
 	  signals->gammatone._buffer[ii].sampleRate = thisProcessor->getFsOut();
@@ -216,11 +212,11 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
 	  uint32_t nChannels = thisProcessor->get_ihc_nChannels();
 	  		
-	  PORT::iniTFS_port ( &(signals->ihc._buffer[ii].left.dataN), nChannels,  fpc, false, self );
-	  PORT::iniTFS_port ( &(signals->ihc._buffer[ii].right.dataN), nChannels,  fpc, false, self );
+	  PORT::iniTFS_port ( &(signals->ihc._buffer[ii].left.dataN), &(signals->ihc._buffer[ii].right.dataN), nChannels,  fpc, true, false, self );
 	  
-	  PORT::publishTFS_port ( &(signals->ihc._buffer[ii].left.dataN), left, nChannels, fpc, 0, self );
-	  PORT::publishTFS_port ( &(signals->ihc._buffer[ii].right.dataN), right, nChannels, fpc, 0, self );
+	  PORT::publishTFS_port ( &(signals->ihc._buffer[ii].left.dataN), left,
+							  &(signals->ihc._buffer[ii].right.dataN), right, 
+							  nChannels, fpc, 0, true, self );
 	  
 	  signals->ihc._buffer[ii].framesOnPort = fpc;	  
 	  signals->ihc._buffer[ii].sampleRate = thisProcessor->getFsOut();
@@ -246,9 +242,9 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
 	  uint32_t nChannels = thisProcessor->get_ild_nChannels();
 	  		
-	  PORT::iniTFS_port ( &(signals->ild._buffer[ii].left.dataN), nChannels,  fpc, false, self );
+	  PORT::iniTFS_port ( &(signals->ild._buffer[ii].left.dataN), nullptr, nChannels,  fpc, false, false, self );
 	  
-	  PORT::publishTFS_port ( &(signals->ild._buffer[ii].left.dataN), left, nChannels, fpc, 0, self );
+	  PORT::publishTFS_port ( &(signals->ild._buffer[ii].left.dataN), left, nullptr, left, nChannels, fpc, 0, false, self );
 	  
 	  signals->ild._buffer[ii].framesOnPort = fpc;	  
 	  signals->ild._buffer[ii].sampleRate = thisProcessor->getFsOut();

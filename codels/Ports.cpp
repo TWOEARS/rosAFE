@@ -2,23 +2,27 @@
 
 
 	genom_event
-	PORT::iniTDS_port ( sequence_double *signal, uint32_t fop, bool initToZero, genom_context self ) {
+	PORT::iniTDS_port ( sequence_double *left, sequence_double *right, uint32_t fop, bool initToZero, genom_context self ) {
 
-		signal->_length = fop;
-		
-		if ( genom_sequence_reserve( signal, fop ) )
+		left->_length = fop;
+		right->_length = fop;
+			
+		if ( genom_sequence_reserve( left, fop ) || genom_sequence_reserve( right, fop ) )
 		return rosAFE_e_noMemory( self );	
 
 		if ( initToZero ) {
-			for ( size_t ii = 0; ii < fop; ++ii )
-				signal->_buffer[ii] = 0;
+			for ( size_t ii = 0; ii < fop; ++ii ) {
+					left->_buffer[ii] = 0;
+					right->_buffer[ii] = 0;
+			}
 		}
+		
 		return genom_ok;	
 	}
 
-	genom_event
-	PORT::publishTDS_port ( sequence_double *signal, twoCTypeBlockPtr chunk, uint32_t fop, uint32_t bytesPerFrame, genom_context self ) {
-
+	void
+	PORT::TDS_exec ( sequence_double *signal, twoCTypeBlockPtr chunk, uint32_t fop, uint32_t bytesPerFrame ) {
+		
 		uint32_t dim1 = chunk->array1.second;
 		uint32_t dim2 = chunk->array2.second;
 
@@ -44,13 +48,24 @@
 					for (ii = 0, pos = fop - dim2; pos < fop ; ++ii, ++pos ) {
 						signal->_buffer[pos] = *(chunk->array2.first + ii);
 					}			
-				}		
+				}	
+	}
+
+	genom_event
+	PORT::publishTDS_port ( sequence_double *signalLeft, twoCTypeBlockPtr chunkLeft, sequence_double *signalRight, twoCTypeBlockPtr chunkRight, uint32_t fop, uint32_t bytesPerFrame, genom_context self ) {
+
+		std::thread left( PORT::TDS_exec, signalLeft, chunkLeft, fop, bytesPerFrame);
+		std::thread right( PORT::TDS_exec, signalRight, chunkRight, fop, bytesPerFrame);
+			
+		left.join();
+		right.join();
+			
 		return genom_ok;
 	}
 
 	genom_event
-	PORT::iniTFS_port ( sequence_rosAFE_signalOneD *signal, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self ) {
-
+	PORT::TFS_init( sequence_rosAFE_signalOneD *signal, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self ) {
+		
 	  if ( genom_sequence_reserve( signal, nChannels) )
 		return rosAFE_e_noMemory( self );
 
@@ -67,12 +82,26 @@
 				signal->_buffer[ii].data._buffer[iii] = 0;
 		}
 	  }
+	
+	return genom_ok;	  		
+	}
+	
+	genom_event
+	PORT::iniTFS_port ( sequence_rosAFE_signalOneD *signalLeft, sequence_rosAFE_signalOneD *signalRight, uint32_t nChannels, uint32_t fop, bool isBinaural, bool initToZero, genom_context self ) {
 
-	  return genom_ok;		
+		std::thread left( PORT::TFS_init, signalLeft, nChannels, fop, initToZero, self );
+		
+		if ( isBinaural ) {
+			std::thread right( PORT::TFS_init, signalRight, nChannels, fop, initToZero, self );
+			left.join();
+			right.join();
+		} else left.join();
+
+		return genom_ok;		
 	}
 
-	genom_event
-	PORT::publishTFS_port ( sequence_rosAFE_signalOneD *signal, std::vector<twoCTypeBlockPtr >& chunk, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, genom_context self ) {
+	void
+	PORT::TFS_exec ( sequence_rosAFE_signalOneD *signal, std::vector<twoCTypeBlockPtr >& chunk, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame ) {
 
 		for ( size_t ii = 0 ; ii < nChannels ; ++ii ) {
 			
@@ -97,7 +126,23 @@
 					for (iii = 0, pos = fop - dim2; pos < fop ; ++iii, ++pos)
 						signal->_buffer[ii].data._buffer[pos] = *(chunk[ii]->array2.first + iii);	
 				}
-		}
+		}		
+	}
+		
+	genom_event
+	PORT::publishTFS_port ( sequence_rosAFE_signalOneD *signalLeft, std::vector<twoCTypeBlockPtr >& chunkLeft,
+							sequence_rosAFE_signalOneD *signalRight, std::vector<twoCTypeBlockPtr >& chunkRight,
+							uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, bool isBinaural, genom_context self ) {
+
+		std::thread left( PORT::TFS_exec, signalLeft, std::ref(chunkLeft), nChannels, fop, bytesPerFrame );
+		
+		if ( isBinaural ) {
+			std::thread right( PORT::TFS_exec, signalRight, std::ref(chunkRight), nChannels, fop, bytesPerFrame );
+			left.join();
+			right.join();
+		} else left.join();
+
+		return genom_ok;	
 
 	  return genom_ok;	
 	}
@@ -110,8 +155,7 @@
 						
 		  uint32_t fop =  sampleRate * bufferSize_s; // total amount of Frames On the Port 
 	
-		  iniTDS_port(&(inputProcPort->data( self )->left.data), fop, true, self );
-		  iniTDS_port(&(inputProcPort->data( self )->right.data), fop, true, self );
+		  iniTDS_port(&(inputProcPort->data( self )->left.data), &(inputProcPort->data( self )->right.data), fop, true, self );
 
 		  inputProcPort->data( self )->sampleRate = sampleRate;
 		  inputProcPort->data( self )->framesOnPort = fop;
@@ -127,8 +171,7 @@
 
 			uint32_t fop = inputProcPort->data( self )->framesOnPort; 	// total amount of Frames On the Port
 
-			publishTDS_port ( &(inputProcPort->data( self )->left.data), left, fop, bytesPerFrame, self );
-			publishTDS_port ( &(inputProcPort->data( self )->right.data), right, fop, bytesPerFrame, self );
+			publishTDS_port ( &(inputProcPort->data( self )->left.data), left, &(inputProcPort->data( self )->right.data), right, fop, bytesPerFrame, self );
 			
 			inputProcPort->data( self )->lastFrameIndex = nfr;
 			inputProcPort->write( self );
@@ -146,8 +189,7 @@
 	  
 	  preProcPort->open( name, self );
 		
-	  iniTDS_port(&(preProcPort->data( name, self )->left.data), fop, true, self );
-	  iniTDS_port(&(preProcPort->data( name, self )->right.data), fop, true, self );
+	  iniTDS_port(&(preProcPort->data( name, self )->left.data), &(preProcPort->data( name, self )->right.data), fop, true, self );
 		  
 	  preProcPort->data( name, self )->sampleRate = sampleRate;
 	  preProcPort->data( name, self )->framesOnPort = fop;
@@ -163,8 +205,7 @@
 	   	
 		uint32_t fop = preProcPort->data( name, self )->framesOnPort; // total amount of Frames On the Port
 
-		publishTDS_port ( &(preProcPort->data( name, self )->left.data), left, fop, bytesPerFrame, self );
-		publishTDS_port ( &(preProcPort->data( name, self )->right.data), right, fop, bytesPerFrame, self );
+		publishTDS_port ( &(preProcPort->data( name, self )->left.data), left, &(preProcPort->data( name, self )->right.data), right, fop, bytesPerFrame, self );
 							
 		preProcPort->data( name, self )->lastFrameIndex = nfr;
 		preProcPort->write( name, self );	
@@ -188,8 +229,7 @@
 							
 	  uint32_t fop =  sampleRate * bufferSize_s; /* total amount of Frames On the Port */
 	  
-	  iniTFS_port ( &(gammatonePort->data( name, self )->left.dataN), nChannels,  fop, true, self );
-	  iniTFS_port ( &(gammatonePort->data( name, self )->right.dataN), nChannels,  fop, true, self );
+	  iniTFS_port ( &(gammatonePort->data( name, self )->left.dataN), &(gammatonePort->data( name, self )->right.dataN), nChannels,  fop, true, true, self );
 		
 	  gammatonePort->data( name, self )->sampleRate = sampleRate;
 	  gammatonePort->data( name, self )->framesOnPort = fop;	  
@@ -209,8 +249,9 @@
 					
 		thisPort = gammatonePort->data( name, self );
 
-		publishTFS_port ( &(thisPort->left.dataN), left, thisPort->numberOfChannels, thisPort->framesOnPort, bytesPerFrame, self );
-		publishTFS_port ( &(thisPort->right.dataN), right, thisPort->numberOfChannels, thisPort->framesOnPort, bytesPerFrame, self );
+		publishTFS_port ( &(thisPort->left.dataN), left,
+						  &(thisPort->right.dataN), right, thisPort->numberOfChannels, 
+						  thisPort->framesOnPort, bytesPerFrame, true, self );
 		
 		thisPort->lastFrameIndex = nfr;
 		gammatonePort->write( name, self );			
@@ -234,8 +275,7 @@
 	  
 	  ihcPort->open( name, self );
 
-	  iniTFS_port ( &(ihcPort->data( name, self )->left.dataN), nChannels,  fop, true, self );
-	  iniTFS_port ( &(ihcPort->data( name, self )->right.dataN), nChannels,  fop, true, self );
+	  iniTFS_port ( &(ihcPort->data( name, self )->left.dataN), &(ihcPort->data( name, self )->right.dataN), nChannels,  fop, true, true, self );
 
 	  ihcPort->data( name, self )->sampleRate = sampleRate;
 	  ihcPort->data( name, self )->framesOnPort = fop;	  
@@ -255,8 +295,9 @@
 										
 		thisPort = ihcPort->data( name, self );
 
-		publishTFS_port ( &(thisPort->left.dataN), left, thisPort->numberOfChannels, thisPort->framesOnPort, bytesPerFrame, self );
-		publishTFS_port ( &(thisPort->right.dataN), right, thisPort->numberOfChannels, thisPort->framesOnPort, bytesPerFrame, self );
+		publishTFS_port ( &(thisPort->left.dataN), left,
+						  &(thisPort->right.dataN), right, thisPort->numberOfChannels, 
+						  thisPort->framesOnPort, bytesPerFrame, true, self );
 		
 		thisPort->lastFrameIndex = nfr;
 		ihcPort->write( name, self );			
@@ -280,7 +321,7 @@
 	  
 	  ildPort->open( name, self );
 
-	  iniTFS_port ( &(ildPort->data( name, self )->left.dataN), nChannels,  fop, true, self );
+	  iniTFS_port ( &(ildPort->data( name, self )->left.dataN), nullptr, nChannels, fop, false, true, self );
 
 	  ildPort->data( name, self )->sampleRate = sampleRate;
 	  ildPort->data( name, self )->framesOnPort = fop;	  
@@ -300,7 +341,7 @@
 										
 		thisPort = ildPort->data( name, self );
 
-		publishTFS_port ( &(thisPort->left.dataN), left, thisPort->numberOfChannels, thisPort->framesOnPort, bytesPerFrame, self );
+		publishTFS_port ( &(thisPort->left.dataN), left, nullptr, left, thisPort->numberOfChannels, thisPort->framesOnPort, bytesPerFrame, false, self );
 		
 		thisPort->lastFrameIndex = nfr;
 		ildPort->write( name, self );

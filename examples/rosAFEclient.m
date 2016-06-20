@@ -28,7 +28,7 @@ bufferSize_s_rosAFE_port = 1;
 bufferSize_s_rosAFE_getSignal = 1;
 bufferSize_s_matlab = 10;
 
-inputDevice = 'hw:2,0'; % Check your input device by bass.ListDevices();
+inputDevice = 'hw:1,0'; % Check your input device by bass.ListDevices();
 
 framesPerChunk = 12000; % Each chunk is (framesPerChunk/sampleRate) seconds.
 
@@ -49,7 +49,7 @@ pp_cutoffHzDC  = 5000;
 par = genParStruct('pp_bRemoveDC',pp_bRemoveDC,...
                     'pp_cutoffHzDC',pp_cutoffHzDC); 
 
-mObj.addProcessor('ild',par); % With given parameters
+mObj.addProcessor('ild'); % With given parameters
 
 mObj.modifyParameter( 'time_0', 'pp_bRemoveDC', '0' );
 
