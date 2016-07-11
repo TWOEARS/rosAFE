@@ -34,7 +34,7 @@ startIldProc(const char *name, const char *upperDepName,
   if (!(upperDepProc))
 	return rosAFE_e_noUpperDependencie (self);
 	
-  ildWindowType thisWindow = _hann;
+  windowType thisWindow = _hann;
   if ( strcmp( ild_wname, "hamming" ) == 0 )
     thisWindow = _hamming;
   else if ( strcmp( ild_wname, "hanning" ) == 0 )
@@ -53,7 +53,7 @@ startIldProc(const char *name, const char *upperDepName,
 
   // Initialization of the output port
   PORT::initILDPort ( name, ildPort, ildProcessor->getFsOut(),
-						infos->bufferSize_s_port, ildProcessor->get_ild_nChannels(), self );
+						infos->bufferSize_s_port, ildProcessor->get_nChannel(), self );
   
   SM::addFlag( name, upperDepName, flagMapSt, self );
   SM::addFlag( name, upperDepName, newDataMapSt, self );

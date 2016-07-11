@@ -179,7 +179,7 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  uint32_t dim2 = left[0]->array2.second;
 			
 	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-	  uint32_t nChannels = thisProcessor->get_fb_nChannels();
+	  uint32_t nChannels = thisProcessor->get_nChannel();
 	  		
 	  PORT::iniTFS_port ( &(signals->gammatone._buffer[ii].left.dataN), &(signals->gammatone._buffer[ii].right.dataN), nChannels,  fpc, true, false, self );
 	  
@@ -210,7 +210,7 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  uint32_t dim2 = left[0]->array2.second;
 			
 	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-	  uint32_t nChannels = thisProcessor->get_ihc_nChannels();
+	  uint32_t nChannels = thisProcessor->get_nChannel();
 	  		
 	  PORT::iniTFS_port ( &(signals->ihc._buffer[ii].left.dataN), &(signals->ihc._buffer[ii].right.dataN), nChannels,  fpc, true, false, self );
 	  
@@ -223,7 +223,7 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  signals->ihc._buffer[ii].numberOfChannels = nChannels;
 	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 	  
-  }	    
+  }
 
 /* ****************************  ILD START  ************************************ */
   size_t sizeIldProc = ids->ildProcessorsSt->processorsAccessor.getSize();
@@ -240,7 +240,7 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  uint32_t dim2 = left[0]->array2.second;
 			
 	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
-	  uint32_t nChannels = thisProcessor->get_ild_nChannels();
+	  uint32_t nChannels = thisProcessor->get_nChannel();
 	  		
 	  PORT::iniTFS_port ( &(signals->ild._buffer[ii].left.dataN), nullptr, nChannels,  fpc, false, false, self );
 	  
@@ -405,14 +405,14 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     parameters->gammatone._buffer[ii].fb_lowFreqHz = thisProcessor->get_fb_lowFreqHz();
     parameters->gammatone._buffer[ii].fb_highFreqHz = thisProcessor->get_fb_highFreqHz();
     parameters->gammatone._buffer[ii].fb_nERBs = thisProcessor->get_fb_nERBs();
-    parameters->gammatone._buffer[ii].fb_nChannels = thisProcessor->get_fb_nChannels();
+    parameters->gammatone._buffer[ii].fb_nChannels = thisProcessor->get_nChannel();
     parameters->gammatone._buffer[ii].fb_nGamma = thisProcessor->get_fb_nGamma();
     parameters->gammatone._buffer[ii].fb_bwERBs = thisProcessor->get_fb_bwERBs();
 
-    parameters->gammatone._buffer[ii].fb_cfHz._length = thisProcessor->get_fb_nChannels();
-	if ( genom_sequence_reserve(&(parameters->gammatone._buffer[ii].fb_cfHz), thisProcessor->get_fb_nChannels() ) )
+    parameters->gammatone._buffer[ii].fb_cfHz._length = thisProcessor->get_nChannel();
+	if ( genom_sequence_reserve(&(parameters->gammatone._buffer[ii].fb_cfHz), thisProcessor->get_nChannel() ) )
 		return rosAFE_e_noMemory( self );
-	for ( size_t jj = 0 ; jj < thisProcessor->get_fb_nChannels() ; ++jj )
+	for ( size_t jj = 0 ; jj < thisProcessor->get_nChannel() ; ++jj )
 		parameters->gammatone._buffer[ii].fb_cfHz._buffer[jj] = *( thisProcessor->get_fb_cfHz() + jj );
     
     thisProcessor.reset(); 
@@ -483,7 +483,7 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 		  
 	parameters->ild._buffer[ii].name = strdup( thisProcessor->getName().c_str() );	
 
-    switch ( thisProcessor->get_ild_wname() ) {
+    switch ( thisProcessor->get_wname() ) {
 		case _hamming:
 			parameters->ild._buffer[ii].ild_wname = strdup("hamming");
 			break;
@@ -507,8 +507,8 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 			break;
 	}
 
-    parameters->ild._buffer[ii].ild_wSizeSec = thisProcessor->get_ild_wSizeSec();
-    parameters->ild._buffer[ii].ild_hSizeSec = thisProcessor->get_ild_hSizeSec();
+    parameters->ild._buffer[ii].ild_wSizeSec = thisProcessor->get_wSizeSec();
+    parameters->ild._buffer[ii].ild_hSizeSec = thisProcessor->get_hSizeSec();
         
     thisProcessor.reset();
   }
@@ -627,13 +627,13 @@ modifyParameter(const char *nameProc, const char *nameParam,
 	  else if ( type == _ild ) {
 
 		if ( strcmp( nameParam, "ild_wSizeSec" ) == 0 ) {
-			ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_ild_wSizeSec( params.get<double>("newValue") );
+			ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_wSizeSec( params.get<double>("newValue") );
 			return genom_ok;
 		} else if ( strcmp( nameParam, "ild_hSizeSec" ) == 0 ) {
-				ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_ild_hSizeSec( params.get<double>("newValue") );
+				ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_hSizeSec( params.get<double>("newValue") );
 				return genom_ok;
 		} else if ( strcmp( nameParam, "ild_wname" ) == 0 ) {
-				ildWindowType thisWindow = _hann;
+				windowType thisWindow = _hann;
 				if ( strcmp( params["newValue"].c_str(), "hamming" ) == 0 )
 					thisWindow = _hamming;
 				else if ( strcmp( params["newValue"].c_str(), "hanning" ) == 0 )
@@ -644,7 +644,7 @@ modifyParameter(const char *nameProc, const char *nameParam,
 					thisWindow = _triang;
 				else if ( strcmp( params["newValue"].c_str(), "sqrt_win" ) == 0 )
 					thisWindow = _sqrt_win;															
-				ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_ild_wname( thisWindow );
+				ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_wname( thisWindow );
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
 	  }  

@@ -5,13 +5,14 @@
 #include <memory>
 #include <vector>
 
-#include "src/Processors/inputProc.hpp"
-#include "src/Processors/preProc.hpp"
-#include "src/Processors/gammatoneProc.hpp"
-#include "src/Processors/ihcProc.hpp"
-#include "src/Processors/ildProc.hpp"
+#include "openafe/Processors/inputProc.hpp"
+#include "openafe/Processors/preProc.hpp"
+#include "openafe/Processors/gammatoneProc.hpp"
+#include "openafe/Processors/ihcProc.hpp"
+#include "openafe/Processors/ildProc.hpp"
+#include "openafe/Processors/ratemap.hpp"
 
-#include "src/Processors/ProcessorVector.hpp"
+#include "openafe/Processors/ProcessorVector.hpp"
 
 using namespace openAFE;
 
