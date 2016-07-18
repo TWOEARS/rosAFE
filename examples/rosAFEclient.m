@@ -1,26 +1,9 @@
-% clear all;
-% close all;
-% clc;
-p=0.25;
+clear all; close all; clc;
 
-%% Paths
-addpath(genpath('~/openrobots/lib/matlab'));
+%% Initialization of modules
+[ bass, rosAFE, client ] = initRosAFE( );
 
-addpath(genpath('/home/musabini/TwoEars/AuditoryModel/TwoEars-1.2/AuditoryFrontEnd'));
-startAuditoryFrontEnd;
-
-addpath(genpath('~/genom_ws/rosAFE/matlabFiles'));
-startRosAFE;
-
-%% Genom
-client = genomix.client;
-pause(p);
-bass = client.load('bass');
-pause(p);
-rosAFE = client.load('rosAFE');
-pause(p);
-
-%% Parameters for rosAFE
+%% Parameters for data object
 sampleRate = 44100;
 
 bufferSize_s_bass = 1;
@@ -28,7 +11,7 @@ bufferSize_s_rosAFE_port = 1;
 bufferSize_s_rosAFE_getSignal = 1;
 bufferSize_s_matlab = 10;
 
-inputDevice = 'hw:1,0'; % Check your input device by bass.ListDevices();
+inputDevice = 'hw:2,0'; % Check your input device by bass.ListDevices();
 
 framesPerChunk = 12000; % Each chunk is (framesPerChunk/sampleRate) seconds.
 
@@ -49,10 +32,13 @@ pp_cutoffHzDC  = 5000;
 par = genParStruct('pp_bRemoveDC',pp_bRemoveDC,...
                     'pp_cutoffHzDC',pp_cutoffHzDC); 
 
-mObj.addProcessor('ild'); % With given parameters
+par2 = genParStruct('ihc_method','none'); 
+                
+mObj.addProcessor('ild'); % With default parameters
+mObj.addProcessor('ild',par); % With given parameters
 
-mObj.modifyParameter( 'time_0', 'pp_bRemoveDC', '0' );
+%mObj.modifyParameter( 'time_0', 'pp_bRemoveDC', '0' );
 
 mObj.processChunk( );
 
-mObj.deleteProcessor( 'time_0' );
+mObj.deleteProcessor( 'ild', 1 );

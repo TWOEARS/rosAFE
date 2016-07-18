@@ -24,7 +24,9 @@ initIDS(rosAFE_ids *ids, genom_context self)
   ids->ihcProcessorsSt = new rosAFE_ihcProcessors();
 
   ids->ildProcessorsSt = new rosAFE_ildProcessors();
-        
+
+  ids->ratemapProcessorsSt = new rosAFE_ratemapProcessors();
+          
   // Creating the structure which will contain all flags.
   ids->flagMapSt = new rosAFE_flagMap();
   ids->newDataMapSt = new rosAFE_flagMap();

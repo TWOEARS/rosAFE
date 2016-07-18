@@ -9,6 +9,5 @@ interface rosAFEInterface {
     port multiple out rosAFE::TimeFrequencySignalPortStruct gammatonePort;
     port multiple out rosAFE::TimeFrequencySignalPortStruct ihcPort;
     port multiple out rosAFE::TimeFrequencySignalPortStruct ildPort;
-    port multiple out rosAFE::TimeFrequencySignalPortStruct ratemapPort;
 };
 

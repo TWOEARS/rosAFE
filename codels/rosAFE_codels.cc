@@ -24,6 +24,8 @@ openAFE::procType findType ( const char *name, const rosAFE_ids *ids )
 		return _ihc;
 	else if ( (ids->ildProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
 	    return _ild;
+	else if ( (ids->ratemapProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+	    return _ratemap;	    
 	else return _unknow;
 }
 
@@ -81,6 +83,18 @@ existsAlready(const char *name, const char *upperDepName,
 /* --- Activity IldProc ------------------------------------------------- */
 
 /** Validation codel existsAlready of activity IldProc.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ * rosAFE_e_noSuchProcessor.
+ */
+/* already defined in service PreProc validation */
+
+
+
+/* --- Activity RatemapProc --------------------------------------------- */
+
+/** Validation codel existsAlready of activity RatemapProc.
  *
  * Returns genom_ok.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
@@ -299,6 +313,10 @@ getDependencie(const char *nameProc, sequence_string *dependencies,
 		std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc );
 		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
+	} else if ( type == _ratemap ) {
+		std::shared_ptr < Ratemap > thisProcessor = ids->ratemapProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
 	}
   
   return genom_ok;
@@ -514,7 +532,64 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
   }
 /* ******************************  ILD END  ************************************** */
 	
+/* *****************************  Ratemap START  ************************************* */
+ 
+  size_t sizeRatemapProc = ids->ratemapProcessorsSt->processorsAccessor.getSize();
+
+  parameters->ratemap._length = sizeRatemapProc;
+  if (genom_sequence_reserve(&(parameters->ratemap), sizeRatemapProc))
+    return rosAFE_e_noMemory( self );
+
+ for ( size_t ii = 0 ; ii < sizeRatemapProc ; ++ii ) {
+	 
+    std::shared_ptr < Ratemap > thisProcessor = ids->ratemapProcessorsSt->processorsAccessor.getProcessor ( ii );
+		  
+	parameters->ratemap._buffer[ii].name = strdup( thisProcessor->getName().c_str() );	
+
+    switch ( thisProcessor->get_wname() ) {
+		case _hamming:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("hamming");
+			break;
+		case _hanning:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("hanning");
+			break;
+		case _hann:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("hann");
+			break;
+		case _blackman:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("blackman");
+			break;
+		case _triang:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("triang");
+			break;
+		case _sqrt_win:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("sqrt_win");
+			break;
+		default:
+			parameters->ratemap._buffer[ii].rm_wname = strdup("unknown");
+			break;
+	}
+
+    parameters->ratemap._buffer[ii].rm_wSizeSec = thisProcessor->get_wSizeSec();
+    parameters->ratemap._buffer[ii].rm_hSizeSec = thisProcessor->get_hSizeSec();
+    
+    switch ( thisProcessor->get_rm_scailing() ) {
+		case _magnitude:
+			parameters->ratemap._buffer[ii].rm_scaling = strdup("triang");
+			break;
+		case _power:
+			parameters->ratemap._buffer[ii].rm_scaling = strdup("sqrt_win");
+			break;
+		default:
+			parameters->ratemap._buffer[ii].rm_scaling = strdup("unknown");
+			break;		
+	}  
 	
+    parameters->ratemap._buffer[ii].rm_decaySec = thisProcessor->get_rm_decaySec();
+        
+    thisProcessor.reset();
+  }
+/* ******************************  Ratemap END  ************************************** */	
   return genom_ok;
 }
 

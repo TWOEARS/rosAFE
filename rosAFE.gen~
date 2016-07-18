@@ -203,7 +203,7 @@ component rosAFE {
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
     };
 
-   activity RatemapProc (
+   activity Ratemap (
       in string name = "ratemap" : "The name of this ratemap processor",
       in string upperDepName = "ild" : "The name of the upper dependencie",
       in string rm_wname =  "hann" : "Window name",

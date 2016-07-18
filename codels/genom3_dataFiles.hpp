@@ -38,6 +38,10 @@ struct rosAFE_ildProcessors {
 	ProcessorVector< ILDProc > processorsAccessor; 
 };
 
+struct rosAFE_ratemapProcessors {
+	ProcessorVector< Ratemap > processorsAccessor; 
+};
+
 struct flagSt {
 	std::string upperDep;
 	std::string lowerDep;

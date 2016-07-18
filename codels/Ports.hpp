@@ -73,16 +73,27 @@ namespace PORT {
 
 	genom_event
 	deleteIHCPort   ( const char *name, const rosAFE_ihcPort *ihcPort, genom_context self );
-	
+
 	genom_event
 	initILDPort ( const char *name, const rosAFE_ildPort *ildPort, uint32_t sampleRate,
 						uint32_t bufferSize_s, uint32_t nChannels, genom_context self );
-						
+
 	genom_event
 	publishILDPort ( const char *name, const rosAFE_ildPort *ildPort, std::vector<twoCTypeBlockPtr > left,
 						uint32_t bytesPerFrame, int64_t nfr, genom_context self );
-																		
+
 	genom_event
 	deleteILDPort   ( const char *name, const rosAFE_ildPort *ildPort, genom_context self );
+	
+	genom_event
+	initRatemapPort ( const char *name, const rosAFE_ratemapPort *ratemapPort, uint32_t sampleRate,
+						uint32_t bufferSize_s, uint32_t nChannels, genom_context self );
+						
+	genom_event
+	publishRatemapPort ( const char *name, const rosAFE_ratemapPort *ratemapPort, std::vector<twoCTypeBlockPtr > left,
+						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self );
+																		
+	genom_event
+	deleteRatemapPort   ( const char *name, const rosAFE_ratemapPort *ratemapPort, genom_context self );
 }
 #endif /* PORTS_HPP */

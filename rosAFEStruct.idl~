@@ -96,7 +96,7 @@ module rosAFE {
       sequence<gammatoneProcsParametres>        gammatone;
       sequence<ihcProcsParametres>      	ihc;
       sequence<ildProcsParametres>      	ild;
-      sequence<ratemapProcsParametres>      	ratemap;
+      // sequence<ratemapProcsParametres>      	ratemap;
     };
 
     struct dataObjSt {

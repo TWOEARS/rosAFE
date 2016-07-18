@@ -354,3 +354,49 @@
 		ildPort->close( name, self );
 		return genom_ok;		
 	}
+	
+/* Ratemap Port ----------------------------------------------------------------- */
+
+	genom_event
+	PORT::initRatemapPort ( const char *name, const rosAFE_ratemapPort *ratemapPort, uint32_t sampleRate,
+						uint32_t bufferSize_s, uint32_t nChannels, genom_context self ) {
+
+	  uint32_t fop =  sampleRate * bufferSize_s; /* total amount of Frames On the Port */
+	  
+	  ratemapPort->open( name, self );
+
+	  iniTFS_port ( &(ratemapPort->data( name, self )->left.dataN), &(ratemapPort->data( name, self )->right.dataN), nChannels, fop, true, true, self );
+
+	  ratemapPort->data( name, self )->sampleRate = sampleRate;
+	  ratemapPort->data( name, self )->framesOnPort = fop;	  
+	  ratemapPort->data( name, self )->numberOfChannels = nChannels;
+	  ratemapPort->data( name, self )->lastFrameIndex = 0;
+	  
+	  ratemapPort->write( name, self );
+	  
+	  return genom_ok;					
+	}
+
+	genom_event
+	PORT::publishRatemapPort ( const char *name, const rosAFE_ratemapPort *ratemapPort, std::vector<twoCTypeBlockPtr > left,
+						std::vector<twoCTypeBlockPtr > right, uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
+
+		rosAFE_TimeFrequencySignalPortStruct *thisPort;
+										
+		thisPort = ratemapPort->data( name, self );
+
+		publishTFS_port ( &(thisPort->left.dataN), left,
+						  &(thisPort->right.dataN), right, thisPort->numberOfChannels, 
+						  thisPort->framesOnPort, bytesPerFrame, true, self );
+						  		
+		thisPort->lastFrameIndex = nfr;
+		ratemapPort->write( name, self );
+
+	  return genom_ok;							
+	}
+
+	genom_event
+	PORT::deleteRatemapPort ( const char *name, const rosAFE_ratemapPort *ratemapPort, genom_context self ) {
+		ratemapPort->close( name, self );
+		return genom_ok;		
+	}	

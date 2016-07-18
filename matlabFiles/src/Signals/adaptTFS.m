@@ -1,4 +1,4 @@
-function [ chunkLeft chunkRight ] = adaptTFS( framesOnPort, numberOfChannels, left, right, isBinaural )
+function [ chunkLeft chunkRight ] = adaptTFS( framesOnPort, numberOfChannels, left, isBinaural, right )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 

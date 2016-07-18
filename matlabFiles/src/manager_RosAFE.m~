@@ -272,13 +272,16 @@ classdef manager_RosAFE < handle
             %            
             remove = mObj.RosAFE.removeProcessor( mObj.Processors.(procType){number}.name() );
             
+            mObj.dObj.(procType) = mObj.dObj.(procType)([1:number-1,number+1:end]);
+            if ( strcmp(procType,'ild') == 0 )
+               procType 
+            
             while(~strcmp(remove.status,'done'))
                 if ~(isempty(remove.exception))
                     error(remove.exception.ex);
                 end
             end
             
-            pause(2);
             updateProcessorStatus ( mObj );
 
         end        
@@ -319,8 +322,8 @@ classdef manager_RosAFE < handle
                 inputSig = output.result.signals.input( ii );
 
                 if ( inputSig{1}.framesOnPort > 0 )
-                    mObj.dObj.input{2*ii}.appendChunk( cell2mat(inputSig{1}.left.data)' );
-                    mObj.dObj.input{2*ii+1}.appendChunk( cell2mat(inputSig{1}.right.data)' );
+                    mObj.dObj.input{ii}.appendChunk( cell2mat(inputSig{1}.left.data)' );
+                    mObj.dObj.input{ii+1}.appendChunk( cell2mat(inputSig{1}.right.data)' );
                 end
             end
             
@@ -329,8 +332,8 @@ classdef manager_RosAFE < handle
                 inputSig = output.result.signals.preProc( ii );
 
                 if ( inputSig{1}.framesOnPort > 0 )
-                    mObj.dObj.preProc{2*ii}.appendChunk( cell2mat(inputSig{1}.left.data)' );
-                    mObj.dObj.preProc{2*ii+1}.appendChunk( cell2mat(inputSig{1}.right.data)' );
+                    mObj.dObj.preProc{ii}.appendChunk( cell2mat(inputSig{1}.left.data)' );
+                    mObj.dObj.preProc{ii+1}.appendChunk( cell2mat(inputSig{1}.right.data)' );
                 end    
             end
 
@@ -341,8 +344,8 @@ classdef manager_RosAFE < handle
                 if ( inputSig{1}.framesOnPort > 0 )
 
                 	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
-                    mObj.dObj.filterbank{2*ii}.appendChunk( chunkLeft );
-                    mObj.dObj.filterbank{2*ii+1}.appendChunk( chunkRight );
+                    mObj.dObj.filterbank{ii}.appendChunk( chunkLeft );
+                    mObj.dObj.filterbank{ii+1}.appendChunk( chunkRight );
                 end       
             end
             % IHC
@@ -352,8 +355,8 @@ classdef manager_RosAFE < handle
                 if ( inputSig{1}.framesOnPort > 0 )
 
                 	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
-                    mObj.dObj.innerhaircell{2*ii}.appendChunk( chunkLeft );
-                    mObj.dObj.innerhaircell{2*ii+1}.appendChunk( chunkRight );
+                    mObj.dObj.innerhaircell{ii}.appendChunk( chunkLeft );
+                    mObj.dObj.innerhaircell{ii+1}.appendChunk( chunkRight );
                 end       
             end
             % ILD

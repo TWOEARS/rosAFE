@@ -29,6 +29,7 @@ librosAFE_codels_la_SOURCES+=	rosAFE_preProc_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_gammatoneProc_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_ihcProc_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_ildProc_codels.cc
+librosAFE_codels_la_SOURCES+=	rosAFE_ratemapProc_codels.cc
 
 librosAFE_codels_la_SOURCES+=	stateMachine.hpp
 librosAFE_codels_la_SOURCES+=	stateMachine.cpp
@@ -38,8 +39,8 @@ librosAFE_codels_la_SOURCES+=	Ports.cpp
 librosAFE_codels_la_CPPFLAGS=	$(requires_CFLAGS)
 librosAFE_codels_la_CPPFLAGS+=	-Wall -g -O -std=c++11 -DHAVE_INLINE -pthread -D_REENTRANT -Wunused-but-set-variable
 librosAFE_codels_la_LDFLAGS=	$(requires_LIBS)
-librosAFE_codels_la_LDFLAGS+=	-release $(PACKAGE_VERSION) -lopenAFE # -lsndfile -lfftw3f
-
+librosAFE_codels_la_LDFLAGS+=	-release $(PACKAGE_VERSION)
+librosAFE_codels_la_LDFLAGS+=	-lopenAFE # -lsndfile -lfftw3f
 # idl  mappings
 BUILT_SOURCES=	rosAFE_c_types.h
 CLEANFILES=	${BUILT_SOURCES}

@@ -21,7 +21,7 @@ sampleRate = 44100;
 bufferSize_s_bass = 1;
 nFramesPerChunk = 2205;
 nChunksOnPort = sampleRate * bufferSize_s_bass / nFramesPerChunk;
-inputDevice = 'hw:1,0';
+inputDevice = 'hw:2,0';
 
 acquire = bass.Acquire('-a', inputDevice, sampleRate, nFramesPerChunk, nChunksOnPort);
 pause(0.25);
