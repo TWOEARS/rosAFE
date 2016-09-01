@@ -16,6 +16,7 @@ component rosAFE {
     native ihcProcessors;
     native ildProcessors;
     native ratemapProcessors;
+    native crossCorrelationProcessors;
 
     native flagMap;
 
@@ -28,6 +29,8 @@ component rosAFE {
 	ihcProcessors ihcProcessorsSt;
 	ildProcessors ildProcessorsSt;
 	ratemapProcessors ratemapProcessorsSt;
+	crossCorrelationProcessors crossCorrelationProcessorsSt;
+	// itdProcessors itdProcessorsSt;
 
 	flagMap flagMapSt;
 	flagMap newDataMapSt;
@@ -63,10 +66,14 @@ component rosAFE {
         period      50ms;
     };
 
+    task crossCorrelationProc {
+        period      50ms;
+    };
+
     activity InputProc(
       in string name = "input" : "The name of this activity",
       in unsigned long nFramesPerBlock = 12000 : "Blocks size in frames",
-      in double bufferSize_s_port = 10 : "Buffer size in seconds",
+      in double bufferSize_s_port = 1 : "Buffer size in seconds",
       in double bufferSize_s_getSignal = 1 : "Buffer size in seconds"
       ) {
         doc         "Get consecutive blocks of audio data from bass.";
@@ -205,7 +212,7 @@ component rosAFE {
 
    activity RatemapProc (
       in string name = "ratemap" : "The name of this ratemap processor",
-      in string upperDepName = "ild" : "The name of the upper dependencie",
+      in string upperDepName = "ihc" : "The name of the upper dependencie",
       in string rm_wname =  "hann" : "Window name",
       in double rm_wSizeSec =  20E-3 : "Window duration (s)",
       in double rm_hSizeSec =  10E-3 : "Window step size (s)",
@@ -227,6 +234,33 @@ component rosAFE {
 
         codel <delete>    	deleteRatemapProc ( local in name, inout ratemapProcessorsSt, port out ratemapPort ) yield ether;
         codel <stop>    	stopRatemapProc ( inout ratemapProcessorsSt ) yield ether;
+
+        throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
+    };
+
+   activity CrossCorrelationProc (
+      in string name = "crosscorrelation" : "The name of this cross correlation processor",
+      in string upperDepName = "ihc" : "The name of the upper dependencie",
+      in double cc_wSizeSec =  20E-3 : "Window duration (s)",
+      in double cc_hSizeSec =  10E-3 : "Window step size (s)",
+      in double cc_maxDelaySec = 0.0011,
+      in string cc_wname =  "hann" : "Window name"
+      ) {
+        doc         "The cross-correlation between the right and left ears is computed from their respective Inner Hair-Cell representations, in the Fourier  domain for given time frames. This is normalized by the auto-correlation sequence at lag zero, and then evaluated for time lags in a given range, resulting in a three-dimensional function of time frame, frequency channel and lag time.";
+        task        crossCorrelationProc;
+	validate    existsAlready ( local in name, local in upperDepName, in ::ids );
+
+        codel <start>   	startCrossCorrelationProc ( local in name, local in upperDepName, inout crossCorrelationProcessorsSt, inout flagMapSt, inout newDataMapSt, inout ihcProcessorsSt, in infos, port out crossCorrelationPort, /* Arguments Of processor */ local in cc_wSizeSec, local in cc_hSizeSec, local in cc_maxDelaySec, local in cc_wname ) yield waitExec, stop;
+	
+	// The state Machine, start
+        codel <waitExec>    	waitExec ( local in name, local in upperDepName, inout newDataMapSt ) yield pause::waitExec, exec, ether, delete;
+        codel <exec>    	execCrossCorrelationProc ( local in name, local in upperDepName, inout ::ids, out flagMapSt ) yield waitRelease;
+        codel <waitRelease>    	waitRelease ( local in name, inout flagMapSt ) yield pause::waitRelease, release, stop;
+        codel <release>    	releaseCrossCorrelationProc ( local in name, inout ::ids, out newDataMapSt, port out crossCorrelationPort ) yield pause::waitExec, stop;
+	// The state Machine, end
+
+        codel <delete>    	deleteCrossCorrelationProc ( local in name, inout crossCorrelationProcessorsSt, port out crossCorrelationPort ) yield ether;
+        codel <stop>    	stopCrossCorrelationProc ( inout crossCorrelationProcessorsSt ) yield ether;
 
         throw   e_noUpperDependencie, e_existsAlready, e_noSuchProcessor;
     };
@@ -280,6 +314,6 @@ component rosAFE {
 
     function Stop() {
         doc         "Stop all";
-        interrupts  InputProc, PreProc, GammatoneProc, IhcProc, IldProc, RatemapProc;
+        interrupts  InputProc, PreProc, GammatoneProc, IhcProc, IldProc, RatemapProc, CrossCorrelationProc;
     };
 };

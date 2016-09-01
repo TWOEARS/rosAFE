@@ -32,7 +32,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
                    uint32_t fb_nChannels,
                    const sequence_double *fb_cfHz, uint32_t fb_nGamma,
                    double fb_bwERBs, genom_context self)
-{
+{    
   std::shared_ptr<PreProc > upperDepProc = ((*preProcessorsSt)->processorsAccessor).getProcessor( upperDepName );
 
   if (!(upperDepProc))
@@ -41,7 +41,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
   filterBankType thisBank = _gammatoneFilterBank;
   if ( strcmp( fb_type, "drnl" ) == 0 )
 	thisBank = _drnlFilterBank;
-		 
+
   std::shared_ptr < GammatoneProc > gammatoneProcessor (new GammatoneProc( name, upperDepProc,
 	thisBank, fb_lowFreqHz, fb_highFreqHz, fb_nERBs, fb_nChannels, fb_cfHz->_buffer, fb_cfHz->_length, fb_nGamma, fb_bwERBs ) );
   
@@ -56,6 +56,7 @@ startGammatoneProc(const char *name, const char *upperDepName,
   
   upperDepProc.reset();
   gammatoneProcessor.reset();
+  
   return rosAFE_waitExec;
 }
 

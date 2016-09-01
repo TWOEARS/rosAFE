@@ -19,6 +19,11 @@ module rosAFE {
         sequence<signalOneD >       dataN;
     };
 
+    struct signalNxND
+    {
+        sequence<signalND >       dataNxN;
+    };
+
     struct TimeDomainSignalPortStruct {
         unsigned long 			sampleRate;
         unsigned long long    		lastFrameIndex;
@@ -34,6 +39,15 @@ module rosAFE {
         unsigned long         		numberOfChannels;
         signalND      	      		left;
         signalND              		right;
+    };
+
+    struct CrossCorrelationSignalPortStruct {
+        unsigned long 			sampleRate;
+        unsigned long long    		lastFrameIndex;
+        unsigned long long    		framesOnPort;
+        unsigned long long    		numberOfLags;
+        unsigned long         		numberOfChannels;
+        signalNxND      	      	left;
     };
 
     struct inputProcsParametres {
@@ -90,6 +104,15 @@ module rosAFE {
       double rm_decaySec;
     };
 
+    struct crossCorrelationParametres {
+      string name;
+      string cc_wname;
+      double cc_wSizeSec;
+      double cc_hSizeSec;
+      double cc_maxDelaySec;
+      sequence<double> cc_lags;
+    };
+
     struct parameters {
       sequence<inputProcsParametres> 		input;
       sequence<preProcsParametres>      	preProc;
@@ -97,6 +120,7 @@ module rosAFE {
       sequence<ihcProcsParametres>      	ihc;
       sequence<ildProcsParametres>      	ild;
       sequence<ratemapProcsParametres>      	ratemap;
+      sequence<crossCorrelationParametres>      crossCorrelation;
     };
 
     struct dataObjSt {
@@ -106,6 +130,7 @@ module rosAFE {
       sequence<TimeFrequencySignalPortStruct>      	ihc;
       sequence<TimeFrequencySignalPortStruct>      	ild;
       sequence<TimeFrequencySignalPortStruct>      	ratemap;
+      sequence<CrossCorrelationSignalPortStruct>      	crossCorrelation;
     };
 };
 

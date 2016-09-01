@@ -146,7 +146,67 @@
 
 	  return genom_ok;	
 	}
+
+	genom_event
+	PORT::iniCC_port ( sequence_rosAFE_signalND *signal, uint32_t nLag, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self ) {
+
+	  if ( genom_sequence_reserve( signal, nLag) )
+		return rosAFE_e_noMemory( self );
+
+	  signal->_length = nLag;
+	  
+	  for ( size_t ii = 0 ; ii < nLag ; ++ii ) { 
+	  	  if ( genom_sequence_reserve( &(signal->_buffer[ii].dataN), nChannels) ) 
+			return rosAFE_e_noMemory( self );
+		  signal->_buffer[ii].dataN._length = nChannels; 
+
+		 for ( size_t jj = 0 ; jj < nChannels ; ++jj ) { 
+			if ( genom_sequence_reserve(&(signal->_buffer[ii].dataN._buffer[jj].data), fop) )
+				return rosAFE_e_noMemory( self );
+			signal->_buffer[ii].dataN._buffer[jj].data._length = fop;
+
+		  if ( initToZero ) {	  
+			for ( size_t iii = 0; iii < fop; ++iii)
+				signal->_buffer[ii].dataN._buffer[jj].data._buffer[iii] = 0;
+		  }
+	  }
+	}
+
+	return genom_ok;		
+	}
+
+	genom_event
+	PORT::publishCC_port ( sequence_rosAFE_signalND *signal, std::vector<std::vector<twoCTypeBlockPtr > >& chunk,
+							uint32_t nLag, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, genom_context self ) {
+		
+		for ( size_t ii = 0 ; ii < nChannels ; ++ii ) {
+			for ( size_t jj = 0 ; jj < nLag ; ++jj ) {
+				uint32_t dim1 = chunk[ii][jj]->array1.second;
+				uint32_t dim2 = chunk[ii][jj]->array2.second;
 			
+				uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+
+				if ( bytesPerFrame > 0 )		
+					memmove(signal->_buffer[jj].dataN._buffer[ii].data._buffer, signal->_buffer[jj].dataN._buffer[ii].data._buffer + fpc, (fop - fpc) * bytesPerFrame);
+
+			uint32_t pos, iii;
+			if (dim2 == 0) {	
+				for (iii = 0, pos = fop - fpc; pos < fop ; ++iii, ++pos)
+					signal->_buffer[jj].dataN._buffer[ii].data._buffer[pos] = *(chunk[ii][jj]->array1.first + iii);
+			} else if (dim1 == 0) {
+					for (iii = 0, pos = fop - fpc; pos < fop ; ++iii, ++pos)
+						signal->_buffer[jj].dataN._buffer[ii].data._buffer[pos] = *(chunk[ii][jj]->array2.first + iii);
+			} else {
+					for (iii = 0, pos = fop - fpc; pos < fop - dim2 ; ++iii, ++pos)
+						signal->_buffer[jj].dataN._buffer[ii].data._buffer[pos] = *(chunk[ii][jj]->array1.first + iii);
+					for (iii = 0, pos = fop - dim2; pos < fop ; ++iii, ++pos)
+						signal->_buffer[jj].dataN._buffer[ii].data._buffer[pos] = *(chunk[ii][jj]->array2.first + iii);	
+				}
+			}	
+		}
+	  return genom_ok;	
+	}
+				
 /* Input Port ----------------------------------------------------------------- */
 
 	genom_event
@@ -399,4 +459,51 @@
 	PORT::deleteRatemapPort ( const char *name, const rosAFE_ratemapPort *ratemapPort, genom_context self ) {
 		ratemapPort->close( name, self );
 		return genom_ok;		
-	}	
+	}
+		
+/* Cross-Correlation Port */
+
+	genom_event
+	PORT::initCrossCorrelationPort ( const char *name, const rosAFE_crossCorrelationPort *crossCorrelationPort, uint32_t sampleRate,
+						uint32_t bufferSize_s, uint32_t nLag, uint32_t nChannels, genom_context self ) {
+					
+		uint32_t fop =  sampleRate * bufferSize_s;  // total amount of Frames On the Port 
+		  
+		crossCorrelationPort->open( name, self );
+
+		iniCC_port ( &(crossCorrelationPort->data( name, self )->left.dataNxN), nLag, nChannels, fop, true, self );
+
+		crossCorrelationPort->data( name, self )->sampleRate = sampleRate;
+		crossCorrelationPort->data( name, self )->framesOnPort = fop;	  
+		crossCorrelationPort->data( name, self )->numberOfLags = nLag;	  
+		crossCorrelationPort->data( name, self )->numberOfChannels = nChannels;
+		crossCorrelationPort->data( name, self )->lastFrameIndex = 0;
+		  
+		crossCorrelationPort->write( name, self );
+
+		return genom_ok;
+	}
+						
+	genom_event
+	PORT::publishCrossCorrelationPort ( const char *name, const rosAFE_crossCorrelationPort *crossCorrelationPort, std::vector<std::vector<twoCTypeBlockPtr > > left,
+						uint32_t bytesPerFrame, int64_t nfr, genom_context self ) {
+							
+		rosAFE_CrossCorrelationSignalPortStruct *thisPort;		
+
+		thisPort = crossCorrelationPort->data( name, self );
+
+		publishCC_port ( &(thisPort->left.dataNxN), left,
+						 thisPort->numberOfLags, thisPort->numberOfChannels, 
+						 thisPort->framesOnPort, bytesPerFrame, self );
+						  		
+		thisPort->lastFrameIndex = nfr;
+		crossCorrelationPort->write( name, self );
+		
+		return genom_ok;				
+	}
+	
+	genom_event
+	PORT::deleteCrossCorrelationPort ( const char *name, const rosAFE_crossCorrelationPort *crossCorrelationPort, genom_context self ) {
+		crossCorrelationPort->close( name, self );
+		return genom_ok;					
+	}

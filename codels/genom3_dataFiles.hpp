@@ -11,6 +11,7 @@
 #include "openafe/Processors/ihcProc.hpp"
 #include "openafe/Processors/ildProc.hpp"
 #include "openafe/Processors/ratemap.hpp"
+#include "openafe/Processors/crossCorrelation.hpp"
 
 #include "openafe/Processors/ProcessorVector.hpp"
 
@@ -40,6 +41,10 @@ struct rosAFE_ildProcessors {
 
 struct rosAFE_ratemapProcessors {
 	ProcessorVector< Ratemap > processorsAccessor; 
+};
+
+struct rosAFE_crossCorrelationProcessors {
+	ProcessorVector< CrossCorrelation > processorsAccessor; 
 };
 
 struct flagSt {

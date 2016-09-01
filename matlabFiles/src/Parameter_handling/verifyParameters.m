@@ -141,6 +141,61 @@ function [result, hproc] = verifyParameters( mObj, type, p, name)
                         end
                     end
 
+              case ('ratemapProc')
+
+                    defaultParams = Parameters.getProcessorDefault(type);
+                    % Loop over the ILD processors
+                    for ii = 1:length(mObj.Processors.ratemap)
+
+                        % Get a handle to that processor, for readability in the
+                        % following
+                        proc = mObj.Processors.ratemap{ii};
+                            
+                        if ( (length(name)==0) || ( strcmp(name, proc.name) ) )
+                            if ( strcmp(proc.rm_wname, defaultOrAsked(p , defaultParams, 'rm_wname')) && ...
+                                 (proc.rm_hSizeSec == defaultOrAsked(p , defaultParams, 'rm_hSizeSec')) && ...  
+                                 (proc.rm_decaySec == defaultOrAsked(p , defaultParams, 'rm_decaySec')) && ...
+                                 (proc.rm_wSizeSec == defaultOrAsked(p , defaultParams, 'rm_wSizeSec')) && ...  
+                                 strcmp(proc.rm_scaling, defaultOrAsked(p , defaultParams, 'rm_scaling')) )
+                                % Then it is a suitable candidate, we should
+                                % investigate its dependencies
+                                dep = mObj.RosAFE.getDependencies(proc.name);
+                                result = verifyParameters( mObj, 'ihcProc', p, dep.result.dependencies(end -1 ));
+                                if ( result == 1 )
+                                    hproc = proc;
+                                end
+                                    
+                            end
+                    end      
+                    end
+                
+             case ('crosscorrelationProc')
+
+                    defaultParams = Parameters.getProcessorDefault(type);
+                    % Loop over the ILD processors
+                    for ii = 1:length(mObj.Processors.crossCorrelation)
+
+                        % Get a handle to that processor, for readability in the
+                        % following
+                        proc = mObj.Processors.crossCorrelation{ii};
+                            
+                        if ( (length(name)==0) || ( strcmp(name, proc.name) ) )
+                            if ( strcmp(proc.cc_wname, defaultOrAsked(p , defaultParams, 'cc_wname')) && ...
+                                 (proc.cc_hSizeSec == defaultOrAsked(p , defaultParams, 'cc_hSizeSec')) && ...  
+                                 (proc.cc_wSizeSec == defaultOrAsked(p , defaultParams, 'cc_wSizeSec')) && ...  
+                                 (proc.cc_maxDelaySec == defaultOrAsked(p , defaultParams, 'cc_maxDelaySec')) )
+                             
+                                % Then it is a suitable candidate, we should
+                                % investigate its dependencies
+                                dep = mObj.RosAFE.getDependencies(proc.name);
+                                result = verifyParameters( mObj, 'ihcProc', p, dep.result.dependencies(end -1 ));
+                                if ( result == 1 )
+                                    hproc = proc;
+                                end
+                                    
+                            end
+                    end      
+                    end                 
                     
                 otherwise
                     result = 0;

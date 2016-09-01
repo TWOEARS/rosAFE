@@ -30,6 +30,7 @@ librosAFE_codels_la_SOURCES+=	rosAFE_gammatoneProc_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_ihcProc_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_ildProc_codels.cc
 librosAFE_codels_la_SOURCES+=	rosAFE_ratemapProc_codels.cc
+librosAFE_codels_la_SOURCES+=	rosAFE_crossCorrelationProc_codels.cc
 
 librosAFE_codels_la_SOURCES+=	stateMachine.hpp
 librosAFE_codels_la_SOURCES+=	stateMachine.cpp

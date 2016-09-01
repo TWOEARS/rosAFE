@@ -247,6 +247,12 @@ classdef manager_RosAFE < handle
                     case ( 'ild' )
                         addSingleProcessor( mObj, 'ildProc', strcat(dep_list(ii)), dependency.name, p );
                         dependency = hasProcessor ( mObj, 'ildProc', p );
+                    case ( 'ratemap' )
+                        addSingleProcessor( mObj, 'ratemapProc', strcat(dep_list(ii)), dependency.name, p );
+                        dependency = hasProcessor ( mObj, 'ildProc', p );
+                    case ( 'crosscorrelation' )
+                        addSingleProcessor( mObj, 'crosscorrelationProc', strcat(dep_list(ii)), dependency.name, p );
+                        dependency = hasProcessor ( mObj, 'ildProc', p );                        
                 end
             end
         end
@@ -314,58 +320,58 @@ classdef manager_RosAFE < handle
                  error(strcat('Error',output.exception.ex));
             end
             
-            % Input Processors
-            for ii = 1:length(mObj.Processors.input)
-                inputSig = output.result.signals.input( ii );
-
-                if ( inputSig{1}.framesOnPort > 0 )
-                    mObj.dObj.input{2*ii}.appendChunk( cell2mat(inputSig{1}.left.data)' );
-                    mObj.dObj.input{2*ii+1}.appendChunk( cell2mat(inputSig{1}.right.data)' );
-                end
-            end
-            
-            % Pre Processors  
-            for ii = 1:length(mObj.Processors.preProc)
-                inputSig = output.result.signals.preProc( ii );
-
-                if ( inputSig{1}.framesOnPort > 0 )
-                    mObj.dObj.preProc{2*ii}.appendChunk( cell2mat(inputSig{1}.left.data)' );
-                    mObj.dObj.preProc{2*ii+1}.appendChunk( cell2mat(inputSig{1}.right.data)' );
-                end    
-            end
-
-            % Filterbanks
-            for ii = 1:length(mObj.Processors.gammatone)
-                inputSig = output.result.signals.gammatone( ii );
-
-                if ( inputSig{1}.framesOnPort > 0 )
-
-                	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
-                    mObj.dObj.filterbank{2*ii}.appendChunk( chunkLeft );
-                    mObj.dObj.filterbank{2*ii+1}.appendChunk( chunkRight );
-                end       
-            end
-            % IHC
-            for ii = 1:length(mObj.Processors.ihc)
-                inputSig = output.result.signals.ihc( ii );
-
-                if ( inputSig{1}.framesOnPort > 0 )
-
-                	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
-                    mObj.dObj.innerhaircell{2*ii}.appendChunk( chunkLeft );
-                    mObj.dObj.innerhaircell{2*ii+1}.appendChunk( chunkRight );
-                end       
-            end
-            % ILD
-            for ii = 1:length(mObj.Processors.ild)
-                inputSig = output.result.signals.ild( ii );
-
-                if ( inputSig{1}.framesOnPort > 0 )
-
-                	chunkLeft = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 0 );
-                    mObj.dObj.ild{ii}.appendChunk( chunkLeft );
-                end       
-            end             
+%             % Input Processors
+%             for ii = 1:length(mObj.Processors.input)
+%                 inputSig = output.result.signals.input( ii );
+% 
+%                 if ( inputSig{1}.framesOnPort > 0 )
+%                     mObj.dObj.input{2*ii-1}.appendChunk( cell2mat(inputSig{1}.left.data)' );
+%                     mObj.dObj.input{2*ii}.appendChunk( cell2mat(inputSig{1}.right.data)' );
+%                 end
+%             end
+%             
+%             % Pre Processors  
+%             for ii = 1:length(mObj.Processors.preProc)
+%                 inputSig = output.result.signals.preProc( ii );
+% 
+%                 if ( inputSig{1}.framesOnPort > 0 )
+%                     mObj.dObj.preProc{2*ii-1}.appendChunk( cell2mat(inputSig{1}.left.data)' );
+%                     mObj.dObj.preProc{2*ii}.appendChunk( cell2mat(inputSig{1}.right.data)' );
+%                 end    
+%             end
+% 
+%             % Filterbanks
+%             for ii = 1:length(mObj.Processors.gammatone)
+%                 inputSig = output.result.signals.gammatone( ii );
+% 
+%                 if ( inputSig{1}.framesOnPort > 0 )
+% 
+%                 	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
+%                     mObj.dObj.filterbank{2*ii}.appendChunk( chunkLeft );
+%                     mObj.dObj.filterbank{2*ii+1}.appendChunk( chunkRight );
+%                 end       
+%             end
+%             % IHC
+%             for ii = 1:length(mObj.Processors.ihc)
+%                 inputSig = output.result.signals.ihc( ii );
+% 
+%                 if ( inputSig{1}.framesOnPort > 0 )
+% 
+%                 	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
+%                     mObj.dObj.innerhaircell{2*ii}.appendChunk( chunkLeft );
+%                     mObj.dObj.innerhaircell{2*ii+1}.appendChunk( chunkRight );
+%                 end       
+%             end
+%             % ILD
+%             for ii = 1:length(mObj.Processors.ild)
+%                 inputSig = output.result.signals.ild( ii );
+% 
+%                 if ( inputSig{1}.framesOnPort > 0 )
+% 
+%                 	chunkLeft = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 0 );
+%                     mObj.dObj.ild{ii}.appendChunk( chunkLeft );
+%                 end       
+%             end             
         end    
     end
     
@@ -569,7 +575,47 @@ classdef manager_RosAFE < handle
                     sig_mono = TimeFrequencySignal.construct(mObj.dObj.sampleRate, mObj.dObj.bufferSize_s_matlab, 'ild', name, cell2mat(mObj.Processors.gammatone{this_jj}.fb_cfHz), 'mono');
                    
                     mObj.dObj.addSignal(sig_mono);
+                    
+                case ('ratemapProc')
+                    name = strcat(cell2mat(procName),'_',int2str((length(mObj.Processors.ratemap))));
+                    defaultParameters = Parameters.getProcessorDefault( procType );
+                    thisProc = mObj.RosAFE.RatemapProc('-a', name, dependencies, defaultOrAsked(par, defaultParameters, 'rm_wname'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'rm_wSizeSec'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'rm_hSizeSec'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'rm_scaling'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'rm_decaySec')); 
+                    pause(0.2); 
+                    
+                    updateProcessorStatus ( mObj );
+                    dep = mObj.RosAFE.getDependencies(name);
                    
+                    this_jj = 0;
+                    for jj = 1:length(mObj.Processors.gammatone)
+                        if( strcmp(mObj.Processors.gammatone{jj}.name, dep.result.dependencies(3)) )
+                            this_jj = jj;
+                        end
+                    end
+                   
+                    sig_l = TimeFrequencySignal.construct(mObj.dObj.sampleRate, mObj.dObj.bufferSize_s_matlab, 'ratemap', name, cell2mat(mObj.Processors.gammatone{this_jj}.fb_cfHz), 'left');
+                    sig_r = TimeFrequencySignal.construct(mObj.dObj.sampleRate, mObj.dObj.bufferSize_s_matlab, 'ratemap', name, cell2mat(mObj.Processors.gammatone{this_jj}.fb_cfHz), 'right');
+                   
+                    mObj.dObj.addSignal(sig_l);
+                    mObj.dObj.addSignal(sig_r);
+
+                case ('crosscorrelationProc')
+                    name = strcat(cell2mat(procName),'_',int2str((length(mObj.Processors.crossCorrelation))));
+                    defaultParameters = Parameters.getProcessorDefault( procType );
+                    thisProc = mObj.RosAFE.CrossCorrelationProc('-a', name,  dependencies, defaultOrAsked(par, defaultParameters, 'cc_wSizeSec'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'cc_hSizeSec'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'cc_maxDelaySec'), ...
+                                                                             defaultOrAsked(par, defaultParameters, 'cc_wname')); 
+                    pause(0.2); 
+                    
+                    updateProcessorStatus ( mObj );
+                   
+                    % sig_l = CorrelationSignal.construct
+                    % mObj.dObj.addSignal(sig_l);
+                    
                 otherwise
                     error('Processor type doesnt exist');
             end
@@ -584,7 +630,6 @@ classdef manager_RosAFE < handle
         function updateProcessorStatus ( mObj )
             % updateProcessorStatus (RosAFE)    Reads the published ROS
             %                                   topic about the processor's status
-            
             params = mObj.RosAFE.getParameters();
             if ( strcmp(params.status,'error') )
                error(strcat('Error',params.exception.ex));

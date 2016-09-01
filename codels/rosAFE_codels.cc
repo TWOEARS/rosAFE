@@ -12,6 +12,55 @@
 
 #include <apf/parameter_map.h>
 
+void setWName ( openAFE::windowType wName, char** paramString) {
+	
+	    switch ( wName ) {
+		case _hamming:
+			*paramString = strdup("hamming");
+			break;
+		case _hanning:
+			*paramString = strdup("hanning");
+			break;
+		case _hann:
+			*paramString = strdup("hann");
+			break;
+		case _blackman:
+			*paramString = strdup("blackman");
+			break;
+		case _triang:
+			*paramString = strdup("triang");
+			break;
+		case _sqrt_win:
+			*paramString = strdup("sqrt_win");
+			break;
+		default:
+			*paramString = strdup("unknown");
+			break;
+	}
+}
+
+unsigned int typeToOrder ( openAFE::procType type )
+{
+	switch ( type ) {
+		case _inputProc:
+			return 1;
+		case _preProc:
+			return 2;
+		case _gammatone:
+			return 3;
+		case _ihc:
+			return 4;
+		case _ild:
+			return 5;
+		case _ratemap:
+			return 5;
+		case _crosscorrelation:
+			return 5;
+		default :
+			return 0;
+		}
+}
+
 openAFE::procType findType ( const char *name, const rosAFE_ids *ids )
 {
 	if ( (ids->inputProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
@@ -26,6 +75,8 @@ openAFE::procType findType ( const char *name, const rosAFE_ids *ids )
 	    return _ild;
 	else if ( (ids->ratemapProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
 	    return _ratemap;	    
+	else if ( (ids->crossCorrelationProcessorsSt->processorsAccessor).existsProcessorName ( name ) )
+	    return _crosscorrelation;
 	else return _unknow;
 }
 
@@ -95,6 +146,18 @@ existsAlready(const char *name, const char *upperDepName,
 /* --- Activity RatemapProc --------------------------------------------- */
 
 /** Validation codel existsAlready of activity RatemapProc.
+ *
+ * Returns genom_ok.
+ * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
+ * rosAFE_e_noSuchProcessor.
+ */
+/* already defined in service PreProc validation */
+
+
+
+/* --- Activity CrossCorrelationProc ------------------------------------ */
+
+/** Validation codel existsAlready of activity CrossCorrelationProc.
  *
  * Returns genom_ok.
  * Throws rosAFE_e_noUpperDependencie, rosAFE_e_existsAlready,
@@ -266,7 +329,67 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 	  signals->ild._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
 	  
   }
-  	  
+  
+/* ****************************  Ratemap START  ************************************ */
+  size_t sizeRatemapProc = ids->ratemapProcessorsSt->processorsAccessor.getSize();
+  signals->ratemap._length = sizeRatemapProc;
+  if (genom_sequence_reserve(&(signals->ratemap), sizeRatemapProc))
+	return rosAFE_e_noMemory( self );
+	 
+  for ( size_t ii = 0 ; ii < sizeRatemapProc ; ++ii ) {
+      std::shared_ptr < Ratemap > thisProcessor = ids->ratemapProcessorsSt->processorsAccessor.getProcessor ( ii );
+
+	  std::vector< twoCTypeBlockPtr > left = thisProcessor->getLeftOldDataAccessor();
+	  std::vector< twoCTypeBlockPtr > right = thisProcessor->getRightOldDataAccessor();
+	  
+	  uint32_t dim1 = left[0]->array1.second;
+	  uint32_t dim2 = left[0]->array2.second;
+			
+	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+	  uint32_t nChannels = thisProcessor->get_nChannel();
+	  		
+	  PORT::iniTFS_port ( &(signals->ratemap._buffer[ii].left.dataN), &(signals->ratemap._buffer[ii].right.dataN), nChannels,  fpc, true, false, self );
+	  
+	  PORT::publishTFS_port ( &(signals->ratemap._buffer[ii].left.dataN), left,
+							  &(signals->ratemap._buffer[ii].right.dataN), right, 
+							  nChannels, fpc, 0, true, self );
+							  	  
+	  signals->ihc._buffer[ii].framesOnPort = fpc;	  
+	  signals->ihc._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  signals->ihc._buffer[ii].numberOfChannels = nChannels;
+	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();	  
+  }
+    
+/* ***********************  CROSS CORRELATION START  ******************************* */
+  size_t sizeCrossCorrelationProc = ids->crossCorrelationProcessorsSt->processorsAccessor.getSize();
+  signals->crossCorrelation._length = sizeCrossCorrelationProc;
+  if (genom_sequence_reserve(&(signals->crossCorrelation), sizeCrossCorrelationProc))
+	return rosAFE_e_noMemory( self );
+	 
+  for ( size_t ii = 0 ; ii < sizeCrossCorrelationProc ; ++ii ) {
+      std::shared_ptr < CrossCorrelation > thisProcessor = ids->crossCorrelationProcessorsSt->processorsAccessor.getProcessor ( ii );
+	
+	  std::vector<std::vector< twoCTypeBlockPtr > > left = thisProcessor->getLeftOldDataAccessor();
+
+	  uint32_t dim1 = left[0][0]->array1.second;
+	  uint32_t dim2 = left[0][0]->array2.second;
+			
+	  uint32_t fpc = dim1 + dim2; 			// amount of Frames On this Chunk
+	  
+	  uint32_t nLags = thisProcessor->get_cc_lags_size();
+	  uint32_t nChannels = thisProcessor->get_nChannel();
+
+      PORT::iniCC_port ( &(signals->crossCorrelation._buffer[ii].left.dataNxN), nLags, nChannels, fpc, false, self );
+	  
+	  PORT::publishCC_port (&(signals->crossCorrelation._buffer[ii].left.dataNxN), left, nLags, nChannels, fpc, 0, self );
+								  
+	  signals->crossCorrelation._buffer[ii].framesOnPort = fpc;	  
+	  signals->crossCorrelation._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  signals->crossCorrelation._buffer[ii].numberOfLags = nLags;
+	  signals->crossCorrelation._buffer[ii].numberOfChannels = nChannels;
+	  signals->crossCorrelation._buffer[ii].lastFrameIndex = thisProcessor->getNFR();
+	  
+  }  	  
   return genom_ok;
 }
 
@@ -289,33 +412,37 @@ getDependencie(const char *nameProc, sequence_string *dependencies,
   // Reserving genom_sequence only once
   if ( dependencies->_length == 0 ) {
 	  
-	  dependencies->_length = type ;
-	  if ( genom_sequence_reserve(dependencies, type) )
+	  dependencies->_length = typeToOrder( type );
+	  if ( genom_sequence_reserve(dependencies, dependencies->_length) )
 		return rosAFE_e_noMemory( self );
   }
   
 	if ( type == _inputProc ) {
 		std::shared_ptr < InputProc > thisProcessor = ids->inputProcessorsSt->processorsAccessor.getProcessor ( nameProc );
-		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
 	} else if ( type == _preProc ) {
 		std::shared_ptr < PreProc > thisProcessor = ids->preProcessorsSt->processorsAccessor.getProcessor ( nameProc );
-		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
 	} else if ( type == _gammatone ) {
 		std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( nameProc );
-		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
 	} else if ( type == _ihc ) {
 		std::shared_ptr < IHCProc > thisProcessor = ids->ihcProcessorsSt->processorsAccessor.getProcessor ( nameProc );
-		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
 	} else if ( type == _ild ) {
 		std::shared_ptr < ILDProc > thisProcessor = ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc );
-		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
 	} else if ( type == _ratemap ) {
 		std::shared_ptr < Ratemap > thisProcessor = ids->ratemapProcessorsSt->processorsAccessor.getProcessor ( nameProc );
-		dependencies->_buffer[ type - 1 ] = strdup( thisProcessor->getName().c_str() );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
+		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
+	} else if ( type == _crosscorrelation ) {
+		std::shared_ptr < CrossCorrelation > thisProcessor = ids->crossCorrelationProcessorsSt->processorsAccessor.getProcessor ( nameProc );
+		dependencies->_buffer[ typeToOrder(type) - 1 ] = strdup( thisProcessor->getName().c_str() );
 		getDependencie( thisProcessor->get_upperProcName().c_str(), dependencies, ids, self );
 	}
   
@@ -403,11 +530,10 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 	return rosAFE_e_noMemory( self );
 
  for ( size_t ii = 0 ; ii < sizeGammatone ; ++ii ) {
-	 
+		
     std::shared_ptr < GammatoneProc > thisProcessor = ids->gammatoneProcessorsSt->processorsAccessor.getProcessor ( ii );
-		  
     parameters->gammatone._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
-    
+
     switch ( thisProcessor->get_fb_type() ) {
 		case _gammatoneFilterBank:
 			parameters->gammatone._buffer[ii].fb_type = strdup("gammatone");
@@ -419,7 +545,7 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 			parameters->gammatone._buffer[ii].fb_type = strdup("unknow");
 			break;
 	}
-	
+
     parameters->gammatone._buffer[ii].fb_lowFreqHz = thisProcessor->get_fb_lowFreqHz();
     parameters->gammatone._buffer[ii].fb_highFreqHz = thisProcessor->get_fb_highFreqHz();
     parameters->gammatone._buffer[ii].fb_nERBs = thisProcessor->get_fb_nERBs();
@@ -430,9 +556,10 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     parameters->gammatone._buffer[ii].fb_cfHz._length = thisProcessor->get_nChannel();
 	if ( genom_sequence_reserve(&(parameters->gammatone._buffer[ii].fb_cfHz), thisProcessor->get_nChannel() ) )
 		return rosAFE_e_noMemory( self );
+			
 	for ( size_t jj = 0 ; jj < thisProcessor->get_nChannel() ; ++jj )
 		parameters->gammatone._buffer[ii].fb_cfHz._buffer[jj] = *( thisProcessor->get_fb_cfHz() + jj );
-    
+
     thisProcessor.reset(); 
   }
 
@@ -501,29 +628,7 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 		  
 	parameters->ild._buffer[ii].name = strdup( thisProcessor->getName().c_str() );	
 
-    switch ( thisProcessor->get_wname() ) {
-		case _hamming:
-			parameters->ild._buffer[ii].ild_wname = strdup("hamming");
-			break;
-		case _hanning:
-			parameters->ild._buffer[ii].ild_wname = strdup("hanning");
-			break;
-		case _hann:
-			parameters->ild._buffer[ii].ild_wname = strdup("hann");
-			break;
-		case _blackman:
-			parameters->ild._buffer[ii].ild_wname = strdup("blackman");
-			break;
-		case _triang:
-			parameters->ild._buffer[ii].ild_wname = strdup("triang");
-			break;
-		case _sqrt_win:
-			parameters->ild._buffer[ii].ild_wname = strdup("sqrt_win");
-			break;
-		default:
-			parameters->ild._buffer[ii].ild_wname = strdup("unknown");
-			break;
-	}
+	setWName ( thisProcessor->get_wname(), &(parameters->ild._buffer[ii].ild_wname) );
 
     parameters->ild._buffer[ii].ild_wSizeSec = thisProcessor->get_wSizeSec();
     parameters->ild._buffer[ii].ild_hSizeSec = thisProcessor->get_hSizeSec();
@@ -546,39 +651,17 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
 		  
 	parameters->ratemap._buffer[ii].name = strdup( thisProcessor->getName().c_str() );	
 
-    switch ( thisProcessor->get_wname() ) {
-		case _hamming:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("hamming");
-			break;
-		case _hanning:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("hanning");
-			break;
-		case _hann:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("hann");
-			break;
-		case _blackman:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("blackman");
-			break;
-		case _triang:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("triang");
-			break;
-		case _sqrt_win:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("sqrt_win");
-			break;
-		default:
-			parameters->ratemap._buffer[ii].rm_wname = strdup("unknown");
-			break;
-	}
+	setWName ( thisProcessor->get_wname(), &(parameters->ratemap._buffer[ii].rm_wname) );
 
     parameters->ratemap._buffer[ii].rm_wSizeSec = thisProcessor->get_wSizeSec();
     parameters->ratemap._buffer[ii].rm_hSizeSec = thisProcessor->get_hSizeSec();
     
     switch ( thisProcessor->get_rm_scailing() ) {
 		case _magnitude:
-			parameters->ratemap._buffer[ii].rm_scaling = strdup("triang");
+			parameters->ratemap._buffer[ii].rm_scaling = strdup("magnitude");
 			break;
 		case _power:
-			parameters->ratemap._buffer[ii].rm_scaling = strdup("sqrt_win");
+			parameters->ratemap._buffer[ii].rm_scaling = strdup("power");
 			break;
 		default:
 			parameters->ratemap._buffer[ii].rm_scaling = strdup("unknown");
@@ -589,7 +672,43 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
         
     thisProcessor.reset();
   }
-/* ******************************  Ratemap END  ************************************** */	
+/* ******************************  Ratemap END  ************************************** */
+
+/* *****************************  CrossCorrelation START  ************************************* */
+ 
+  size_t sizeCrossCorrelationProc = ids->crossCorrelationProcessorsSt->processorsAccessor.getSize();
+
+  parameters->crossCorrelation._length = sizeCrossCorrelationProc;
+  if (genom_sequence_reserve(&(parameters->crossCorrelation), sizeCrossCorrelationProc))
+    return rosAFE_e_noMemory( self );
+
+ for ( size_t ii = 0 ; ii < sizeCrossCorrelationProc ; ++ii ) {
+	 
+    std::shared_ptr < CrossCorrelation > thisProcessor = ids->crossCorrelationProcessorsSt->processorsAccessor.getProcessor ( ii );
+		  
+	parameters->crossCorrelation._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
+	
+	const double get_cc_maxDelaySec();
+	const double *get_cc_lags();
+	const std::size_t get_cc_lags_size();
+
+    parameters->crossCorrelation._buffer[ii].cc_maxDelaySec = thisProcessor->get_cc_maxDelaySec();
+    parameters->crossCorrelation._buffer[ii].cc_wSizeSec = thisProcessor->get_wSizeSec();
+    parameters->crossCorrelation._buffer[ii].cc_hSizeSec = thisProcessor->get_hSizeSec();
+    
+	setWName ( thisProcessor->get_wname(), &(parameters->crossCorrelation._buffer[ii].cc_wname) );
+
+    parameters->crossCorrelation._buffer[ii].cc_lags._length = thisProcessor->get_cc_lags_size();
+	if ( genom_sequence_reserve(&(parameters->crossCorrelation._buffer[ii].cc_lags), thisProcessor->get_cc_lags_size() ) )
+		return rosAFE_e_noMemory( self );
+			
+	for ( size_t jj = 0 ; jj < thisProcessor->get_cc_lags_size() ; ++jj )
+		parameters->crossCorrelation._buffer[ii].cc_lags._buffer[jj] = *( thisProcessor->get_cc_lags() + jj );
+
+    thisProcessor.reset();
+  }
+/* ******************************  CrossCorrelation END  ************************************** */
+
   return genom_ok;
 }
 
@@ -722,7 +841,29 @@ modifyParameter(const char *nameProc, const char *nameParam,
 				ids->ildProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_wname( thisWindow );
 				return genom_ok;
 		} else return rosAFE_e_noSuchParameter(self);
-	  }  
+	  } else if ( type == _ratemap) {
+		if ( strcmp( nameParam, "rm_decaySec" ) == 0 ) {		  
+		  ids->ratemapProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_rm_decaySec( params.get<double>("newValue") );
+			return genom_ok;
+		} else if ( strcmp( nameParam, "set_rm_scailing" ) == 0 ) {
+			
+				scalingType thisScaling = _power;
+				if ( strcmp( params["newValue"].c_str(), "_magnitude" ) == 0 )
+					thisScaling = _magnitude;
+				else if ( strcmp( params["newValue"].c_str(), "_power" ) == 0 )
+					thisScaling = _power;
+					
+				ids->ratemapProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_rm_scailing( thisScaling );
+				return genom_ok;		  
+				
+		} else return rosAFE_e_noSuchParameter(self);
+	  } else if ( type == _crosscorrelation) {
+		  
+			if ( strcmp( nameParam, "cc_maxDelaySec" ) == 0 ) {		  
+				ids->crossCorrelationProcessorsSt->processorsAccessor.getProcessor ( nameProc )->set_cc_maxDelaySec( params.get<double>("newValue") );
+				return genom_ok;
+			} else return rosAFE_e_noSuchParameter(self);
+		}
   } catch ( const std::exception & e )  { 
 		return rosAFE_e_badNewValue( self); 
   }

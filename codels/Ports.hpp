@@ -12,6 +12,8 @@
 
 namespace PORT {
 
+/*  Type Related Functions  */
+
 	genom_event
 	iniTDS_port ( sequence_double *left, sequence_double *right, uint32_t fop, bool initToZero, genom_context self );
 
@@ -34,7 +36,16 @@ namespace PORT {
 	publishTFS_port ( sequence_rosAFE_signalOneD *signalLeft, std::vector<twoCTypeBlockPtr >& chunkLeft,
 							sequence_rosAFE_signalOneD *signalRight, std::vector<twoCTypeBlockPtr >& chunkRight,
 							uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, bool isBinaural, genom_context self );
-				
+	
+	genom_event
+	iniCC_port ( sequence_rosAFE_signalND *signalLeft, uint32_t nLag, uint32_t nChannels, uint32_t fop, bool initToZero, genom_context self );
+
+	genom_event
+	publishCC_port ( sequence_rosAFE_signalND *signalLeft, std::vector<std::vector<twoCTypeBlockPtr > >& chunkLeft,
+							uint32_t nLag, uint32_t nChannels, uint32_t fop, uint32_t bytesPerFrame, genom_context self );
+
+/*  Processor Related Functions  */
+											
 	genom_event
 	initInputPort ( const rosAFE_inputProcPort *inputProcPort, uint32_t sampleRate,
 						uint32_t bufferSize_s, genom_context self );
@@ -95,5 +106,16 @@ namespace PORT {
 																		
 	genom_event
 	deleteRatemapPort   ( const char *name, const rosAFE_ratemapPort *ratemapPort, genom_context self );
+	
+	genom_event
+	initCrossCorrelationPort ( const char *name, const rosAFE_crossCorrelationPort *crossCorrelationPort, uint32_t sampleRate,
+						uint32_t bufferSize_s, uint32_t nLag, uint32_t nChannels, genom_context self );
+						
+	genom_event
+	publishCrossCorrelationPort ( const char *name, const rosAFE_crossCorrelationPort *crossCorrelationPort, std::vector<std::vector<twoCTypeBlockPtr > > left,
+						uint32_t bytesPerFrame, int64_t nfr, genom_context self );
+																		
+	genom_event
+	deleteCrossCorrelationPort ( const char *name, const rosAFE_crossCorrelationPort *crossCorrelationPort, genom_context self );	
 }
 #endif /* PORTS_HPP */

@@ -1,5 +1,7 @@
 clear all; close all; clc;
 
+addpath(genpath('/home/musabini/genom_ws/rosAFE/examples'));
+
 %% Initialization of modules
 [ bass, rosAFE, client ] = initRosAFE( );
 
@@ -35,7 +37,9 @@ par = genParStruct('pp_bRemoveDC',pp_bRemoveDC,...
 par2 = genParStruct('ihc_method','none'); 
                 
 mObj.addProcessor('ild'); % With default parameters
-mObj.addProcessor('ild',par); % With given parameters
+mObj.addProcessor('ratemap'); % With default parameters
+
+%mObj.addProcessor('ild',par); % With given parameters
 
 %mObj.modifyParameter( 'time_0', 'pp_bRemoveDC', '0' );
 
