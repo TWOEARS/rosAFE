@@ -354,10 +354,10 @@ getSignal(rosAFE_dataObjSt *signals, const rosAFE_ids *ids,
 							  &(signals->ratemap._buffer[ii].right.dataN), right, 
 							  nChannels, fpc, 0, true, self );
 							  	  
-	  signals->ihc._buffer[ii].framesOnPort = fpc;	  
-	  signals->ihc._buffer[ii].sampleRate = thisProcessor->getFsOut();
-	  signals->ihc._buffer[ii].numberOfChannels = nChannels;
-	  signals->ihc._buffer[ii].lastFrameIndex = thisProcessor->getNFR();	  
+	  signals->ratemap._buffer[ii].framesOnPort = fpc;	  
+	  signals->ratemap._buffer[ii].sampleRate = thisProcessor->getFsOut();
+	  signals->ratemap._buffer[ii].numberOfChannels = nChannels;
+	  signals->ratemap._buffer[ii].lastFrameIndex = thisProcessor->getNFR();	  
   }
     
 /* ***********************  CROSS CORRELATION START  ******************************* */
@@ -687,10 +687,6 @@ getParameters(const rosAFE_ids *ids, rosAFE_parameters *parameters,
     std::shared_ptr < CrossCorrelation > thisProcessor = ids->crossCorrelationProcessorsSt->processorsAccessor.getProcessor ( ii );
 		  
 	parameters->crossCorrelation._buffer[ii].name = strdup( thisProcessor->getName().c_str() );
-	
-	const double get_cc_maxDelaySec();
-	const double *get_cc_lags();
-	const std::size_t get_cc_lags_size();
 
     parameters->crossCorrelation._buffer[ii].cc_maxDelaySec = thisProcessor->get_cc_maxDelaySec();
     parameters->crossCorrelation._buffer[ii].cc_wSizeSec = thisProcessor->get_wSizeSec();

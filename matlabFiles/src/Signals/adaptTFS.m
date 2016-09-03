@@ -1,6 +1,7 @@
 function [ chunkLeft chunkRight ] = adaptTFS( framesOnPort, numberOfChannels, left, isBinaural, right )
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%adaptTFS [ chunkLeft chunkRight ] = adaptTFS( framesOnPort, numberOfChannels, left, isBinaural, right )
+%   Adapts a the incoming RosAFE style TimeFrequenctSignal signal to Matlab
+%   AFE style TimeFrequenctSignal
 
 	chunkLeft = zeros(framesOnPort, numberOfChannels);
     if ( isBinaural )

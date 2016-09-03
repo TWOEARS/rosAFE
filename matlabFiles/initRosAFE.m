@@ -5,7 +5,6 @@ function [ bass, rosAFE, client ] = initRosAFE( openRobotsMatlabPath, twoEarsPat
 if ( nargin == 0 )
     openRobotsMatlabPath = '~/openrobots/lib/matlab';
     twoEarsPath = '~/TwoEars/AuditoryModel/TwoEars-1.2/';
-    rosAFE_matlab_Path = '~/genom_ws/rosAFE/matlabFiles';
 end
 
 %% Paths

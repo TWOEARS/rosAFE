@@ -76,7 +76,7 @@ component rosAFE {
       in double bufferSize_s_port = 1 : "Buffer size in seconds",
       in double bufferSize_s_getSignal = 1 : "Buffer size in seconds"
       ) {
-        doc         "Get consecutive blocks of audio data from bass.";
+        doc         "Gets consecutive blocks of audio data from bass.";
         task        input;
         interrupts  InputProc;  // Only one audio input can exist
 

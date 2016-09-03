@@ -87,7 +87,7 @@ classdef manager_RosAFE < handle
                 if iscell(request) && numel(request) == 1
                     % Then we have a one request with multiple parameters
                     if iscell(p)
-                        %... with individual parameters
+                        %... with individual parametersoutput
                         for ii = 1:size(p,2)
                             mObj.addProcessor(request,p{ii});
                         end
@@ -320,59 +320,70 @@ classdef manager_RosAFE < handle
                  error(strcat('Error',output.exception.ex));
             end
             
-%             % Input Processors
-%             for ii = 1:length(mObj.Processors.input)
-%                 inputSig = output.result.signals.input( ii );
-% 
-%                 if ( inputSig{1}.framesOnPort > 0 )
-%                     mObj.dObj.input{2*ii-1}.appendChunk( cell2mat(inputSig{1}.left.data)' );
-%                     mObj.dObj.input{2*ii}.appendChunk( cell2mat(inputSig{1}.right.data)' );
-%                 end
-%             end
-%             
-%             % Pre Processors  
-%             for ii = 1:length(mObj.Processors.preProc)
-%                 inputSig = output.result.signals.preProc( ii );
-% 
-%                 if ( inputSig{1}.framesOnPort > 0 )
-%                     mObj.dObj.preProc{2*ii-1}.appendChunk( cell2mat(inputSig{1}.left.data)' );
-%                     mObj.dObj.preProc{2*ii}.appendChunk( cell2mat(inputSig{1}.right.data)' );
-%                 end    
-%             end
-% 
-%             % Filterbanks
-%             for ii = 1:length(mObj.Processors.gammatone)
-%                 inputSig = output.result.signals.gammatone( ii );
-% 
-%                 if ( inputSig{1}.framesOnPort > 0 )
-% 
-%                 	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
-%                     mObj.dObj.filterbank{2*ii}.appendChunk( chunkLeft );
-%                     mObj.dObj.filterbank{2*ii+1}.appendChunk( chunkRight );
-%                 end       
-%             end
-%             % IHC
-%             for ii = 1:length(mObj.Processors.ihc)
-%                 inputSig = output.result.signals.ihc( ii );
-% 
-%                 if ( inputSig{1}.framesOnPort > 0 )
-% 
-%                 	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
-%                     mObj.dObj.innerhaircell{2*ii}.appendChunk( chunkLeft );
-%                     mObj.dObj.innerhaircell{2*ii+1}.appendChunk( chunkRight );
-%                 end       
-%             end
-%             % ILD
-%             for ii = 1:length(mObj.Processors.ild)
-%                 inputSig = output.result.signals.ild( ii );
-% 
-%                 if ( inputSig{1}.framesOnPort > 0 )
-% 
-%                 	chunkLeft = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 0 );
-%                     mObj.dObj.ild{ii}.appendChunk( chunkLeft );
-%                 end       
-%             end             
-        end    
+            % Input Processors
+            for ii = 1:length(mObj.Processors.input)
+                inputSig = output.result.signals.input( ii );
+
+                if ( inputSig{1}.framesOnPort > 0 )
+                    mObj.dObj.input{2*ii-1}.appendChunk( cell2mat(inputSig{1}.left.data)' );
+                    mObj.dObj.input{2*ii}.appendChunk( cell2mat(inputSig{1}.right.data)' );
+                end
+            end
+            
+            % Pre Processors  
+            for ii = 1:length(mObj.Processors.preProc)
+                inputSig = output.result.signals.preProc( ii );
+
+                if ( inputSig{1}.framesOnPort > 0 )
+                    mObj.dObj.preProc{2*ii-1}.appendChunk( cell2mat(inputSig{1}.left.data)' );
+                    mObj.dObj.preProc{2*ii}.appendChunk( cell2mat(inputSig{1}.right.data)' );
+                end    
+            end
+
+            % Filterbanks
+            for ii = 1:length(mObj.Processors.gammatone)
+                inputSig = output.result.signals.gammatone( ii );
+
+                if ( inputSig{1}.framesOnPort > 0 )
+
+                	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
+                    mObj.dObj.filterbank{2*ii-1}.appendChunk( chunkLeft );
+                    mObj.dObj.filterbank{2*ii}.appendChunk( chunkRight );
+                end       
+            end
+            % IHC
+            for ii = 1:length(mObj.Processors.ihc)
+                inputSig = output.result.signals.ihc( ii );
+
+                if ( inputSig{1}.framesOnPort > 0 )
+
+                	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
+                    mObj.dObj.innerhaircell{2*ii-1}.appendChunk( chunkLeft );
+                    mObj.dObj.innerhaircell{2*ii}.appendChunk( chunkRight );
+                end       
+            end
+            % ILD
+            for ii = 1:length(mObj.Processors.ild)
+                inputSig = output.result.signals.ild( ii );
+
+                if ( inputSig{1}.framesOnPort > 0 )
+
+                	chunkLeft = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 0 );
+                    mObj.dObj.ild{ii}.appendChunk( chunkLeft );
+                end       
+            end 
+            % Ratemap
+            for ii = 1:length(mObj.Processors.ratemap)
+                inputSig = output.result.signals.ratemap( ii );
+
+                if ( inputSig{1}.framesOnPort > 0 )
+
+                	[chunkLeft chunkRight] = adaptTFS( inputSig{1}.framesOnPort, inputSig{1}.numberOfChannels, inputSig{1}.left, 1, inputSig{1}.right );
+                    mObj.dObj.ratemap{2*ii-1}.appendChunk( chunkLeft );
+                    mObj.dObj.ratemap{2*ii}.appendChunk( chunkRight );
+                end       
+            end
+        end 
     end
     
     methods (Access = protected)

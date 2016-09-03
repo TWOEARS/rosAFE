@@ -1,9 +1,13 @@
 clear all; close all; clc;
 
-addpath(genpath('/home/musabini/genom_ws/rosAFE/examples'));
+openRobotsMatlabPath = '~/openrobots/lib/matlab';
+twoEarsPath = '~/TwoEars/AuditoryModel/TwoEars-1.2/';
+rosAFE_matlab_Path = '~/genom_ws/rosAFE/matlabFiles';
+
+addpath(genpath(rosAFE_matlab_Path));
 
 %% Initialization of modules
-[ bass, rosAFE, client ] = initRosAFE( );
+[ bass, rosAFE, client ] = initRosAFE( openRobotsMatlabPath, twoEarsPath );
 
 %% Parameters for data object
 sampleRate = 44100;
@@ -27,12 +31,20 @@ dObj = dataObject_RosAFE( bass, rosAFE, inputDevice, sampleRate, framesPerChunk,
 mObj = manager_RosAFE(dObj);
                 
 mObj.addProcessor('ild'); % With default parameters
-mObj.addProcessor('ratemap'); % With default parameters
 
-%mObj.addProcessor('ild',par); % With given parameters
+%% Searching gammatone filter's fsHz parameter
+name = 'ild_0';
+output = mObj.RosAFE.ildPort(name);
 
-%mObj.modifyParameter( 'time_0', 'pp_bRemoveDC', '0' );
+sig = TimeFrequencySignal.construct(output.ildPort.sampleRate, mObj.dObj.bufferSize_s_matlab, 'ild', name, cell2mat(mObj.Processors.gammatone{1}.fb_cfHz), 'mono');
+f = figure(1);
 
-mObj.processChunk( );
+while (1)
+    output = mObj.RosAFE.ildPort(name);
 
-mObj.deleteProcessor( 'ild', 1 );
+    chunkLeft = adaptTFS( output.ildPort.framesOnPort, output.ildPort.numberOfChannels, output.ildPort.left, 0 );
+    sig.appendChunk( chunkLeft );
+    sig.plot(f);
+    
+    pause(0.3);
+end
